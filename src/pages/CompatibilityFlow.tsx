@@ -705,7 +705,7 @@ const CompatibilityFlow = () => {
               <button onClick={() => { setStep("input"); setResult(null); }} className="flex-1 rounded-xl bg-card py-3 text-sm font-semibold text-foreground shadow-card flex items-center justify-center gap-2 border border-border"><Users className="h-4 w-4" /> {t("assessmentFlow.compatibility.tryAgain")}</button>
             </div>
             <button
-              onClick={() => navigate(`/chat?agent=bestie`, {
+              onClick={() => navigate(`/chat?agent=yunsheng`, {
                 state: { compatibilityResult: { partnerName, partnerMbti, partnerZodiac, overallScore: result.overallScore, title: result.title, summary: result.summary, dimensions: result.dimensions, strengths: result.strengths, conflicts: result.conflicts, loveLanguage: result.loveLanguage } },
               })}
               className="w-full rounded-xl bg-card py-3 text-sm font-semibold text-foreground shadow-card border border-border flex items-center justify-center gap-2"

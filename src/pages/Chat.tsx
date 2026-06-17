@@ -86,7 +86,7 @@ const Chat = () => {
     return hookLocale;
   })();
   const { user, session, promptLogin } = useAuth();
-  const agentId = searchParams.get("agent") || "barista";
+  const agentId = searchParams.get("agent") || "nuannuan";
   const rawAgent = RAW_AGENTS.find((a) => a.id === agentId) || RAW_AGENTS[0];
   const agent = localizeAgent(rawAgent, t);
   const mbtiResult = (location.state as any)?.mbtiResult as { mbtiType: string; title: string; description: string; parallelUniverse?: any } | undefined;
@@ -647,7 +647,7 @@ const Chat = () => {
 
     // Mystic tarot draw: detect intent and insert a card before AI reply
     let drawnCardContext = "";
-    if (agentId === "mystic" && isTarotDrawIntent(text)) {
+    if (agentId === "xinggui" && isTarotDrawIntent(text)) {
       const cardMsgId = `card-${Date.now()}`;
       setMessages((prev) => [...prev, { id: cardMsgId, role: "assistant", content: "", kind: "tarot-card", tarotCard: null }]);
       try {
@@ -689,7 +689,7 @@ const Chat = () => {
 
     // Retrospective context: user is asking about a previously drawn card.
     let pastCardContext = "";
-    if (agentId === "mystic" && !drawnCardContext && isRetrospectiveCardRef(text)) {
+    if (agentId === "xinggui" && !drawnCardContext && isRetrospectiveCardRef(text)) {
       const lastCardMsg = [...messages].reverse().find((m) => m.kind === "tarot-card" && m.tarotCard);
       if (lastCardMsg?.tarotCard) {
         const c = lastCardMsg.tarotCard;

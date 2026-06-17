@@ -240,7 +240,7 @@ const AssessmentFlow = () => {
           )}
           <div className="flex gap-3">
             <button onClick={handleSharePoster} className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-card py-3 text-sm font-medium text-foreground shadow-card"><Download className="h-4 w-4" /> {t("assessmentFlow.common.saveAndShare")}</button>
-            <button onClick={() => navigate(`/chat?agent=barista`, { state: { mbtiResult: { mbtiType: result.mbtiType, title: result.title, description: result.description, parallelUniverse: parallelData || undefined } } })}
+            <button onClick={() => navigate(`/chat?agent=nuannuan`, { state: { mbtiResult: { mbtiType: result.mbtiType, title: result.title, description: result.description, parallelUniverse: parallelData || undefined } } })}
               className="flex-1 rounded-xl bg-gradient-golden py-3 text-sm font-semibold text-primary-foreground">{t("assessmentFlow.common.talkAboutIt")}</button>
           </div>
         </motion.div>
