@@ -21,9 +21,9 @@ const Settings = () => {
     toast.success(t("settings.saved"));
   };
 
+  // 当前仅面向中国大陆用户，隐藏英文选项。如未来需要重新开放，把 en 加回数组即可。
   const options: { value: Locale; label: string }[] = [
     { value: "zh", label: t("settings.chinese") },
-    { value: "en", label: t("settings.english") },
   ];
 
   const speedOptions: { value: 0.85 | 1 | 1.15; label: string }[] = [
