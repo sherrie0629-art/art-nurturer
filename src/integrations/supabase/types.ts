@@ -270,6 +270,51 @@ export type Database = {
         }
         Relationships: []
       }
+      fortune_stick_draws: {
+        Row: {
+          action_tip: string
+          created_at: string
+          draw_date: string
+          energy_score: number
+          id: string
+          interpretation: string
+          stick_level: string
+          stick_number: number
+          stick_poem: string
+          stick_title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          action_tip?: string
+          created_at?: string
+          draw_date?: string
+          energy_score?: number
+          id?: string
+          interpretation: string
+          stick_level: string
+          stick_number: number
+          stick_poem: string
+          stick_title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          action_tip?: string
+          created_at?: string
+          draw_date?: string
+          energy_score?: number
+          id?: string
+          interpretation?: string
+          stick_level?: string
+          stick_number?: number
+          stick_poem?: string
+          stick_title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
