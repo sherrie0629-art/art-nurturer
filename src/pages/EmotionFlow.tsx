@@ -230,10 +230,10 @@ const EmotionFlow = () => {
             <button onClick={handleSharePoster} className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-card py-3 text-sm font-medium text-foreground shadow-card">
               <Download className="h-4 w-4" /> {t("assessmentFlow.common.saveAndShare")}
             </button>
-            <button onClick={() => navigate(`/chat?agent=jax`, {
+            <button onClick={() => navigate(`/chat?agent=laowang`, {
               state: { emotionResult: { emotionLevel: result.emotionLevel, title: result.title, description: result.description, traits: result.traits, suggestions: result.suggestions } },
             })} className="flex-1 rounded-xl bg-gradient-golden py-3 text-sm font-semibold text-primary-foreground">
-              {t("assessmentFlow.emotion.talkToJax")}
+              {t("assessmentFlow.emotion.talkToLaowang")}
             </button>
           </div>
         </motion.div>

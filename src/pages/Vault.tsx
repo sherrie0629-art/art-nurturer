@@ -67,18 +67,18 @@ const Vault = () => {
 
   const getAgentGradient = (agentId: string) => {
     const gradients: Record<string, string> = {
-      barista: "from-secondary to-gold",
+      nuannuan: "from-rose-warm to-gold",
       coach: "from-teal to-indigo",
-      jax: "from-amber-600 to-orange-400",
+      laowang: "from-amber-600 to-orange-400",
       mentor: "from-indigo to-lavender",
-      mystic: "from-indigo to-lavender",
-      bestie: "from-rose-warm to-gold",
+      xinggui: "from-violet-500 to-purple-300",
+      yunsheng: "from-indigo to-indigo-light",
     };
     return gradients[agentId] || "from-secondary to-primary";
   };
 
   const getAgentEmoji = (agentId: string) =>
-    agentId === "barista" ? "☕" : agentId === "jax" ? "🔥" : agentId === "mystic" ? "🔮" : "💖";
+    agentId === "nuannuan" ? "🌸" : agentId === "laowang" ? "😏" : agentId === "xinggui" ? "⭐" : "🌙";
 
   if (!user) {
     promptLogin(t("auth.promptViewVault"));
