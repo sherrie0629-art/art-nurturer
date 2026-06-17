@@ -42,8 +42,10 @@ const AgentProfileDrawer = ({
       : Math.min(100, ((totalTurns - prevThreshold) / (nextThreshold - prevThreshold)) * 100);
 
   const info = (t(`agentDrawer.info.${agent.id}`, { returnObjects: true }) as Record<string, string>) || {};
-  const shardHints = (t(`agentDrawer.shardHints.${agent.id}`, { returnObjects: true }) as string[]) || [];
-  const related = (t(`agentDrawer.related.${agent.id}`, { returnObjects: true }) as string[]) || [];
+  const shardHintsRaw = t(`agentDrawer.shardHints.${agent.id}`, { returnObjects: true, defaultValue: [] });
+  const shardHints: string[] = Array.isArray(shardHintsRaw) ? (shardHintsRaw as string[]) : [];
+  const relatedRaw = t(`agentDrawer.related.${agent.id}`, { returnObjects: true, defaultValue: [] });
+  const related: string[] = Array.isArray(relatedRaw) ? (relatedRaw as string[]) : [];
   const currentMoment = t(`agentDrawer.currentMoment.${agent.id}`, "");
 
   const shardsCount = agent.easterEggs.filter((e) => easterEggsFound.includes(e.trigger)).length;
