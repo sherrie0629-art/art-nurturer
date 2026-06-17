@@ -12,30 +12,30 @@ const corsHeaders = {
 
 const AGENTS = [
   {
-    id: "barista",
-    displayName: "Chloe",
-    emoji: "☕",
+    id: "nuannuan",
+    displayName: "暖暖",
+    emoji: "🧵",
     lens:
       "the perspective of presence and emotional safety — what does this person carry quietly, what part of them needs to feel heard but rarely is",
   },
   {
-    id: "jax",
-    displayName: "Jax",
-    emoji: "🔥",
+    id: "laowang",
+    displayName: "老王",
+    emoji: "🍵",
     lens:
       "the perspective of how this person reacts under pressure — their strength, their tendency to brace, what battle they fight and where they could exhale",
   },
   {
-    id: "mystic",
-    displayName: "Luna",
-    emoji: "🔮",
+    id: "yunsheng",
+    displayName: "云生",
+    emoji: "🌙",
     lens:
       "the symbolic / archetypal perspective — what cosmic patterns, mystical motifs, recurring archetypes echo through them",
   },
   {
-    id: "bestie",
-    displayName: "Aria",
-    emoji: "💖",
+    id: "xinggui",
+    displayName: "星轨",
+    emoji: "✨",
     lens:
       "the perspective of a best friend who delights in their quirks — what makes them lovable, magnetic, their hidden creative spark",
   },
