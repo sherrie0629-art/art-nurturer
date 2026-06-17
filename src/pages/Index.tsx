@@ -98,7 +98,7 @@ const Index = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.05 }}
               whileHover={{ y: -2 }}
-              onClick={() => navigate("/daily-tarot")}
+              onClick={() => navigate("/daily-fortune-stick")}
               className="md:col-span-4 group text-left rounded-2xl md:rounded-3xl border border-[#c9a84c]/15 bg-[#1a1a1a] p-4 md:p-6 hover:border-[#c9a84c]/45 transition-colors"
             >
               <div className="flex items-start justify-between gap-3">
@@ -106,14 +106,14 @@ const Index = () => {
                   className="text-xl md:text-2xl text-[#c9a84c]"
                   style={{ fontFamily: serif }}
                 >
-                  {t("home.dailyTarot")}
+                  {t("home.dailyFortune")}
                 </h3>
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#c9a84c]/30 text-[#c9a84c] group-hover:bg-[#c9a84c] group-hover:text-[#0d0d0d] transition-colors">
                   <ArrowRight className="h-4 w-4" />
                 </span>
               </div>
               <p className="mt-2 text-xs text-[#f0d78c]/55">
-                {t("home.dailyTarotDesc")}
+                {t("home.dailyFortuneDesc")}
               </p>
             </motion.button>
 

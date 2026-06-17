@@ -4,7 +4,8 @@ import LanguageDetector from "i18next-browser-languagedetector";
 import en from "./locales/en.json";
 import zh from "./locales/zh.json";
 
-export const SUPPORTED_LOCALES = ["en", "zh"] as const;
+// 当前面向中国大陆用户，仅启用中文。如需重新开放英文，把 "en" 加回数组并恢复 Settings 中的英文选项。
+export const SUPPORTED_LOCALES = ["zh"] as const;
 export type Locale = (typeof SUPPORTED_LOCALES)[number];
 export const LOCALE_STORAGE_KEY = "app.locale";
 
@@ -16,7 +17,8 @@ i18n
       en: { translation: en },
       zh: { translation: zh },
     },
-    fallbackLng: "en",
+    fallbackLng: "zh",
+    lng: "zh",
     supportedLngs: SUPPORTED_LOCALES as unknown as string[],
     nonExplicitSupportedLngs: true,
     detection: {
@@ -26,5 +28,20 @@ i18n
     },
     interpolation: { escapeValue: false },
   });
+
+// 旧用户本地缓存可能是 "en"，强制改回 zh
+try {
+  if (typeof window !== "undefined") {
+    const cached = window.localStorage.getItem(LOCALE_STORAGE_KEY);
+    if (cached && cached !== "zh") {
+      window.localStorage.setItem(LOCALE_STORAGE_KEY, "zh");
+    }
+    if (i18n.language !== "zh") {
+      void i18n.changeLanguage("zh");
+    }
+  }
+} catch {
+  /* ignore */
+}
 
 export default i18n;
