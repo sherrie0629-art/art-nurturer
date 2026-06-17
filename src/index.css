@@ -1,0 +1,144 @@
+/* Fonts loaded non-blocking via index.html */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* 夜空鎏金 · Black & Gold */
+    --background: 0 0% 5%;          /* #0d0d0d */
+    --foreground: 42 70% 75%;       /* #f0d78c */
+
+    --card: 0 0% 10%;               /* #1a1a1a */
+    --card-foreground: 42 70% 75%;
+
+    --popover: 0 0% 8%;
+    --popover-foreground: 42 70% 75%;
+
+    --primary: 42 53% 54%;          /* #c9a84c */
+    --primary-foreground: 0 0% 5%;
+
+    --secondary: 0 0% 14%;
+    --secondary-foreground: 42 70% 75%;
+
+    --muted: 0 0% 12%;
+    --muted-foreground: 42 25% 60%;
+
+    --accent: 42 53% 54%;
+    --accent-foreground: 0 0% 5%;
+
+    --destructive: 0 65% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 42 40% 35%;
+    --input: 0 0% 16%;
+    --ring: 42 53% 54%;
+
+    --radius: 1rem;
+
+    /* Custom tokens */
+    --gold: 42 53% 54%;
+    --gold-light: 42 70% 75%;
+    --indigo: 225 50% 30%;
+    --indigo-light: 225 40% 50%;
+    --teal: 175 40% 45%;
+    --rose-warm: 350 50% 60%;
+    --lavender: 260 35% 65%;
+
+    --gradient-mystic: linear-gradient(135deg, hsl(0 0% 10%), hsl(0 0% 5%));
+    --gradient-golden: linear-gradient(135deg, hsl(42 53% 54%), hsl(42 70% 75%));
+    --gradient-calm: linear-gradient(180deg, hsl(0 0% 5%), hsl(0 0% 8%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 10%), hsl(0 0% 8%));
+
+    --shadow-soft: 0 4px 20px -4px hsl(0 0% 0% / 0.5);
+    --shadow-glow: 0 0 30px -5px hsl(42 53% 54% / 0.35);
+    --shadow-card: 0 2px 12px -2px hsl(0 0% 0% / 0.45);
+
+    --font-display: 'DM Serif Display', serif;
+    --font-body: 'Fira Sans', 'Inter', sans-serif;
+
+    --sidebar-background: 0 0% 8%;
+    --sidebar-foreground: 42 70% 75%;
+    --sidebar-primary: 42 53% 54%;
+    --sidebar-primary-foreground: 0 0% 5%;
+    --sidebar-accent: 0 0% 14%;
+    --sidebar-accent-foreground: 42 70% 75%;
+    --sidebar-border: 0 0% 18%;
+    --sidebar-ring: 42 53% 54%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-body);
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+  }
+}
+
+@layer utilities {
+  .text-gradient-mystic {
+    background: var(--gradient-mystic);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .text-gradient-golden {
+    background: var(--gradient-golden);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .bg-gradient-mystic {
+    background: var(--gradient-mystic);
+  }
+  .bg-gradient-golden {
+    background: var(--gradient-golden);
+  }
+  .bg-gradient-calm {
+    background: var(--gradient-calm);
+  }
+  .shadow-soft {
+    box-shadow: var(--shadow-soft);
+  }
+  .shadow-glow {
+    box-shadow: var(--shadow-glow);
+  }
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+  .font-display {
+    font-family: var(--font-display);
+  }
+  .font-body {
+    font-family: var(--font-body);
+  }
+
+  /* Agent chat themes — dark base with each agent's accent */
+  .chat-theme-barista {
+    --chat-bg: linear-gradient(180deg, hsl(0 0% 8%), hsl(30 15% 10%));
+    --chat-header-bg: hsl(30 50% 55% / 0.10);
+    --chat-accent: hsl(30 60% 60%);
+  }
+  .chat-theme-coach {
+    --chat-bg: linear-gradient(180deg, hsl(0 0% 8%), hsl(140 15% 10%));
+    --chat-header-bg: hsl(140 40% 55% / 0.10);
+    --chat-accent: hsl(140 45% 60%);
+  }
+  .chat-theme-mentor {
+    --chat-bg: linear-gradient(180deg, hsl(0 0% 8%), hsl(200 15% 10%));
+    --chat-header-bg: hsl(200 40% 55% / 0.10);
+    --chat-accent: hsl(200 50% 65%);
+  }
+  .chat-theme-bestie {
+    --chat-bg: linear-gradient(180deg, hsl(0 0% 8%), hsl(42 15% 10%));
+    --chat-header-bg: hsl(42 53% 54% / 0.10);
+    --chat-accent: hsl(42 70% 65%);
+  }
+}

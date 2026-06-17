@@ -1,0 +1,234 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+
+const AI_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
+const BUCKET = "tarot-card-art";
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+};
+
+function fetchAI(model: string, body: Record<string, unknown>): Promise<Response> {
+  return fetch(AI_URL, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${Deno.env.get("LOVABLE_API_KEY")!}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ ...body, model }),
+  });
+}
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  try {
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+    const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
+
+    // Auth
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Missing auth" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const { data: { user }, error: authErr } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
+    if (authErr || !user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    const { cardId, cardName, isReversed, keywords, locale: bodyLocale } = await req.json();
+    const locale = bodyLocale === "zh" ? "zh" : "en";
+    if (cardId === undefined || !cardName) {
+      return new Response(JSON.stringify({ error: "Missing card info" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // Check if already drawn today
+    const today = new Date().toISOString().split("T")[0];
+    const { data: existing } = await supabase
+      .from("tarot_draws")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("draw_date", today)
+      .maybeSingle();
+
+    if (existing) {
+      // Return existing draw
+      let imageUrl: string | null = null;
+      if (existing.image_status === "ready" && existing.image_path) {
+        const { data: signed } = await supabase.storage.from(BUCKET).createSignedUrl(existing.image_path, 3600);
+        imageUrl = signed?.signedUrl || null;
+      }
+      return new Response(JSON.stringify({
+        id: existing.id,
+        cardId: existing.card_id,
+        cardName: existing.card_name,
+        isReversed: existing.is_reversed,
+        interpretation: existing.interpretation,
+        actionTip: existing.action_tip,
+        energyScore: existing.energy_score,
+        imageUrl,
+        imageStatus: existing.image_status,
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    const position = isReversed ? "Reversed" : "Upright";
+    const positionZh = isReversed ? "逆位" : "正位";
+    const keywordsStr = (keywords || []).join(", ");
+
+    // Generate interpretation
+    const systemEn = "You are a soul guide who blends Jungian psychology with tarot wisdom. Your readings are warm, insightful, and psychologically grounded.";
+    const systemZh = "你是一位融合荣格心理学与塔罗智慧的灵魂向导，解读温暖、有洞察、有心理学根基。请始终用简体中文输出，所有文字都必须是中文。";
+    const userEn = `I drew "${cardName}" in the ${position} position. Keywords: ${keywordsStr}.
+
+Please provide a psychological interpretation for my day:
+1. Briefly explain the card's psychological symbolism (2-3 sentences)
+2. Based on the ${position} meaning, give today's emotional insight (3-4 sentences)
+3. Keep it under 200 words, warm yet profound
+4. On a new line, start with "💡 " and give a brief actionable tip (under 15 words)
+
+Output the reading directly without titles or separators.`;
+    const userZh = `我抽到了"${cardName}"（${positionZh}）。关键词：${keywordsStr}。
+
+请用简体中文给我今天的心理解读：
+1. 简述这张牌的心理象征（2-3 句）
+2. 基于${positionZh}含义，给今日情绪洞察（3-4 句）
+3. 整体不超过 200 字，温暖且有深度
+4. 另起一行，以 "💡 " 开头给一条 15 字以内的可执行小行动
+
+直接输出解读，不要任何标题或分隔符。`;
+
+    const whisperResp = await fetchAI("google/gemini-3-flash-preview", {
+      messages: [
+        { role: "system", content: locale === "zh" ? systemZh : systemEn },
+        { role: "user", content: locale === "zh" ? userZh : userEn },
+      ],
+    });
+
+    if (!whisperResp.ok) {
+      const status = whisperResp.status;
+      if (status === 429) return new Response(JSON.stringify({ error: "Too many requests. Please try again later." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      if (status === 402) return new Response(JSON.stringify({ error: "Usage limit reached." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      throw new Error("AI generation failed");
+    }
+
+    const fallbackInterpretation = locale === "zh" ? "每一张牌都是一面镜子，映照此刻的你。" : "Every card is a mirror, reflecting who you are right now.";
+    const fallbackActionTip = locale === "zh" ? "给自己片刻安静。" : "Give yourself a moment of stillness.";
+    const aiData = await whisperResp.json();
+    const fullText = aiData.choices?.[0]?.message?.content?.trim() || fallbackInterpretation;
+    const tipMatch = fullText.match(/\n\n?💡\s*(.+)/);
+    const interpretation = tipMatch ? fullText.slice(0, tipMatch.index).trim() : fullText;
+    const actionTip = tipMatch ? tipMatch[1].trim() : fallbackActionTip;
+
+    // Score energy locally (no AI needed) - based on card position + keyword sentiment
+    const POSITIVE_WORDS = new Set([
+      "love","joy","success","abundance","harmony","peace","wisdom","clarity","hope",
+      "freedom","celebration","victory","new beginnings","strength","courage","faith",
+      "growth","passion","creativity","fulfillment","insight","trust","balance","luck",
+    ]);
+    const NEGATIVE_WORDS = new Set([
+      "fear","loss","grief","conflict","betrayal","despair","stagnation","confusion",
+      "isolation","ending","destruction","heartbreak","anxiety","doubt","burden","defeat",
+    ]);
+    let energyScore = isReversed ? 2 : 4;
+    let pos = 0, neg = 0;
+    for (const k of (keywords || [])) {
+      const lk = String(k).toLowerCase();
+      if (POSITIVE_WORDS.has(lk)) pos++;
+      else if (NEGATIVE_WORDS.has(lk)) neg++;
+    }
+    if (pos > neg) energyScore = Math.min(5, energyScore + 1);
+    else if (neg > pos) energyScore = Math.max(1, energyScore - 1);
+
+    // Check shared card art cache (78 cards × 2 positions = 156 max entries)
+    const { data: cached } = await supabase
+      .from("tarot_card_art")
+      .select("image_path")
+      .eq("card_id", cardId)
+      .eq("is_reversed", isReversed)
+      .maybeSingle();
+
+    const cachedPath = (cached as any)?.image_path as string | undefined;
+
+    // Insert draw row (status depends on cache hit)
+    const { data: row, error: insertErr } = await supabase.from("tarot_draws").insert({
+      user_id: user.id,
+      card_id: cardId,
+      card_name: cardName,
+      is_reversed: isReversed,
+      interpretation: `${interpretation}\n\n💡 ${actionTip}`,
+      action_tip: actionTip,
+      energy_score: energyScore,
+      image_path: cachedPath || null,
+      image_status: cachedPath ? "ready" : "pending",
+    }).select("id").single();
+
+    if (insertErr) {
+      console.error("Insert error:", insertErr);
+      return new Response(JSON.stringify({ error: "Failed to save draw" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    const drawId = row.id;
+
+    // Cache hit → return signed URL immediately, no image generation needed
+    if (cachedPath) {
+      const { data: signed } = await supabase.storage.from(BUCKET).createSignedUrl(cachedPath, 3600);
+      return new Response(JSON.stringify({
+        id: drawId,
+        cardId,
+        cardName,
+        isReversed,
+        interpretation: `${interpretation}\n\n💡 ${actionTip}`,
+        actionTip,
+        energyScore,
+        imageUrl: signed?.signedUrl || null,
+        imageStatus: "ready",
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // Cache miss → async image generation
+    const imagePrompt = `Create a mystical tarot card illustration for "${cardName}" (${position}). Style: ethereal watercolor with gold accents, dreamy cosmic atmosphere, rich symbolism. The card should evoke ${keywordsStr}. Mystical, elegant, NO TEXT. Square format.`;
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
+
+    const imagePromise = (async () => {
+      try {
+        const imgResp = await fetch(AI_URL, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ model: "google/gemini-3.1-flash-image-preview", messages: [{ role: "user", content: imagePrompt }], modalities: ["image", "text"] }),
+        });
+        if (!imgResp.ok) { await supabase.from("tarot_draws").update({ image_status: "failed" }).eq("id", drawId); return; }
+        const imgData = await imgResp.json();
+        const b64Url = imgData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+        if (!b64Url) { await supabase.from("tarot_draws").update({ image_status: "failed" }).eq("id", drawId); return; }
+        const b64 = b64Url.split(",")[1];
+        if (!b64) { await supabase.from("tarot_draws").update({ image_status: "failed" }).eq("id", drawId); return; }
+        const bin = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+        const fileName = `shared/${cardId}_${isReversed ? "rev" : "up"}_${Date.now()}.png`;
+        const { error: upErr } = await supabase.storage.from(BUCKET).upload(fileName, bin, { contentType: "image/png", upsert: false });
+        if (upErr) { console.error("Upload err:", upErr); await supabase.from("tarot_draws").update({ image_status: "failed" }).eq("id", drawId); return; }
+        // Write to shared cache (ignore conflict in case of concurrent generation)
+        await supabase.from("tarot_card_art").upsert(
+          { card_id: cardId, is_reversed: isReversed, image_path: fileName },
+          { onConflict: "card_id,is_reversed", ignoreDuplicates: true }
+        );
+        await supabase.from("tarot_draws").update({ image_path: fileName, image_status: "ready" }).eq("id", drawId);
+      } catch (e) { console.error("Image gen err:", e); await supabase.from("tarot_draws").update({ image_status: "failed" }).eq("id", drawId); }
+    })();
+
+    try { if (typeof EdgeRuntime !== "undefined" && (EdgeRuntime as any).waitUntil) { (EdgeRuntime as any).waitUntil(imagePromise); } } catch {}
+
+
+    return new Response(JSON.stringify({
+      id: drawId,
+      cardId,
+      cardName,
+      isReversed,
+      interpretation: `${interpretation}\n\n💡 ${actionTip}`,
+      actionTip,
+      energyScore,
+      imageUrl: null,
+      imageStatus: "pending",
+    }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  } catch (e) {
+    console.error("tarot-draw error:", e);
+    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
+});

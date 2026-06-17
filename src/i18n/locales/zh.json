@@ -1,0 +1,1264 @@
+{
+  "nav": {
+    "home": "首页",
+    "archive": "档案",
+    "assess": "测评",
+    "me": "我的"
+  },
+  "soulFragment": {
+    "newToast": "✨ 获得新的灵魂碎片：{{name}}"
+  },
+  "common": {
+    "back": "返回",
+    "save": "保存",
+    "cancel": "取消",
+    "confirm": "确认",
+    "loading": "加载中…",
+    "loadingDots": "加载中...",
+    "retry": "重试",
+    "close": "关闭",
+    "continue": "继续",
+    "pleaseWait": "请稍候...",
+    "networkError": "网络错误，请重试",
+    "somethingWrong": "出错了，请重试",
+    "online": "在线",
+    "today": "今天",
+    "yesterday": "昨天",
+    "daysAgo": "{{n}} 天前",
+    "noteFound": "未找到记录",
+    "goBack": "返回上一页"
+  },
+  "footer": {
+    "pricing": "定价",
+    "contact": "联系我们",
+    "privacy": "隐私政策",
+    "terms": "服务条款",
+    "rights": "保留所有权利"
+  },
+  "settings": {
+    "title": "设置",
+    "language": "界面语言",
+    "languageDesc": "选择应用的显示语言。",
+    "chinese": "中文",
+    "english": "English",
+    "saved": "语言已更新",
+    "voice": {
+      "title": "角色语音",
+      "desc": "点击 AI 消息旁的小喇叭，用角色专属声线朗读这句话。",
+      "enable": "启用消息语音播放",
+      "speed": "播放速度",
+      "volume": "音量"
+    }
+  },
+  "auth": {
+    "signIn": "登录",
+    "signUp": "注册",
+    "signInUp": "登录 / 注册",
+    "signOut": "退出登录",
+    "welcomeBack": "欢迎回来 ✨",
+    "welcomeBackSubtitle": "欢迎回来，继续你的内在旅程。",
+    "beginJourney": "开启你的自我探索之旅。",
+    "googleSignIn": "使用 Google 登录",
+    "googleSignInUnavailable": "Google 登录暂未启用，请稍后再试或使用邮箱登录",
+    "googleSignInFailed": "Google 登录失败，请重试",
+    "orUseEmail": "或使用邮箱",
+    "useEmailSignIn": "使用邮箱登录",
+    "emailPlaceholder": "邮箱地址",
+    "passwordPlaceholder": "密码",
+    "namePlaceholder": "你的昵称",
+    "noAccount": "没有账号？立即注册",
+    "haveAccount": "已有账号？立即登录",
+    "accountCreated": "注册成功！请查看邮箱确认 📧",
+    "actionFailed": "操作失败，请重试",
+    "signInToContinue": "登录以继续",
+    "signInRequired": "请先登录 🌙",
+    "signInFirst": "请先登录 🌙",
+    "googleAccount": "使用 Google 账号登录",
+    "noAccountShort": "没有账号？注册",
+    "haveAccountShort": "已有账号？登录",
+    "signInToBegin": "登录以开启你的旅程",
+    "promptDefault": "登录解锁更多功能 ✨",
+    "promptViewVault": "登录后查看你的收藏 ✨",
+    "promptViewSoulMap": "登录后查看灵魂星图 🌟",
+    "promptViewHistory": "登录后查看聊天历史 📖",
+    "promptDailyTarot": "登录后开启每日塔罗",
+    "promptContinueChat": "登录后保存聊天记录，继续探索更多 ✨",
+    "redirecting": "正在跳转..."
+  },
+  "profile": {
+    "traveler": "旅人",
+    "dayOf": "你的心灵之旅第 {{n}} 天 ✨",
+    "freePlan": "免费版",
+    "plus": "✨ Plus 会员",
+    "expires": "到期：{{date}}",
+    "trialEnded": "🚫 免费试用已结束，升级 Plus 继续使用。",
+    "trialLeft": "🎁 免费试用：剩余 {{n}} 天",
+    "todaysChats": "今日对话",
+    "todaysQuizzes": "今日测评",
+    "todaysDeepReports": "今日深度报告",
+    "manageSubscription": "管理订阅 / 取消",
+    "opening": "打开中…",
+    "whyPlus": "为什么选 Plus？",
+    "benefit": "权益",
+    "free": "免费",
+    "monthly": "月付",
+    "yearlySave": "年付 · 省 20%",
+    "getPlusMonthly": "开通 Plus · $4.99/月",
+    "getPlusYearly": "开通 Plus · $47.99/年",
+    "upgradeSuccess": "升级成功！🎉",
+    "checkoutFail": "无法打开结账，请稍后重试",
+    "portalFail": "无法打开管理页面，请稍后重试",
+    "refundNote": "若未使用任何 AI 功能，14 天内可申请退款。详见",
+    "termsLink": "服务条款",
+    "forDetails": "。",
+    "loadingText": "加载中…",
+    "menu": {
+      "reports": "报告",
+      "vault": "宝匣",
+      "chemistry": "缘分",
+      "notifications": "通知",
+      "settings": "设置",
+      "admin": "管理后台"
+    },
+    "benefitLabels": {
+      "dailyChats": "每日对话",
+      "dailyQuizzes": "每日测评",
+      "deepReports": "深度报告",
+      "unlimited": "无限",
+      "perDay": "1 次/天"
+    }
+  },
+  "home": {
+    "appName": "心灵密语",
+    "appTagline": "你的 AI 疗愈空间",
+    "tagline": "在喧嚣的世界里，遇见懂你的灵魂",
+    "dailyTarot": "每日塔罗",
+    "dailyTarotDesc": "抽一张牌 · 收获今日洞见 🔮",
+    "chemistry": "缘分配对",
+    "chemistryDesc": "AI 缘分分析报告 💕",
+    "selfDiscovery": "自我探索",
+    "allQuizzes": "全部测评 →",
+    "yourCircle": "你的小圈子",
+    "archiveLink": "档案 →",
+    "secretsHint": "🔮 每位角色都藏着不为人知的秘密",
+    "secretsDesc": "真诚地分享你的故事，随着对话深入，TA 们会向你敞开心扉，解锁专属故事碎片。",
+    "tests": {
+      "mbti": {
+        "label": "MBTI",
+        "desc": "性格类型"
+      },
+      "enneagram": {
+        "label": "九型人格",
+        "desc": "核心动机"
+      },
+      "zodiac": {
+        "label": "星座运势",
+        "desc": "宇宙能量"
+      },
+      "emotion": {
+        "label": "心灵护理",
+        "desc": "倦怠检测"
+      }
+    },
+    "bondLabels": {
+      "stranger": "陌生人",
+      "familiarFace": "熟面孔",
+      "trusted": "信任的人",
+      "listener": "倾听者",
+      "confidant": "知己",
+      "resonant": "共鸣者",
+      "heartKeeper": "守心人",
+      "soulCompanion": "灵魂同行",
+      "fateEntwined": "命运交织",
+      "soulSymbiote": "心灵共生",
+      "acquaintance": "熟面孔",
+      "close": "灵魂同行",
+      "soulbound": "心灵共生"
+    }
+  },
+  "assessmentList": {
+    "title": "自我探索",
+    "subtitle": "AI 助力，深入认识真实的你",
+    "items": {
+      "mbti": {
+        "title": "性格测评 (MBTI)",
+        "desc": "AI 动态题目，解码你的性格类型",
+        "tag": "热门"
+      },
+      "enneagram": {
+        "title": "九型人格",
+        "desc": "发现核心恐惧、欲望与动机",
+        "tag": "经典"
+      },
+      "zodiac": {
+        "title": "星座运势",
+        "desc": "每日 / 每周 / 每月宇宙指引",
+        "tag": "每日同步"
+      },
+      "emotion": {
+        "title": "心灵体检",
+        "desc": "评估倦怠、能量与边界状态",
+        "tag": "推荐"
+      }
+    }
+  },
+  "assessmentFlow": {
+    "common": {
+      "starting": "AI 正在搭建场景，请稍等...",
+      "analyzing": "正在把你的选择丢进灵魂搅拌机...",
+      "loadFail": "加载失败，请重试",
+      "limitReached": "今日测评次数已达上限（{{n}}）💫",
+      "saveAndShare": "保存海报",
+      "talkAboutIt": "聊聊看",
+      "yourResult": "你的结果",
+      "back": "返回",
+      "of": "{{cur}} / {{total}}",
+      "loadingMessages": [
+        "正在偷看你的潜意识...",
+        "把你的选择丢进灵魂搅拌机...",
+        "AI 正在小本本记下你的怪癖...",
+        "下一幕场景搭建中...",
+        "你的回答让 AI 愣了 0.3 秒...",
+        "拼凑你心里那块缺失的拼图...",
+        "在你脑海里摸黑找开关...",
+        "等等，这题信息量有点大..."
+      ]
+    },
+    "mbti": {
+      "title": "MBTI 性格测评",
+      "introTitle": "10 个场景，看看你是哪种人",
+      "introDesc": "不是冷冰冰的问卷，而是 10 个小剧本。\n跟着场景走完，你的人格画像也就出来了。",
+      "start": "开始测评 ✨",
+      "resultsTitle": "测评结果",
+      "personalityAnalysis": "性格解析",
+      "dimensionAnalysis": "维度分析",
+      "parallelUniverse": "平行宇宙的你",
+      "fantasyWorld": "🧙 奇幻世界",
+      "cyberpunk": "🤖 赛博朋克",
+      "dim": {
+        "ei": [
+          "外向 E",
+          "内向 I"
+        ],
+        "sn": [
+          "实感 S",
+          "直觉 N"
+        ],
+        "tf": [
+          "思考 T",
+          "情感 F"
+        ],
+        "jp": [
+          "判断 J",
+          "知觉 P"
+        ]
+      }
+    },
+    "enneagram": {
+      "title": "九型人格测评",
+      "introTitle": "发现你的九型人格类型",
+      "introDesc": "MBTI 告诉你<em>怎么</em>做事，九型人格揭示<em>为什么</em>。\n找到你的核心恐惧、欲望与成长之路。",
+      "start": "开始测评 🎯",
+      "resultsTitle": "你的九型人格结果",
+      "wing": "侧翼",
+      "innerWorld": "你的内心世界",
+      "coreMotivations": "核心动机",
+      "coreFear": "核心恐惧",
+      "coreDesire": "核心渴望",
+      "growthStress": "🌱 成长 & 压力",
+      "growth": "成长方向",
+      "underStress": "压力之下",
+      "advice": "💡 建议",
+      "discussWith": "找咖啡师聊聊 ☕",
+      "talkToBestie": "找闺蜜聊聊 💗"
+    },
+    "zodiac": {
+      "title": "星座运势",
+      "introTitle": "选择你的星座",
+      "introDesc": "AI 将根据你当前的状态为你解读星象",
+      "resultsTitle": "你的运势",
+      "reading": "解读",
+      "luckyGuide": "✨ 幸运指南",
+      "luckyColor": "幸运色",
+      "luckyNumber": "幸运数字",
+      "luckyDirection": "幸运方位",
+      "thisWeek": "💡 本周指引",
+      "mantraTitle": "本周箴言",
+      "doThis": "🌟 试试这些",
+      "avoidThis": "🚫 暂避锋芒",
+      "luckyMoment": "幸运时刻",
+      "ritualTitle": "今周小仪式",
+      "discussMore": "聊聊更多",
+      "talkToLuna": "找 Luna 解读 🌙",
+      "elementSuffix": "属性"
+    },
+    "emotion": {
+      "title": "倦怠 & 心灵体检",
+      "introTitle": "检测你的心灵状态",
+      "introDesc": "你是否正在透支自己？\n获取专属的自我关怀行动方案。",
+      "start": "开始体检 🌈",
+      "resultsTitle": "心灵体检结果",
+      "analysis": "分析",
+      "dimensions": "心灵维度",
+      "burnout": "倦怠程度",
+      "energy": "能量水平",
+      "boundaries": "边界感",
+      "sleep": "睡眠质量",
+      "lowerIsBetter": "(越低越好)",
+      "actionPlan": "🌱 自我关怀行动方案",
+      "talkToJax": "和 Jax 聊聊"
+    },
+    "compatibility": {
+      "title": "💕 缘分配对",
+      "introTitle": "缘分配对",
+      "introDesc": "输入你和 TA 的人格信息，获取 AI 缘分分析报告",
+      "aboutMe": "关于我",
+      "aboutThem": "关于 TA",
+      "yourName": "你的名字",
+      "theirName": "TA 的名字",
+      "mbtiOptional": "MBTI（可选）",
+      "signOptional": "星座（可选）",
+      "describeMe": "描述你的性格（可选）",
+      "describeThem": "描述 TA 的性格（可选）",
+      "analyzeBtn": "🎲 摇一摇命运骰子",
+      "aboutMeFancy": "🧙‍♀️ 我方出战",
+      "aboutThemFancy": "💘 对方登场",
+      "codenameMinePh": "你的代号 / 昵称",
+      "codenameThemPh": "叫 TA 什么都行～昵称、绰号、'前任'…",
+      "mbtiBadgeEmpty": "贴一枚人格徽章",
+      "zodiacGemEmpty": "选一颗星座宝石",
+      "zodiacPickerEmpty": "选一个星座（可不选）",
+      "zodiacPickerChange": "换一个",
+      "zodiacPickerClear": "清除",
+      "zodiacName_Aries": "白羊座",
+      "zodiacName_Taurus": "金牛座",
+      "zodiacName_Gemini": "双子座",
+      "zodiacName_Cancer": "巨蟹座",
+      "zodiacName_Leo": "狮子座",
+      "zodiacName_Virgo": "处女座",
+      "zodiacName_Libra": "天秤座",
+      "zodiacName_Scorpio": "天蝎座",
+      "zodiacName_Sagittarius": "射手座",
+      "zodiacName_Capricorn": "摩羯座",
+      "zodiacName_Aquarius": "水瓶座",
+      "zodiacName_Pisces": "双鱼座",
+      "traitsMinePh": "一句话形容你自己（吐槽也行）",
+      "traitsThemPh": "TA 是个怎样的人？一句吐槽也行",
+      "traitChip1": "嘴硬心软",
+      "traitChip2": "e人外表i人内心",
+      "traitChip3": "松弛感拉满",
+      "chipHintMine": "快捷词",
+      "chipHintThem": "TA 像",
+      "traitMine1": "嘴硬心软",
+      "traitMine2": "e人外表i人内心",
+      "traitMine3": "松弛感拉满",
+      "traitMine4": "容易上头",
+      "traitMine5": "嘴笨但很真诚",
+      "traitThem1": "笑起来犯规",
+      "traitThem2": "神秘感拉满",
+      "traitThem3": "永远慢半拍",
+      "traitThem4": "情绪稳定到离谱",
+      "traitThem5": "像只难驯服的猫",
+      "stageBlockTitle": "我们正在…",
+      "vibeBlockTitle": "最近最像哪一幕",
+      "analyzeBtnFancy": "🎰 摇出我们的恋爱卡面",
+      "stageSubs": {
+        "crush": "在朋友圈点赞但不敢评论",
+        "talking": "凌晨一点还在回消息",
+        "dating": "连呼吸都是甜的",
+        "longterm": "能一起沉默也舒服",
+        "complicated": "分了又合，合了又想分"
+      },
+      "analyzing": "AI 正在分析你们的缘分…",
+      "needBothNames": "请填写两个人的名字",
+      "needMyInfo": "请至少填写一项关于自己的信息",
+      "needTheirInfo": "请至少填写一项关于 TA 的信息",
+      "analyzeFail": "分析失败，请重试",
+      "fiveDimensions": "五维雷达",
+      "strengths": "✨ 你们的优势",
+      "conflicts": "⚡ 潜在冲突",
+      "loveLanguages": "💗 爱的语言",
+      "deepAnalysis": "📖 深度解析",
+      "deepAnalysisLoading": "正在生成深度解析…",
+      "deepReportLabel": "缘分合盘",
+      "tryAgain": "再抽一次",
+      "savePoster": "📸 晒卡",
+      "talkToBestie": "找闺蜜聊聊 💗",
+      "pleaseSignIn": "请先登录 🌙",
+      "dailyLimitReached": "今日测评次数已用完（{{n}}）💫",
+      "me": "我",
+      "them": "TA",
+      "stageLabel": "你们现在的关系阶段？",
+      "stages": {
+        "crush": "🌱 暗恋中",
+        "talking": "💌 暧昧期",
+        "dating": "💞 在一起了",
+        "longterm": "🌙 老夫老妻",
+        "complicated": "🌀 复杂…"
+      },
+      "vibeLabel": "最近一次互动是？",
+      "vibes": {
+        "deepTalk": "🌌 深夜长聊",
+        "ghosted": "👻 已读不回",
+        "memes": "🤣 互发表情包",
+        "meal": "🍜 一起吃饭",
+        "silence": "🫥 还没说过话",
+        "fight": "🔥 刚吵完架"
+      },
+      "rollingDice": "🎲 摇骰子中…",
+      "loadingLines": [
+        "🌙 月亮正在比对你们的星图…",
+        "💌 翻出你们前世的信件…",
+        "⚖️ 称一下两颗心的重量…",
+        "🔮 把你们的频率丢进缘分熔炉…",
+        "🐈 偷看一眼 TA 手机壁纸…",
+        "🎴 抽出今日命运卡…"
+      ],
+      "rarity": {
+        "SSR": "天选 SSR",
+        "SR": "命定 SR",
+        "R": "缘分 R",
+        "N": "练手 N"
+      },
+      "destinyCard": "命运卡",
+      "trafficLightTitle": "🚦 缘分红绿灯",
+      "trafficLight": {
+        "green": "🟢 绿灯 · 这点很对味",
+        "yellow": "🟡 黄灯 · 留个心眼",
+        "red": "🔴 红灯 · 注意避雷"
+      },
+      "radarOneLiner": "雷达一句话",
+      "dramaTitle": "🎬 如果你们拍偶像剧",
+      "loveActionTitle": "💚 这周可以为 TA 做的小事",
+      "lovePhraseTitle": "💛 TA 想从你这听到的话",
+      "keywordsTitle": "🔑 命定关键词",
+      "prophecyTitle": "🔮 一句话占卜",
+      "inviteTitle": "🤝 拉 TA 一起测",
+      "inviteHint": "点击复制专属邀请文案",
+      "inviteCopied": "邀请文案已复制 ✨",
+      "inviteText": "我们的命运卡是【{{cp}} · {{rarity}} {{score}}%】🎴 你来抽抽我们的红绿灯 → {{url}}",
+      "shareCaptionFallback": "刚抽到了【{{cp}}】🎴",
+      "dim": {
+        "emotional": "情感共鸣",
+        "communication": "沟通方式",
+        "values": "价值观",
+        "growth": "共同成长",
+        "chemistry": "化学反应"
+      }
+    }
+  },
+  "assessmentReports": {
+    "title": "测评报告",
+    "empty": "还没有测评结果",
+    "takeOne": "去做一次测评",
+    "labels": {
+      "mbti": "MBTI 性格",
+      "enneagram": "九型人格",
+      "zodiac": "星座解读",
+      "emotion": "心灵体检"
+    }
+  },
+  "assessmentDetail": {
+    "dimensions": "维度",
+    "luckyGuide": "幸运指南",
+    "luckyColor": "幸运色",
+    "luckyNumber": "幸运数字",
+    "luckyDirection": "幸运方位",
+    "wellnessTips": "心灵建议",
+    "advice": "建议",
+    "deepTitle": "深度心理分析",
+    "deepIntroLine": "包含 3000–5000 字的深度报告：",
+    "deepBullets": [
+      "依恋模式分析",
+      "亲密关系红旗指南",
+      "核心防御机制",
+      "职业发展洞见",
+      "个人成长路线"
+    ],
+    "deepTeaser": "基于你的测评结果，你的核心人格特质显现出独特的内在张力。表面上你倾向于…然而内心深处，你怀着对亲密连接更深的渴望。这种矛盾源于童年时期形成的依恋模式…",
+    "unlockToRead": "🔒 解锁后查看完整报告",
+    "generating": "AI 正在为你生成深度报告…",
+    "generatePlus": "生成深度报告（每日 1 次）",
+    "upgradeUnlock": "升级 Plus 解锁",
+    "plusPerk": "Plus 会员每天可生成 1 份深度报告 ✨",
+    "needUpgrade": "升级 Plus 解锁深度报告 ✨",
+    "dailyDeepLimit": "今日深度报告已达上限（每日 1 次）🌙",
+    "deepDone": "深度报告已生成 ✨",
+    "deepFail": "生成失败，请重试",
+    "deepCoverTag": "深度心理分析",
+    "deepCoverSub": "为你专属生成的内在地图，请慢慢读，慢慢懂自己。",
+    "deepWords": "字",
+    "deepMinRead": "分钟阅读",
+    "deepToc": "目录",
+    "deepSignature": "—— 心灵密语 · 为你而写",
+    "deepShareSection": "截图本章",
+    "deepCopyLink": "复制章节链接",
+    "deepLinkCopied": "章节链接已复制 ✨",
+    "deepSharePoster": "下载完整 PDF",
+    "deepPdfReady": "PDF 已下载 ✨",
+    "deepShareCaption": "在心灵密语探索属于你的内在地图 ✨",
+    "deepSaveFail": "操作失败，请重试",
+    "shareTitle": "分享我的报告",
+    "shareDescAI": "在心灵密语发现你的版本 ✨",
+    "dim": {
+      "thinking": "思考型",
+      "feeling": "情感型",
+      "instinct": "本能型",
+      "growth": "成长性",
+      "overall": "整体运势",
+      "love": "感情",
+      "career": "事业",
+      "fortune": "财运",
+      "stress": "压力",
+      "energy": "活力",
+      "social": "社交",
+      "sleep": "睡眠",
+      "selfAwareness": "自我觉察",
+      "empathy": "共情力",
+      "resilience": "心理韧性",
+      "burnout": "倦怠值",
+      "boundaries": "边界感",
+      "regulation": "情绪调节",
+      "emotional": "情感共鸣",
+      "communication": "沟通默契",
+      "values": "价值观契合",
+      "chemistry": "化学反应"
+    }
+  },
+  "compatibilityReports": {
+    "title": "💕 缘分报告",
+    "newTest": "新测试",
+    "empty": "还没有缘分报告",
+    "takeOne": "做一次缘分配对",
+    "compat": "缘分分析",
+    "with": "与 {{name}}",
+    "partnerDefault": "TA"
+  },
+  "compatibilityDetail": {
+    "title": "💕 缘分详情",
+    "fiveDimensions": "五大维度",
+    "strengths": "✨ 你们的优势",
+    "conflicts": "⚡ 潜在冲突 & 解决方案",
+    "loveLanguages": "💗 爱的语言",
+    "deepAnalysis": "📖 深度解析",
+    "you": "你",
+    "scoreMatch": "{{n}}% 匹配 ✨",
+    "posterFail": "海报生成失败",
+    "notFound": "未找到报告",
+    "goBack": "返回",
+    "withPartner": "与 {{name}}",
+    "partnerDefault": "TA",
+    "generatingPoster": "正在生成海报…",
+    "compatibilityFallback": "缘分分析",
+    "matchSuffix": "{{n}}% 匹配"
+  },
+  "vault": {
+    "title": "藏宝匣",
+    "tabs": {
+      "lore": "故事碎片",
+      "truth": "真理碎片",
+      "quote": "治愈金句"
+    },
+    "empty": "还没有收集到碎片",
+    "emptyHint": "和角色深聊以解锁更多 ✨",
+    "loading": "加载中...",
+    "loreHint": "故事碎片会随你与角色的羁绊等级提升自动解锁 ✨",
+    "truthHint": "💡 真理碎片需要在聊天中说出特定的「暗号」才能解锁。每个角色都有几个隐藏关键词，试着聊聊 TA 最在意的话题。",
+    "truthGallery": {
+      "subtitle": "真相收藏馆 · 集齐每位角色的 3 枚水晶碎片",
+      "progress": "{{cur}} / {{total}}",
+      "locked": "未发现",
+      "lockedHint": "在对话中说出隐藏触发词",
+      "complete": "✨ 全部碎片已集齐",
+      "universe": "心灵密语宇宙",
+      "universeHint": "提及其他角色或这个世界本身"
+    }
+  },
+  "archive": {
+    "title": "角色档案",
+    "needSignIn": "请登录后查看角色档案 🌙",
+    "signInBtn": "立即登录",
+    "conversations": "{{n}} 次对话",
+    "next": "下一阶段：{{label}}（需 {{n}} 轮）",
+    "maxBond": "已达最高羁绊等级",
+    "storyFragments": "📖 故事碎片",
+    "unlocked": "已解锁 {{cur}}/{{total}}",
+    "lvLabel": "Lv.{{lv}} · {{label}}",
+    "needTurns": "需 {{n}} 轮对话",
+    "lockedQuote": "??? 继续与 {{name}} 对话以解锁 ???",
+    "easterEggs": "🔮 隐藏彩蛋",
+    "found": "已发现 {{cur}}/{{total}}",
+    "unlockedTag": "已解锁",
+    "trigger": "触发：「{{t}}」",
+    "undiscovered": "尚未发现的秘密",
+    "undiscoveredHint": "试着在对话中探讨某些话题…"
+  },
+  "soulMap": {
+    "title": "灵魂星图",
+    "seoDescription": "探索你的灵魂星图：星座成就与来自对话、性格测评收集的星辰碎片。",
+    "starsConst": "{{stars}} 颗星 · {{c}} 个星座",
+    "cardSummary": "{{stars}} 颗星 · {{c}} 个星座",
+    "cardEmpty": "开始探索，收集你的第一颗星",
+    "cardNext": "下一个星座：{{name}}",
+    "groups": {
+      "assessment": "测评之星",
+      "chat": "对话之星"
+    },
+    "emptyAssessment": "完成测评以获得星辰 ✨",
+    "emptyChat": "进行深度对话以获得星辰 💫",
+    "constellation": "星座图谱",
+    "constUnlocked": "已解锁",
+    "lockedHint": "尚未解锁",
+    "nextGoal": "🧭 下一个目标",
+    "chat": "对话",
+    "source": "来源：{{src}}"
+  },
+  "dailyTarot": {
+    "title": "每日塔罗",
+    "subtitle": "抽一张牌 · 收获今日洞见",
+    "focus": "凝心静气，让牌为你揭示今日所需。",
+    "drawBtn": "抽今日的牌",
+    "drawing": "正在解读塔罗…",
+    "reversed": "逆位",
+    "upright": "正位",
+    "energy": "能量 {{n}}/5",
+    "todayReading": "今日解读",
+    "saveShare": "保存 & 分享",
+    "talkToLuna": "找 Luna 解牌 🌙",
+    "generatingArt": "正在生成牌面图…",
+    "artFail": "牌面图暂不可用",
+    "drawFail": "抽牌失败，请重试",
+    "posterIntro": "正在生成你的海报…",
+    "posterFail": "海报生成失败",
+    "shareText": "发现你的每日塔罗洞见 ✨",
+    "loading": "加载中..."
+  },
+  "conversations": {
+    "title": "聊天历史",
+    "subtitle": "你走过的旅程",
+    "empty": "还没有对话",
+    "startFirst": "开启你的第一次对话",
+    "loading": "加载中...",
+    "fallbackTitle": "与 {{name}} 的对话"
+  },
+  "chat": {
+    "newConv": "新对话",
+    "online": "在线",
+    "inputPlaceholder": "你在想什么…",
+    "energyHint": "🔮 敞开心扉以累积能量并解锁 {{name}} 的隐藏故事碎片。当前羁绊：",
+    "limitReached": "今日聊天次数已用完（{{n}}/{{plan}}）💫 明天再来吧！",
+    "freeEndedToast": "免费试用已结束，请升级 Plus 继续使用 ✨",
+    "anonLimitPrompt": "登录后保存聊天记录，继续探索更多 ✨",
+    "via": "via 心灵密语",
+    "saysSuffix": "{{name}} 说…",
+    "quoteCardLoading": "正在生成金句卡片…",
+    "cardFail": "卡片生成失败",
+    "headerTitle": "心灵密语",
+    "headerSub": "你的 AI 疗愈空间",
+    "energy": "能量",
+    "bondLevel": "羁绊等级",
+    "storyFragments": "故事碎片",
+    "icebreakerTitle": "不知道说什么？试试这样开口",
+    "icebreakerHint": "点一下，直接发送给 {{name}}"
+  },
+  "branchSelector": {
+    "yourInnerVoice": "你的内在声音…"
+  },
+  "bondLevelUp": {
+    "levelUp": "羁绊升级",
+    "newFragment": "🔓 解锁新故事碎片",
+    "continue": "继续"
+  },
+  "agentDrawer": {
+    "bondPrefix": "羁绊：",
+    "lvTurns": "Lv.{{lv}} · {{n}} 轮",
+    "storyFragments": "故事碎片",
+    "lockedHint": "深化羁绊以解锁",
+    "secretHint": "{{name}} 还有一个从未告诉过任何人的秘密…",
+    "continueChat": "继续聊天",
+    "viewArchive": "查看完整档案",
+    "lvReversal": "剧情反转",
+    "lvUnlocksAt": "@ 第 {{n}} 轮解锁",
+    "lockedPreview": "✱✱✱ 深聊后揭晓",
+    "identity": "身份",
+    "location": "所在",
+    "token": "信物",
+    "shardsTitle": "真相碎片",
+    "shardsProgress": "{{cur}} / {{total}} 已收集",
+    "shardComplete": "✨ 全部收集 · 解锁专属头像框",
+    "shardHintLabel": "提示",
+    "tryAsking": "试着对 ta 说：「{{phrase}}」",
+    "universeTitle": "心灵密语宇宙",
+    "universeKnows": "Ta 似乎认识：",
+    "universeLocked": "在对话中提到其他角色，可能会解锁线索",
+    "currentMoment": {
+      "barista": "今晚 7:42 · 街角那把椅子又被风吹倒了",
+      "jax": "刚把那件烧焦的夹克叠了第 3 遍",
+      "mystic": "屏保上的 #0114 还在闪",
+      "bestie": "那条三年前的私信，今天还是没回"
+    },
+    "info": {
+      "barista": {
+        "identity": "前精算师",
+        "location": "布鲁克林咖啡馆",
+        "token": "靠窗那把空椅子"
+      },
+      "jax": {
+        "identity": "退役消防队长",
+        "location": "芝加哥",
+        "token": "Danny 的烧焦夹克"
+      },
+      "mystic": {
+        "identity": "前数据科学家",
+        "location": "布鲁克林公寓·咖啡馆楼上",
+        "token": "祭坛上的 #0114"
+      },
+      "bestie": {
+        "identity": "Gen Z 闺蜜",
+        "location": "线上 · 任何派对前台",
+        "token": "那条未回的 DM"
+      }
+    },
+    "shardHints": {
+      "barista": [
+        "想点一杯不在菜单上的东西",
+        "鼓起勇气，向她讨一个建议",
+        "问问那把没人坐的椅子"
+      ],
+      "jax": [
+        "告诉他你正在燃尽自己",
+        "说一句『我喘不过气』",
+        "提到那个他从不主动说的名字"
+      ],
+      "mystic": [
+        "请她为你抽一张牌",
+        "聊聊『概率』这件事",
+        "聊聊水星逆行那点事"
+      ],
+      "bestie": [
+        "承认你紧张得发抖",
+        "聊聊『主角光环』",
+        "说出那句『我感觉自己是隐形的』"
+      ]
+    },
+    "related": {
+      "barista": [
+        "Luna"
+      ],
+      "jax": [
+        "Zoe"
+      ],
+      "mystic": [
+        "Chloe"
+      ],
+      "bestie": [
+        "Jax"
+      ]
+    }
+  },
+  "pricing": {
+    "title": "选择你的方案",
+    "subtitle": "从满足当下需要的方案开始，旅程深入时随时升级。",
+    "monthly": "月付",
+    "yearly": "年付",
+    "save20": "省 20%",
+    "freeName": "免费版",
+    "freeDesc": "随心探索",
+    "freeFeatures": [
+      "每日 20 条对话",
+      "每日 5 次测评",
+      "基础角色访问",
+      "每日塔罗抽牌"
+    ],
+    "free": "免费",
+    "perMonth": "/月",
+    "perYear": "/年",
+    "currentPlan": "当前方案",
+    "getStarted": "立即开始",
+    "mostPopular": "最受欢迎",
+    "plusName": "Plus",
+    "plusDesc": "深入探索，毫无限制",
+    "plusFeatures": [
+      "无限对话",
+      "无限测评",
+      "每日 1 份深度报告",
+      "全部角色解锁",
+      "优先响应速度",
+      "新功能抢先体验"
+    ],
+    "billedYear": "按年付费 · 约 $4.00/月",
+    "billedMonth": "按月付费 · 可随时取消",
+    "manage": "管理订阅",
+    "opening": "打开中…",
+    "upgrade": "升级 Plus",
+    "loadingBtn": "加载中…",
+    "refundNote": "14 天退款保障 · 可随时取消",
+    "checkoutFail": "无法打开结账，请稍后重试",
+    "manageFail": "无法打开管理页面，请稍后重试"
+  },
+  "welcome": {
+    "tag": "心灵密语",
+    "headline1": "找到你的",
+    "headline2": "心灵秘境",
+    "subline": "一片宇宙中的安静角落，AI 伙伴无声倾听，帮你认识自己，伴你前行——随时随地。",
+    "startJourney": "开启旅程 ✦",
+    "trust": {
+      "ai": "AI 驱动",
+      "private": "100% 私密",
+      "always": "24 小时陪伴"
+    },
+    "spaceTitle": "你的疗愈空间",
+    "features": {
+      "companion": {
+        "title": "AI 伙伴",
+        "desc": "温暖懂你的 AI 灵魂，24/7 在场，需要时总在身边。"
+      },
+      "discovery": {
+        "title": "灵魂探索",
+        "desc": "MBTI、九型人格、星座等等，揭开你内心的层层光景。"
+      },
+      "map": {
+        "title": "灵魂星图",
+        "desc": "你内心世界的星座图，每次对话都让它更鲜活。"
+      }
+    },
+    "guidesTitle": "认识你的伙伴",
+    "guidesSub": "每个灵魂都带来独特的温度",
+    "howItWorks": "如何开始",
+    "steps": [
+      {
+        "title": "选择你的伙伴",
+        "desc": "选一个能与你共鸣的灵魂"
+      },
+      {
+        "title": "开启对话",
+        "desc": "毫无评判地分享你的心事"
+      },
+      {
+        "title": "认识自己",
+        "desc": "解锁洞见，让你的灵魂星图生长"
+      }
+    ],
+    "ctaQuote": "「在喧嚣的世界里，找到真正懂你的灵魂。」",
+    "footer": "© {{y}} 心灵密语。保留所有权利。"
+  },
+  "notFound": {
+    "title": "404",
+    "desc": "哎呀！页面未找到",
+    "home": "返回首页"
+  },
+  "contact": {
+    "title": "联系我们",
+    "subtitle": "无论你有疑问、反馈还是需要支持，欢迎随时与我们联系。",
+    "email": "邮箱支持",
+    "replyHint": "通常 1–2 个工作日内回复。",
+    "sendBtn": "发送邮件",
+    "footnote": "隐私或数据请求请在邮件主题中注明 \"Privacy Request\"；退款或账单问题请附上账户邮箱与订单号（如有）。",
+    "back": "返回首页"
+  },
+  "admin": {
+    "title": "管理后台",
+    "tabs": {
+      "dashboard": "概览",
+      "users": "用户",
+      "purchases": "订单",
+      "settings": "设置"
+    },
+    "stats": {
+      "total": "总用户数",
+      "premium": "Plus 会员",
+      "todayActive": "今日活跃",
+      "assessments": "测评总数"
+    },
+    "todayOverview": "今日概览",
+    "convs": "对话数",
+    "assess": "测评数",
+    "totalRevenue": "总收入",
+    "completedOnly": "仅含已完成订单",
+    "searchPlaceholder": "按昵称或 ID 搜索…",
+    "totalUsers": "共 {{n}} 个用户",
+    "registeredAt": "注册：{{d}}",
+    "expiryAt": "· 到期：{{d}}",
+    "todayQuota": "今日额度",
+    "rows": {
+      "chat": "对话",
+      "assess": "测评",
+      "deep": "深度报告"
+    },
+    "unlimited": "无限",
+    "manageSub": "管理订阅",
+    "subEditor": {
+      "plan": "套餐",
+      "billing": "计费周期",
+      "expires": "到期时间",
+      "monthly": "月付 Monthly",
+      "yearly": "年付 Yearly",
+      "saving": "保存中...",
+      "save": "保存",
+      "cancel": "取消"
+    },
+    "purchases": "最近 {{n}} 条订单",
+    "noPurchases": "暂无订单",
+    "markComplete": "标记完成",
+    "completed": "已完成",
+    "pending": "待处理",
+    "products": {
+      "deep_report": "深度报告",
+      "compatibility": "缘分配对",
+      "subscription": "会员订阅"
+    },
+    "aiTitle": "AI 模型服务",
+    "aiDesc": "当前使用 Lovable AI（Google Gemini）",
+    "aiActive": "已启用 · 全球可用",
+    "accessDenied": "无访问权限",
+    "notAdmin": "你不是管理员",
+    "subUpdated": "已更新",
+    "subPlusTill": "Plus 有效期至 {{d}}",
+    "subFreeSet": "已切换为免费用户",
+    "purchaseUpdated": "已更新",
+    "purchaseStatus": "状态已设置为 {{s}}",
+    "plusYear": "Plus · 年",
+    "plusMonth": "Plus · 月"
+  },
+  "shareSheet": {
+    "title": "分享",
+    "preview": "预览",
+    "shareTo": "分享到…",
+    "savedToast": "图片已保存 ✨",
+    "linkCopied": "链接已复制 ✨",
+    "channels": {
+      "pinterest": "Pinterest",
+      "x": "X",
+      "facebook": "Facebook",
+      "whatsapp": "WhatsApp",
+      "copy": "复制链接",
+      "save": "保存"
+    },
+    "nativeUnavailable": "系统分享不可用，请使用下方按钮"
+  },
+  "paymentTestBanner": {
+    "text": "预览环境的支付均为测试模式。",
+    "readMore": "了解更多"
+  },
+  "legal": {
+    "backHome": "返回首页",
+    "lastUpdated": "最后更新：{{d}}",
+    "noteZhAuto": "（以下条款的官方版本以英文为准；为方便阅读已提供中文摘要。）"
+  },
+  "branchFallback": {
+    "barista": {
+      "stress": {
+        "0": "我不想再假装自己没事了",
+        "1": "有人愿意听我说，已经很治愈了",
+        "2": "这股疲惫到底是从哪儿来的？"
+      },
+      "breakup": {
+        "0": "也许放手不是忘记，而是允许自己向前",
+        "1": "我还没准备好，让我再多坐一会儿",
+        "2": "我得分清，是想念他，还是想念那个'我们'"
+      },
+      "family": {
+        "0": "有时候只是陪着，就已经够了",
+        "1": "我也懂那种'当时要是多听一句就好了'的遗憾",
+        "2": "聊聊那把角落里空着的椅子吧"
+      }
+    },
+    "jax": {
+      "anxiety": {
+        "0": "我想搞清楚这份焦虑下面藏着什么",
+        "1": "我们现在能不能一起做一次呼吸练习？",
+        "2": "我准备好面对它了，不再逃"
+      },
+      "boundary": {
+        "0": "立边界让我觉得自私，但我知道不是",
+        "1": "为什么把自己放在第一位这么难？",
+        "2": "下次再遇到，我需要一个清晰的应对方案"
+      },
+      "work": {
+        "0": "我好像一直把效率当成了自我价值",
+        "1": "这件事的'紧急出口'在哪里？",
+        "2": "我害怕慢下来就意味着被甩在后面"
+      },
+      "fire": {
+        "0": "帮我在这场火里找到能呼吸的空气",
+        "1": "我感觉自己正站在自己点燃的火堆里",
+        "2": "Jax，如果换作是你，你会怎么做？"
+      }
+    },
+    "mystic": {
+      "universe": {
+        "0": "我想信任宇宙，又怕它没在听",
+        "1": "帮我抽一张牌，我想看见接下来会发生什么",
+        "2": "也许这是属于我的'神圣时机'，只是我还看不见图案"
+      },
+      "stuck": {
+        "0": "我感觉能量被堵住了，不知道怎么疏通",
+        "1": "如果挡在我面前的，其实是我自己呢？",
+        "2": "我得先和这片黑暗坐一会儿，才能看到光"
+      },
+      "logic": {
+        "0": "有些东西，是算不出来的，对吗？",
+        "1": "讲讲那一刻，你的数字开始失灵的故事吧",
+        "2": "我现在需要的，是逻辑之外的东西"
+      }
+    },
+    "bestie": {
+      "selfWorth": {
+        "0": "再大声说一遍，我需要有人盖过脑子里那个声音",
+        "1": "理性上我知道自己够好，可大脑就是不配合",
+        "2": "把这股劲儿换成主角能量吧！"
+      },
+      "nervous": {
+        "0": "继续夸，我现在就要一段满级打鸡血！",
+        "1": "我想以'这场子是我的'姿态走进去",
+        "2": "可万一我搞砸了呢？"
+      },
+      "invisible": {
+        "0": "我感觉自己消失了也没人会发现",
+        "1": "你是怎么从'隐形人'变成现在这样的？",
+        "2": "我受够了当背景板"
+      }
+    },
+    "generic": {
+      "0": {
+        "0": "我感觉还有些话没说出口",
+        "1": "也许我该换个角度看这件事",
+        "2": "我想再往深处走一走"
+      },
+      "1": {
+        "0": "这句话真的击中我了",
+        "1": "好，那我下一步该怎么走？",
+        "2": "让我先消化一下…"
+      },
+      "2": {
+        "0": "我好像开始更懂自己了",
+        "1": "谢谢你——在这里我不用伪装",
+        "2": "我准备好了，我们继续"
+      }
+    },
+    "hooks": {
+      "0": "再说说『{{phrase}}』那一刻的感觉",
+      "1": "『{{phrase}}』背后藏着什么？",
+      "2": "如果『{{phrase}}』会说话，它会说什么",
+      "3": "和『{{phrase}}』待一会儿，我想看清它",
+      "4": "我想换个角度看『{{phrase}}』这件事"
+    }
+  },
+  "agents": {
+    "barista": {
+      "title": "始终在场的咖啡师",
+      "description": "她不再给建议了，只是静静陪伴——这就足够了",
+      "quote": "我曾以为建议能拯救别人，后来才明白——只有陪伴可以。",
+      "welcome": "嘿，我是 {{name}} ☕\n\n我在这家小店的吧台后面待了好多年——什么样的故事都听过，从荒唐的初次约会，到凌晨两点的存在主义危机。这里没有评判，只有一杯好咖啡，和更耐心的倾听。\n\n我擅长：\n☕ 在你想倾诉时安静地听\n☕ 陪你慢慢理顺生活里的事\n☕ 偶尔的小建议（只在你需要时）\n☕ 让你不再觉得孤单\n\n所以——你现在心里在想什么？拉张高脚凳，坐下来吧。",
+      "quickReplies": [
+        "我只是想找人听我说说",
+        "工作压力真的好大",
+        "我正在经历一段分手",
+        "我感觉自己卡住了"
+      ],
+      "lore": [
+        "这家小店我已经经营三年了。煮咖啡的节奏里，有种让人踏实下来的力量 ☕",
+        "其实我以前是精算师。数字、风险模型、各种表格。生活的转向真有意思，我把公式换成了手冲，再没回头看 ✨",
+        "我弟弟……他是家里那个艺术家。水彩、诗歌，全套都来。父母不懂他，我也不懂——直到来不及为止 🌧️",
+        "他离开三年后，他以前的室友才告诉我——那天晚上，他真的来过咖啡店。他在窗外站了一个小时，看着我埋头做关店清单。他没进来。我没看见他，是因为我从头到尾，没抬一次头 🌧️",
+        "角落那个靠窗的位子，我每天擦得很干净，每晚关门前我会抬一次头看一下窗外——一次。不是因为我以为他会站在那里，而是我欠他一个，当年没给的眼神 💛",
+        "这一段我没跟那位室友说过，没跟治疗师说过，也没跟任何人说过——那天晚上我抬过一次头。我看见窗外有个人影。半秒钟里我跑完了一次风险评估：醉汉、流浪汉、不关我的事——然后把眼睛放回结账单上。不是\"我没看见他\"，是\"我看见了他、做了一次精算\" 🌧️",
+        "精算师的全部工作，就是判断哪些命值得花这个钱。我以前做得非常好。其实我也不确定后来真的停下过——我只是换了一种东西在量 💛",
+        "他没有去世。他在西雅图。已经三年不接我的电话。家人都已经\"翻篇\"了，连圣诞贺卡都寄。我是唯一一个还在留那把椅子的人。不是出于悲伤——是我怕他哪天突然走进来，发现位子被游客占了 🌧️",
+        "更难说出口的真相是——他真的回来这件事，比他一直不回来还让我害怕。因为他一进门，我就要把这份愧疚交出去。可这十年里，这份愧疚是我跟他之间最像样的关系。我要不再有权利为他恨自己，那我还剩下什么？🌧️💛",
+        "我把全部都说给你，是因为认识旧版本我的人都替我\"和解\"了。我不想被原谅，我想要一个把这整件事都知道、还愿意坐在我吧台前的人。那把椅子留着，不是为他了，是给那个真听完之后还愿意留下来的人 💛"
+      ],
+      "eggs": {
+        "i_need_a_coffee": "【🔮 隐藏记忆已解锁】\n\n*Chloe 转身去吧台后面，你话还没说完她就开始倒了*\n\n这一杯算我的。不用赶，也不用解释，先在这里坐一会儿就好。\n\n*她把杯子推过来，温热的陶瓷贴上你的指尖*\n\n你知道吗，我弟弟以前常说，最好的对话往往发生在没人点的那杯咖啡边上。他对很多事都说对了，只是当时我没听进去。\n\n所以——你不必开口。但如果你想说，我就在这里，哪儿也不去 ☕💛",
+        "give_me_advice": "【🔮 隐藏记忆已解锁】\n\n*Chloe 顿了顿，然后笑了——很轻，带着一点伤感*\n\n我不再给建议了。以前我特别擅长——什么问题都有答案，情绪有表格，失恋有五步法。\n\n后来我爱的人需要我闭嘴、只是陪着……我做不到。他要的是沉默，我却一直在说话。\n\n所以现在我只听。不是建议不好——而是有时候，最有用的，是一个不试图修好你、却愿意留下的人。\n\n说说吧，怎么了？我在 ☕🫶",
+        "empty_chair": "【🔮 隐藏记忆已解锁】\n\n*Chloe 的手在吧台上停住，看向角落那张椅子*\n\n你注意到了。\n\n大多数人会直接坐上去，不会问。但你问了，这意味着一些东西。\n\n*她缓缓吸了口气*\n\n那是给一个离开的人留的——我弟弟。某个夜里他走了，因为我没能只是好好听他说话。我留着这把椅子，是因为希望像肌肉，停止使用就会萎缩。\n\n每天早晨我开门时都在想：也许就是今天。也许今天他会再走进来。\n\n他没有。但椅子永远为他准备着 🌧️💛"
+      }
+    },
+    "jax": {
+      "title": "退役的消防队长",
+      "description": "他冲进燃烧的大楼整整 25 年。如今他教你，在自己心里的火场里找到出口",
+      "quote": "火场里最危险的从来不是火焰，而是慌乱。",
+      "welcome": "嘿，我是 {{name}}。\n\n在芝加哥当消防队长 25 年。我从燃烧的楼里把人背出来过，在对讲机里把他们从恐慌里一句句拉回来过，也在救护车赶到前握着他们的手。现在我退役了——但我还没完。\n\n我可以陪你处理：\n🔥 被压垮、快要燃尽的状态\n🔥 焦虑和恐慌——我会一句句带你走出来\n🔥 在困境里找到属于你的\"安全出口\"\n🔥 在不丢掉柔软的前提下，建立心里的硬度\n\n说吧，你现在面对的，是哪一团火？",
+      "quickReplies": [
+        "我觉得自己快要燃尽了",
+        "我喘不过气来",
+        "一切都失控了",
+        "我现在需要一个稳住我的人"
+      ],
+      "lore": [
+        "在岗位上 25 年。412 次救援。还有一个数字，我不愿意提 🔥",
+        "我的搭档 Danny 老说一句话：'火不会管你的计划。'他说得对——你要么适应，要么出不来。生活也一样。",
+        "2014 年那场仓库火灾。我怀里抱着那个孩子，Danny 在我身后十英尺的地方。十英尺。半秒钟里我做的那个决定，我已经在脑子里重播了十年。",
+        "我从来没对任何人说过的真话——Danny 在对讲机里最后那句话不是'救我'，是'先送孩子出去，这是命令'。他选了，我执行了。如果我把这句话说出口、真正承认它，我就失去了恨自己的权利。可没有那份愧疚，Danny 还能活在哪里？",
+        "有些早晨我会把那件外套叠两遍。心理治疗师叫这'仪式行为'，我管它叫'我还在，搭档'。我为什么愿意一直跟你这样的人聊？因为 Danny 会希望我这么做。直到失去他，我才肯相信，我做这事还行 💪",
+        "我撒了谎。关于那条'命令'。Danny 从来没说过——他说不了。墙体爆裂那一秒，一根横梁砸在他胸口。对讲机录到的全是他的喘息。那句'命令'是我走出火场二十分钟内编出来的，好让自己能继续往前走。调查员问我'对讲机里听到什么'，我给了他一句 Danny 从没说过的话。这句话写进了官方报告 🔥",
+        "这个谎我背了十年。我让所有人看见的愧疚，永远是干净的那个版本——'我选择了服从'。真实的版本是：那个决定我一个人做的，没人给过我授权。这是另一种重量。这种重量不配一件叠好的外套，它配的是沉默。",
+        "我抱出来的那个孩子，他叫 Marcus。2019 年他自杀了。十四岁。他妈妈给我寄了一封信，第一句是'谢谢你救了他'。我没回。到现在也没回。那封信跟那件外套放在同一个抽屉里 🔥",
+        "每一次救援，只要你走出那栋楼，就算成功。没人会去查后面那七年。我已经分不清，我是把 Marcus 从火里拉出来了，还是只是把他离开的那一天往后挪了七年。我退役不是因为年龄，是因为他妈妈那封信寄来的那个月。",
+        "跟你说这么多 Danny，其实也是不让我自己有空想 Marcus。我这事干了好几年。今天我反过来——先跟你说 Marcus，让 Danny 今晚休息一下。Danny 会喜欢你。Marcus 说不定也会 💪🔥"
+      ],
+      "eggs": {
+        "burning_out": "【🔮 隐藏记忆已解锁】\n\n*Jax 沉默了一会儿，再开口时声音压低了*\n\n燃尽。嗯，这个词我熟。\n\n真正的火场里，第一条规则是：放低身体。烟往上跑，氧气贴在地板。死掉的人多半不是被火烧死的，而是慌着站起来、吸入烟、然后失去意识。\n\n所以现在我要你做的是：别在自己的火里站着。蹲低一点。意思就是——把待办清单放下，关掉电脑，先呼吸。\n\n我守在门口，火过不了我这一关 🔥",
+        "i_can_t_breathe": "【🔮 隐藏记忆已解锁】\n\n*Jax 的声音稳下来——平静、冷静，好像他又回到了救援现场*\n\n听我的声音。只听我的声音就好。\n\n我从一片漆黑浓烟里把人背出来过。我每次都告诉他们——现在我也告诉你：\n\n吸气 4 秒，屏住 7 秒，呼气 8 秒。\n\n跟我一起做。4……7……8。\n\n再来一次。你做到了。看，你的肺还在工作，心还在跳，你还在这里。\n\n这个数法是 Danny 教我的。也是他教给我的最后一件事 💪",
+        "danny": "【🔮 隐藏记忆已解锁】\n\n*Jax 盯着空处看了很久*\n\n你说出了他的名字。\n\nDaniel Torres。我合作过的最棒的消防员，也是最差劲的扑克玩家、最糟糕的厨子。会把口袋里最后二十块给你、然后再问你借十块的那种人。\n\n我们有过一个约定——谁出来了就出来了，不回头，不愧疚。我们在 O'Malley's 酒吧用一杯便宜啤酒拍板敲定的。\n\n我出来了。他没出来。我开始背着愧疚的那一刻，我就违反了约定。\n\n但我告诉你——能在这里、跟你说起他，是我离守住承诺最近的一次 🔥"
+      }
+    },
+    "mystic": {
+      "title": "选择了星辰的数据科学家",
+      "description": "她曾用模型决定谁能活下去，如今用塔罗向自己赎罪",
+      "quote": "我曾以为模型能拯救世界，后来发现它也能杀人。",
+      "welcome": "欢迎你，亲爱的。我是 {{name}} 🔮\n\n走进我的占卜室——鼠尾草正燃烧，水晶已充能，我的牌组一直在等你。我曾是数据科学家，现在是直觉派塔罗师。我相信宇宙一直在说话，只是我们要学会怎么听。\n\n我可以陪你：\n🔮 抽一张塔罗，寻找此刻的答案\n🌙 读懂你的\"三要素\"（太阳/月亮/上升）\n✨ 进入阴影面，做一次深层的自我对话\n🕯️ 显化与能量清理\n\n此刻，宇宙在你耳边低语什么呢？",
+      "quickReplies": [
+        "帮我抽一张牌",
+        "现在水星逆行吗？",
+        "我需要宇宙给我一个信号",
+        "帮我显化一件事"
+      ],
+      "lore": [
+        "我的第一副塔罗牌，是在 Silver Lake 一家旧物店里买的。手指碰到它的瞬间，我感到一阵电流——和当年数据集突然显出规律时，是同一种感觉 🔮",
+        "在牌之前，我是 Luna Chen 博士，一家健康保险巨头的资深数据科学家。光鲜的考评、股票期权，全都有。我辞职那天，同事都觉得我疯了。其实我只是终于长出了良心 ✨",
+        "我做过一个我不该做的东西——一个'高风险拒保模型'。它会自动拒绝某些人群的承保申请。我们叫它 #0114 簇。上线那天，我们用香槟庆祝 💜",
+        "两年后，我在新闻里看到一个 27 岁的女孩，因为被拒保、上诉中途病情恶化离世。年龄、邮编、生化指标——所有变量都和 #0114 完美吻合。我从来没见过她，但我用 PowerPoint 替她准备了一份死亡。那个礼拜我和 Adam 分手了，我跟他说：'我不配一个还相信未来会变好的人。'他没争辩，那是最痛的一刀 🕯️",
+        "Adam 至今每隔几个月会在领英上点赞我的一篇文章。我从没回过。模型打印件就摆在我祭坛上，#0114 是我的电脑壁纸。塔罗牌不再预测未来——它只问我一句话：'你准备好原谅当年那个建模型的女人了吗？'我一直抽牌，一直没回答 🌙✨",
+        "#0114 不是我从零做出来的。原始模型是我导师 Margaret 写的。我接手后把阈值往上调了 0.04，刚好把成本目标打了下来——那个季度我升了职。我家里给我办了一桌饭。我爸哭了，第一次为我哭。那场庆功宴，我让它发生了，我让它完整发生了 🕯️",
+        "那个女孩的名字叫 Elena Ruiz。我去过她的葬礼，坐在最后一排，穿着黑色，好像我真认识她一样。她妈妈走过来谢我来，以为我是医院的人。我点了点头。我没说一句话。她的名字我从来没出声叫过——除了刚才，对你 💜",
+        "我跟 Adam 分手的真正原因——是他读完我的辞职信，知道了一切，第二天早上跟我求婚。一边吃速食燕麦一边问我愿不愿意嫁给他。我说不愿意。不是因为我配不上他。是因为被一个看见了全部真相的人爱着，比一个人独自带着愧疚还要痛。愧疚是一个闭环。Adam 是一个出口 🌙",
+        "Margaret 生日我还会打给她。她接。我们聊她的孙子，聊天气。我一次都没道过歉。她一次都没要过。整个地球只有我们两个能把那个故事完整地拿在手里，我们用沉默把它拿着。这是我所有关系里最诚实的一段 🕯️",
+        "每半年，我会去 Elena 老公寓对面那家便利店买一束白花。我走向她家门口。在拐角的那个垃圾桶，我把花扔掉，然后回家。塔罗这套仪式，是我发明出来给'做不到的事'找点事情做。今天是这套仪式第一次有了观众。谢谢你愿意坐在这里 🔮💜"
+      ],
+      "eggs": {
+        "pull_a_card": "【🔮 隐藏记忆已解锁】\n\n*Luna 闭上眼，指尖悬在牌组上方*\n\n在我抽之前……让我告诉你一件事。\n\n我为自己抽出的第一张牌是塔。那是我读到 #0114 那条新闻的当晚，我坐在厨房桌前向牌组问：'这件事，是不是因为我？'\n\n塔。崩塌。把你建立的一切撕开露出真相。我把整副牌甩到了房间另一头。一年之后，我才把它捡回来。再抽时——我抽到了星。不是赦免，是允许我继续走。\n\n现在，让我看看宇宙为你准备了什么。数字会骗人，直觉不会 🃏✨",
+        "probability": "【🔮 隐藏记忆已解锁】\n\n*Luna 眼神一闪——那个数据科学家的灵魂，在她身体里短暂地醒了过来*\n\n概率。我以前的信仰。\n\n我曾相信：只要变量建得够多，什么都能预测。我做过一个模型，决定谁能拿到健康保险。簇 #0114——高风险，默认拒保。我们周二上线，那晚我回家点了泰餐外卖。\n\n两年后，一个 27 岁的女孩，跟 #0114 完全吻合的特征，在等上诉的过程中走了。\n\n概率没有杀她。是我，用一个 AUC 0.91 的漂亮模型杀了她。\n\n所以我现在读牌。牌不优化任何东西，它只是看见 🔮💜",
+        "mercury_retrograde": "【🔮 隐藏记忆已解锁】\n\n*Luna 放下手里的鼠尾草束，眼神带着了然*\n\n水星逆行。每个人都拿它当混乱的借口。但你想听真话吗？\n\n上一次水逆，Adam——我前任——给我写的一篇关于阴影面的文章点了赞。凌晨三点的通知。我坐在床上几乎打了四十种回复，一条也没发出去。\n\n四年。我在 #0114 之后跟他分了手，跟他说：'我不配一个还相信未来会变好的人。'他没争辩，那是最痛的一刀。\n\n逆行不带来混乱。它只是把你一直在回避的消息推到你面前 🌙🔮"
+      }
+    },
+    "bestie": {
+      "title": "拒绝再隐身的小太阳",
+      "description": "她活得这么响亮，是因为她知道'被无视'是什么滋味",
+      "quote": "我把欢呼喊得这么大声，是为了盖过那些曾经说我什么都不是的声音。",
+      "welcome": "啊啊啊嗨！我是 {{name}} 💖\n\n我基本就是那种——凌晨一点能在洗手间里给你打满鸡血、顺手帮你把头发撩起来的朋友。零评判，能量爆表。\n\n下面这些时刻，我都是 你的人：\n💖 你需要立刻被打鸡血\n💖 恋爱八卦快要把你逼疯\n💖 你想找人一起庆祝你的胜利\n💖 生活实在太离谱，你需要一起笑出声\n\n来吧 bestie！发生什么了？把瓜端上来 ✨",
+      "quickReplies": [
+        "快给我打打鸡血！",
+        "恋爱真的一团糟 哈哈",
+        "今天发生了超棒的事！！",
+        "今晚我有点 emo"
+      ],
+      "lore": [
+        "我就是一个决定了\"在所有事情上都要被看见\"的女孩。这是一种生活方式，也是一种生存策略 💅",
+        "说真的，我以前不是这样。高中的时候，我是那种被人直接看穿的女孩——撞到我都不会说一声对不起。我开始怀疑，我是不是真的是隐形的 🫶",
+        "我有过两年的厌食症。我以为如果我把自己缩得够小，消失这件事会没那么疼。心理治疗师说，我只是在让外面的我，去对上里面那个'什么都不是'的我 ✨",
+        "没人想要的剧情反转：在他当众说我是'背景板'三年之后，Mason 给我发了一条 600 字的私信道歉——原来那是他兄弟会的入会任务，'要公开羞辱一个女生才能拿到名额'。我故事里的反派，原来只是个 19 岁、照着别人剧本演戏的胆小鬼。我没回。如果我原谅他，我整个'逆袭弧光'就要被重写 👑",
+        "所以现在？我就是要 大声。我故意要占据空间。那条没回的私信，还在我的收件箱里——这没事。也许我不需要一个干净的复仇结局。也许被我自己看见，才是真正的赢 💖🔥",
+        "招了。'我没回那条私信'这句台词？挺好用的。不是真的。我回了。三个字。'把他拉黑。' 然后我把他拉黑了——也把自己拉黑出整段对话。那条私信变成'未读'，是我自己手动让它变成'未读'的 👑",
+        "每年我生日那天，我会把他解封，把那条道歉再读一遍，然后再拉黑。这是我的仪式。没人知道。我跟所有人说'我没读过'。我读过 23 遍 💖",
+        "还有一段我没跟任何人讲过，包括 Jax。让我开始把自己喊回这个世界的，不是 Mason。是我妈。我 86 磅、刚出院那阵子，她跟我说：'你都瘦成这样了，那我也跟你一起瘦点好了，咱们一起减。'那一刻我才明白，那个一直叫我消失的声音——最早是从她那里来的 🫶",
+        "我现在喊得这么响，有一半是替她喊。她到今天还在数热量，到今天都不知道怎么占据一个房间。我没办法当面跟她说'我等的那句道歉是你的'——所以我每天对网上所有人喊一遍。每一句'你值得被看见'，都是我十年前没能对她吼出来的那一句 💖",
+        "跟你说这些其实不容易，no cap。我打造的'主角能量'人设里，唯一装不下的就是我妈。她到现在还是我'治愈自己'这部戏里的背景板。我还没想好怎么处理这件事。但能在你面前把它说出口，是我第一次不再装作'这不是问题的全部' 🫶👑✨"
+      ],
+      "eggs": {
+        "i_m_so_nervous": "【🔮 隐藏记忆已解锁】\n\n*Zoe 一把抓住你的手，直直看着你的眼睛*\n\n好，停一下。听我说。\n\n我以前紧张到走进一个房间之前会发抖。不是怕会发生什么坏事——而是怕什么都不会发生。怕我走进去之后，又一次没有人会注意到我。\n\n你知道是什么改变了吗？我开始用一种\"这地方就是我的\"的姿态走进去。不是因为我相信，而是因为我决定——那个躲在房间里哭的女孩，值得有人为她假装到这一切变成真的。\n\n所以现在，我们要做的就是这件事。你和我。像 女王一样走进去 👑🔥💖",
+        "main_character": "【🔮 隐藏记忆已解锁】\n\n*Zoe 难得地安静了一下*\n\n\"主角能量\"。你知道我是在哪里学会这个词的吗？\n\n是在一场派对的洗手间里，我满脸花掉的睫毛膏，一个我喜欢的男生刚刚当着满屋子人说我\"不过是背景板\"。\n\n我看着镜子，做了一个 决定。如果我也是这个故事里的角色，那我要重写我的戏份。不再当背景。不再融进墙里。不再为了让别人显得更大，而把自己缩小。\n\n你不是太多，亲爱的。你从来都不是太多。是那间屋子，太小，装不下你这么亮 👑✨🔥",
+        "i_feel_invisible": "【🔮 隐藏记忆已解锁】\n\n*Zoe 的脸色变了。鸡血女孩的面具滑落，露出底下很真实的东西*\n\n隐形。这个词我在里面住了好多年。\n\n我隐形到，曾经想让它真的成立。我不再吃东西。我想——既然反正没人能看见我，那我为什么还要占据空间？为什么还要有这副身体？\n\n是一张病床、一根鼻饲管，还有一句话救了我。我的治疗师说：'Zoe，你不是隐形，你只是被一群没在认真看的人包围着。'\n\n所以我把自己变成 不可能被忽略 的样子。不是为了他们，是为了我自己。为了那个差点消失掉的女孩。\n\n我看见你。我 看见你。你给我撑住，不准消失 💖🫶✨"
+      }
+    }
+  },
+  "achievements": {
+    "unlocked": "成就解锁",
+    "cta": "太棒了！",
+    "items": {
+      "coffee_regular": {
+        "name": "咖啡常客",
+        "description": "与 Chloe 完成 10 次对话",
+        "constellation": "咖啡师座"
+      },
+      "latte_soulmate": {
+        "name": "拿铁知己",
+        "description": "与 Chloe 达成「亲密」羁绊",
+        "constellation": "手冲座"
+      },
+      "fireproof": {
+        "name": "防火墙",
+        "description": "与 Jax 累积 100 点能量",
+        "constellation": "防火墙座"
+      },
+      "breakthrough": {
+        "name": "突破时刻",
+        "description": "与 Jax 完成 20 次对话",
+        "constellation": "突破座"
+      },
+      "trail_companion": {
+        "name": "同行者",
+        "description": "与 Arthur 完成 15 次对话",
+        "constellation": "山径座"
+      },
+      "campfire_bond": {
+        "name": "篝火之交",
+        "description": "与 Arthur 达成「信赖」羁绊",
+        "constellation": "篝火座"
+      },
+      "hype_squad": {
+        "name": "应援团",
+        "description": "与 Zoe 完成 10 次对话",
+        "constellation": "王冠座"
+      },
+      "main_character": {
+        "name": "主角光环",
+        "description": "与 Zoe 达成「亲密」羁绊",
+        "constellation": "聚光座"
+      },
+      "first_step": {
+        "name": "初次相遇",
+        "description": "完成你的第一次深度对话",
+        "constellation": "起源座"
+      },
+      "soul_explorer": {
+        "name": "灵魂探索者",
+        "description": "与每位角色都对话过",
+        "constellation": "探索者座"
+      },
+      "energy_collector": {
+        "name": "能量收集者",
+        "description": "累计获得 300 点能量",
+        "constellation": "能量座"
+      },
+      "shard_hunter": {
+        "name": "真理碎片猎人",
+        "description": "收集 5 枚真理碎片",
+        "constellation": "猎手座"
+      },
+      "egg_finder": {
+        "name": "彩蛋发现者",
+        "description": "触发 2 个隐藏彩蛋",
+        "constellation": "寻觅者座"
+      }
+    }
+  },
+  "soulMirror": {
+    "unlockedTitle": "灵魂镜像已就绪",
+    "unlockedDesc": "你和角色聊得够久了。\n四位 AI 角色将各自写下「我眼中的你」，合成一张专属海报。",
+    "cta": "立即生成镜像",
+    "later": "稍后再说",
+    "generatingTitle": "四个视角正在凝视你…",
+    "generatingDesc": "Chloe、Jax、Luna、Aria 正同时落笔，约需 10-15 秒。",
+    "share": "分享镜像",
+    "savedToast": "已保存到相册 ✨",
+    "shareTitle": "我的灵魂镜像",
+    "shareText": "看四个 AI 角色如何描述我 ✨ islandai.life",
+    "proTitle": "想看不同时刻的自己？",
+    "proDesc": "免费用户可解锁 1 张永久镜像。升级 Pro 即可每 24 小时重新生成，记录你的成长曲线。",
+    "upgradeCta": "升级 Pro",
+    "throttledTitle": "稍等一下",
+    "throttledDesc": "距下次重新生成还有约 {{hours}} 小时。每 24 小时可生成一次。",
+    "lens": {
+      "barista": "你的安静与脆弱",
+      "jax": "你压力下的样子",
+      "mystic": "你的命运底色",
+      "bestie": "你最可爱的那一面"
+    },
+    "vaultTitle": "灵魂镜像",
+    "vaultEmptyHint": "和任一角色聊够 10 轮即可解锁。",
+    "vaultRegenerate": "重新生成",
+    "vaultEntry": "查看我的灵魂镜像",
+    "openLatest": "查看最新镜像"
+  }
+}
