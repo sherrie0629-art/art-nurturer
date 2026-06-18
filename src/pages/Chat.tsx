@@ -31,6 +31,13 @@ import SEO from "@/components/SEO";
 import { useBond } from "@/hooks/useBond";
 import { useSubscription } from "@/hooks/useSubscription";
 import { parseGameMarkers, type BranchOption, type Atmosphere } from "@/lib/parseGameMarkers";
+import {
+  loadGuestDraft,
+  saveGuestDraft,
+  clearGuestDraft,
+  GUEST_MIGRATED_EVENT,
+  type GuestMigratedDetail,
+} from "@/lib/guestChat";
 
 import { toast } from "sonner";
 import { generateSoulFragment } from "@/hooks/useSoulFragment";
@@ -187,11 +194,56 @@ const Chat = () => {
     }
   }, [messages, isStreaming]);
 
+  // Persist guest chat to localStorage so a page refresh doesn't wipe the conversation.
+  // Only runs when the user is signed out; signed-in users go to the database instead.
+  useEffect(() => {
+    if (user) return;
+    if (isStreaming) return;
+    const persistable = messages
+      .filter((m) => m.id !== "welcome" && m.id !== "streaming" && m.kind !== "tarot-card")
+      .map((m) => ({
+        id: m.id,
+        role: m.role,
+        content: m.content,
+        createdAt: Date.now(),
+      }));
+    if (persistable.length === 0) {
+      clearGuestDraft(agentId);
+      return;
+    }
+    saveGuestDraft(agentId, persistable);
+  }, [messages, isStreaming, user, agentId]);
+
+  // When AuthContext finishes migrating guest drafts after sign-in, adopt the
+  // freshly created conversation id for this agent so subsequent messages append
+  // to the same thread instead of spawning a new one.
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<GuestMigratedDetail>).detail;
+      const newId = detail?.agentToConversation?.[agentId];
+      if (newId) {
+        setConversationId(newId);
+        clearGuestDraft(agentId);
+      }
+    };
+    window.addEventListener(GUEST_MIGRATED_EVENT, handler as EventListener);
+    return () => window.removeEventListener(GUEST_MIGRATED_EVENT, handler as EventListener);
+  }, [agentId]);
+
   const hasAssessmentContext = !!(mbtiResult || emotionResult || enneagramResult || zodiacResult || tarotResult || compatibilityResult || fortuneStickResult);
 
   useEffect(() => {
     if (!user) {
-      setMessages([{ id: "welcome", role: "assistant", content: getWelcomeMessage(agent) }]);
+      // Restore any previously saved guest draft for this agent so a refresh doesn't
+      // wipe the conversation. Fall back to the welcome bubble when nothing is saved.
+      const draft = loadGuestDraft(agentId);
+      if (draft.length > 0) {
+        setMessages(
+          draft.map((m) => ({ id: m.id, role: m.role, content: m.content })),
+        );
+      } else {
+        setMessages([{ id: "welcome", role: "assistant", content: getWelcomeMessage(agent) }]);
+      }
       setHistoryLoaded(true);
       return;
     }
@@ -335,6 +387,25 @@ const Chat = () => {
         return;
       }
 
+      // If we still have a guest draft for this agent, a migration is about to run
+      // (or just ran). Keep the in-memory messages and wait for GUEST_MIGRATED_EVENT
+      // to deliver the new conversation id, so we don't flash an empty/old thread.
+      const pendingGuest = loadGuestDraft(agentId);
+      if (pendingGuest.length > 0) {
+        const [{ memories, facts }, { data: summaries }] = await Promise.all([
+          recallFromEdge(""),
+          supabase
+            .from("conversation_summaries")
+            .select("summary, key_topics")
+            .eq("user_id", user.id)
+            .eq("agent_id", agentId)
+            .order("created_at", { ascending: false })
+            .limit(5),
+        ]);
+        setMemoryContext(formatRecall(memories, facts, summaries || []));
+        setHistoryLoaded(true);
+        return;
+      }
 
 
       const [convResult, recallResult, summariesResult] = await Promise.all([
