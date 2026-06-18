@@ -51,6 +51,8 @@ interface Perspective {
   portrait: string;
   signature: string;
   keywords: string[];
+  tier: "unmet" | "glimpse" | "known";
+  totalTurns: number;
 }
 
 function buildPrompt(
@@ -67,10 +69,21 @@ function buildPrompt(
   },
 ) {
   const lang = ctx.locale === "zh" ? "中文" : "English";
-  const fewTurns = ctx.totalTurns < 6;
-  const fallbackNote = fewTurns
-    ? `(You and ${ctx.nickname} have only talked a few times — base your reflection on the general human archetype + the small signals you've heard, and stay honest about the limited context.)`
-    : "";
+  // Tier-aware tone instructions
+  let toneNote = "";
+  let signatureNote = "";
+  if (ctx.totalTurns === 0) {
+    toneNote = ctx.locale === "zh"
+      ? `重要：你和 ${ctx.nickname} **从未真正对话过**。请用「远观初见」的口吻写——基于下面给出的 MBTI / 星座 / 跨角色 facts 写一段坦诚的第一印象，开头自然带出类似「我们还没正式说过话，但远远看你……」的语气。**绝对不要**编造你们的共同记忆、过往对话或细节。承认这是初见。`
+      : `IMPORTANT: You and ${ctx.nickname} have **never actually spoken**. Write in a "first glance from afar" voice — open with something like "We haven't really talked yet, but from a distance I see…" Base it on the MBTI / zodiac / cross-character facts below. **Do not** invent shared memories, past conversations, or specifics. Own that this is a first impression.`;
+    signatureNote = ctx.locale === "zh"
+      ? `signature 用一句带「初见」感的诗化短句。`
+      : `signature should be a poetic one-liner that feels like a first glimpse.`;
+  } else if (ctx.totalTurns < 6) {
+    toneNote = ctx.locale === "zh"
+      ? `你和 ${ctx.nickname} 只浅浅聊过几次。请用克制、留白的观察口吻，承认了解有限，不要假装很熟。`
+      : `You and ${ctx.nickname} have only had a few light exchanges. Use a restrained, spacious observational voice; do not pretend to know them deeply.`;
+  }
 
   return [
     {
@@ -78,7 +91,8 @@ function buildPrompt(
       content: `You are ${agent.displayName}. Speak in ${lang} ONLY (no mixed language). You are writing one short reflection of how YOU see the user ${ctx.nickname}.
 
 Lens: ${agent.lens}
-${fallbackNote}
+${toneNote}
+${signatureNote}
 
 Return STRICTLY a single valid JSON object — no markdown, no code fences, no commentary:
 {
@@ -291,9 +305,27 @@ serve(async (req) => {
           portrait: portrait.slice(0, 280),
           signature: signature.slice(0, 60),
           keywords: keywords.slice(0, 3),
+          tier: bond.total_turns === 0 ? "unmet" : bond.total_turns < 6 ? "glimpse" : "known",
+          totalTurns: bond.total_turns,
         } as Perspective;
       }),
     );
+
+    // Pick C-position: agent with most turns; tie-break by memory count
+    let primaryAgentId: string | null = null;
+    let primaryTurns = 0;
+    for (const p of results) {
+      const memCount = (memoriesPerAgent[p.agentId] || []).length;
+      const score = p.totalTurns * 100 + memCount;
+      const currentBest = primaryAgentId
+        ? (results.find((r) => r.agentId === primaryAgentId)!.totalTurns * 100 +
+           (memoriesPerAgent[primaryAgentId] || []).length)
+        : -1;
+      if (p.totalTurns > 0 && score > currentBest) {
+        primaryAgentId = p.agentId;
+        primaryTurns = p.totalTurns;
+      }
+    }
 
     const userSnapshot = {
       nickname,
@@ -301,6 +333,8 @@ serve(async (req) => {
       zodiac,
       locale,
       generatedAt: new Date().toISOString(),
+      primaryAgentId,
+      primaryTurns,
     };
 
     const { data: inserted, error: insertErr } = await admin
@@ -326,6 +360,7 @@ serve(async (req) => {
         createdAt: inserted.created_at,
         perspectives: results,
         userSnapshot,
+        primaryAgentId,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
