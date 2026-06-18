@@ -1,141 +1,41 @@
-# 测评内容本土化改造方案
+## 签诗卡片美化方案
 
-## 一、现状盘点
+目标：把当前略显"素"的签诗灰色卡片，做成有东方禅意、有质感的"签纸"，仅改 `src/pages/DailyFortuneStick.tsx` 中 result 区块的签诗卡部分（不动业务逻辑）。
 
-目前项目内共 6 个测评/占卜入口（前端 + 边缘函数 + i18n + 数据表）：
+### 视觉设计
 
+1. **签纸质感背景**
+   - 改为深色宣纸 / 古卷轴渐变：暗酒红 → 暗琥珀 → 暗墨色（dark mode 友好），叠加一层 noise/纸纹（CSS `radial-gradient` + `mix-blend-overlay`）。
+   - 卡片四角加细金色装饰角线（用伪元素 `::before/::after` 画 L 形金线）。
+   - 上下加一道烫金细描边 + 内嵌阴影，模拟签纸的厚度。
 
-| 模块                 | 文化背景         | 入口                        | 边缘函数                          |
-| ------------------ | ------------ | ------------------------- | ----------------------------- |
-| MBTI 性格测评          | 西方心理学        | /assessment/mbti          | assessment                    |
-| 九型人格 Enneagram     | 西方/苏菲派       | /assessment/enneagram     | assessment-enneagram          |
-| 星座运势 Zodiac        | 西方占星         | /assessment/zodiac        | assessment-zodiac             |
-| 心灵体检 Emotion       | 通用心理学        | /assessment/emotion       | assessment-emotion            |
-| 缘分配对 Compatibility | 混合（含星座/MBTI） | /assessment/compatibility | assessment-compatibility      |
-| 每日塔罗 Daily Tarot   | 西方神秘学        | /daily-tarot, Chat 内抽牌    | tarot-draw, chat-tarot-draw 等 |
+2. **签诗排版（核心）**
+   - 字体换成更具古意的衬线：使用 `font-display`（项目已有）+ fallback `"Noto Serif SC", "STKaiti", serif`，并将每句作为竖向"垂直签条"也可，但优先保留横排、字距加宽 (`tracking-[0.25em]`)、行高放松 (`leading-[2.4]`)。
+   - 每句签诗居中，逐行 `motion` 渐入（stagger 0.15s），有"墨字浮现"的感觉。
+   - 文字颜色：暖金 `#E8C77A` → `#F5E6B8` 的渐变文字（`bg-clip-text`），并加细微 `text-shadow` 模拟烫金。
 
+3. **"签诗"标签**
+   - 改为竖排印章风格：放在卡片右上角，朱红方框 + 白色"签诗"二字，模拟印泥。
+   - 左上保留小字「第 N 签 · 等级」作为副标。
 
-## 二、改造原则
+4. **装饰元素**
+   - 卡片中央顶部加一枚淡淡的"☯ / 太极 / 简化云纹" SVG 水印（opacity 0.06），增加文化氛围。
+   - 底部加一行小篆/小字落款："—— 心灵密语 · 灵签"。
 
-- **保留有普世心理学价值的**：MBTI、九型人格、心灵体检 —— 国内用户也普遍熟悉，只调整文案/场景到本土语境（职场、家庭、相亲、考公等）。
-- **替换西方神秘学体系**：塔罗 → 周易卦象；西方星座 → 中国传统命理（八字/生肖/紫微）。
-- **新增本土特色**：增加一两个具有中国文化辨识度的题目，让"算命"味更浓但保持心理学外壳。
+5. **同步轻量优化**
+   - "签头"卡片：emoji 容器加金色描边光晕，签等 badge 改为带渐变描边的"印章感"标签。
+   - "现代解签"卡片：标题前加一条短金色竖条 `before:` 装饰，与签诗卡风格呼应。
 
-## 三、最终模块矩阵（建议）
+### 技术细节
 
+- 仅改动文件：`src/pages/DailyFortuneStick.tsx`
+- 新增样式通过 Tailwind utility + 少量 inline style（渐变 / text-shadow）实现，无需改 `index.css` 或 tailwind 配置。
+- 装饰图形用内联 SVG，无新增资源文件。
+- 保留所有现有 state、动画 state、按钮逻辑、i18n 调用不变。
+- Dark / Light 模式都验证一遍颜色对比度（金字在深底、深字在浅底切换通过 `dark:` 前缀）。
 
-| 类别     | 模块                       | 处理方式  | 说明                                          |
-| ------ | ------------------------ | ----- | ------------------------------------------- |
-| 心理学测评  | MBTI 性格测评                | 保留+改写 | 10 个场景改为中国职场/家庭/社交语境（如"老板让你周末加班"）           |
-| 心理学测评  | 九型人格                     | 保留+改写 | 案例本土化（婆媳关系、同事内卷、原生家庭）                       |
-| 心理学测评  | 心灵体检（倦怠）                 | 保留+改写 | 维度文案改成"内卷指数 / 班味浓度 / 精神 emo 度 / 睡眠"         |
-| 命理/玄学  | 星座运势 → **生肖运势 + 紫微星盘**   | 替换    | 输入出生年份（生肖）+ 月份，AI 输出本周/本月运势、宜忌、幸运色/方位/数字    |
-| 命理/玄学  | 每日塔罗 → **每日一卦（周易六十四卦）**  | 替换    | 模拟"摇卦"动画（三枚铜钱六次），抽出本卦+变卦，AI 解卦              |
-| 命理/玄学  | 缘分配对 → **姻缘合盘（八字/生肖合婚）** | 替换    | 输入双方生肖+MBTI，AI 给出"天作之合 / 相生相克 / 化解建议"       |
-| 新增（可选） | **每日一签**                 | 新增    | 进入首页时可"求签"，108 签文，AI 结合用户近期对话给出解读（替代每日塔罗位置） |
+### 不做的事
 
-
-> 备注：八字（年月日时四柱）相对复杂，且需要出生时辰，国内用户接受度高但首次输入门槛大。建议**一期先用"生肖+月份"轻量化命理**，二期再考虑完整八字。
-
-## 四、各模块文案改造要点
-
-### 1. MBTI（保留，重写场景题）
-
-- 场景示例：年终聚餐被点唱、相亲对象迟到 20 分钟、家族群里被催婚、公司团建爬山。
-- "平行宇宙的你"两选项：仙侠世界 / 赛博朋克 → **修仙界的你 / 民国的你**。
-
-### 2. 九型人格（保留，重写题干）
-
-- 内核机制不变（核心恐惧/欲望/侧翼），案例改为本土：原生家庭、内卷、KPI、躺平 vs 卷。
-- 老板角色"咖啡师"已替换为新角色（云生/老王等），文案同步。
-
-### 3. 心灵体检 → 维度本土化
-
-- burnout → "**班味浓度**"
-- energy → "**元气值**"
-- boundaries → "**边界感**"
-- sleep → "**回血质量**"
-- 行动方案文案加入"周末躺平 / 公园 20 分钟 / 寺庙上香"等本土场景。
-
-### 4. 生肖紫微运势（替换星座运势）//这里不做替换。星座运势在中国大陆的年轻人里也很受欢迎。
-
-- Intro：选择生肖（12 选 1）+ 出生月份。
-- AI 输出字段保持兼容：`reading / luckyColor / luckyNumber / luckyDirection / mantra / doThis / avoidThis / ritual`。
-- 文案风格："本周三合贵人临门""忌口舌之争""宜东南方向出行"。
-- 复用现有 `assessment-zodiac` 边缘函数，仅替换 prompt 与 i18n，前端字段不动。
-
-### 5. 每日一卦（替换塔罗）
-
-- 视觉：三枚铜钱抛掷 6 次动画（替代洗牌），生成本卦+变卦。
-- 数据：内置 64 卦元数据（卦名/卦辞/象辞/通俗解），文件 `src/data/iChingHexagrams.ts` 替代 `tarotCards.ts`。
-- AI 解读：结合用户当下提问（聊天内）或当日心情（每日一卦页）给出"事业/感情/财运/健康"四象。
-- 受影响代码：
-  - `src/pages/DailyTarot.tsx` → `DailyHexagram.tsx`
-  - `src/components/TarotCardInline.tsx` → `HexagramInline.tsx`
-  - 边缘函数 `tarot-draw / tarot-draw-status / chat-tarot-draw / prefill-tarot-cards` → 对应 `hexagram-*` 系列
-  - i18n 全量替换"塔罗 → 卦象"
-  - 数据库表（如有 `tarot_draws`）需迁移或新增 `hexagram_draws`
-
-### 6. 姻缘合盘（替换缘分配对）//这里不做替换，保留现有的姻缘合盘。
-
-- 输入：双方姓名、生肖、MBTI（可选）、星座改为生肖。
-- AI 输出："姻缘指数 / 三合六合 / 相冲相害 / 化解之道 / 适合相处方式"。
-- 边缘函数 `assessment-compatibility` 复用，重写 prompt。
-
-### 7. 每日一签（新增，可选 P1）
-
-- 首页"每日塔罗"卡位 → "今日求签"。
-- 108 签内容（观音灵签风格但去宗教化），AI 二次解读。
-
-## 五、技术变更清单
-
-### 前端
-
-- 路由：`/daily-tarot` → `/daily-hexagram`；`/assessment/compatibility` 保留路径但页面重写。
-- 组件重命名：`TarotCardInline` → `HexagramInline`；新增"摇卦动画"组件。
-- 数据：新增 `src/data/iChingHexagrams.ts`（64 卦）、`src/data/zodiacAnimals.ts`（12 生肖）、可选 `src/data/fortuneSticks.ts`（108 签）。
-- i18n：`zh.json` / `en.json` 全量改写 `assessmentFlow.zodiac/compatibility`、`dailyTarot`、`home.tests`、`assessmentList`、`home.dailyTarot/Desc/chemistry` 等键。
-英文版作为"中式文化英文版"保留（拼音 + 注解，如 "I-Ching Hexagram"），便于海外用户也能体验东方文化。
-- 首页 `Index.tsx`：每日塔罗卡 → 每日一卦；MBTI/九型/星座/心灵 → MBTI/九型/**生肖**/心灵。
-
-### 后端（Supabase Edge Functions）
-
-- 新建 `hexagram-draw` / `hexagram-draw-status` / `chat-hexagram-draw` / `prefill-hexagrams`（基于现有塔罗函数复制改写）。
-- 改写 prompts：`assessment` (MBTI)、`assessment-enneagram`、`assessment-zodiac`、`assessment-emotion`、`assessment-compatibility` 内的系统提示，加入"中国文化语境""避免西方占星词汇"等约束。
-- 旧塔罗函数保留一段过渡期，再删除。
-
-### 数据库
-
-- 如存在 `tarot_draws` / `tarot_cards_cache` 等表 → 新增对应 `hexagram_*` 表；老表数据可保留只读或迁移。
-- `assessment_results` 表 type 枚举若有 `tarot/zodiac` → 新增 `hexagram/chinese_zodiac`。
-- 具体表结构在动工前用 supabase--read_query 再确认一遍。
-
-### 角色（agents）
-
-- 现有四位角色（云生/星轨/暖暖/老王）保留。
-- "星轨"原定位偏西方占星 → 文案微调为"东方命理研究者"或"占星 + 命理"双修，避免角色错位。
-
-## 六、实施分期建议
-
-```text
-P0（本期，必做）
-  - i18n 全量替换 + 首页/列表入口换名
-  - MBTI / 九型 / 心灵 题干本土化重写
-  - 星座 → 生肖运势（前端表单 + prompt 重写，复用现有函数）
-  - 缘分配对 prompt 改为生肖合婚
-
-P1（下一期）
-  - 塔罗 → 周易一卦（数据 + 动画 + 新函数 + 数据库表）
-  - 角色"星轨"定位微调
-
-P2（远期可选）
-  - 完整八字四柱命盘
-  - 每日观音签
-```
-
-## 七、待你确认的关键决策
-
-1. **P1 周易一卦** 是本期一起做，还是先做 P0、塔罗暂时保留？（工作量差异大）//每日一卦先不做，年轻人里似乎不一定看得懂周易算卦。
-2. **英文版**怎么处理：A) 同步翻译成中式文化英文（I-Ching 等）；B) 英文版保留塔罗，仅中文版换。//英文版不做处理，我建议可以把设置里面的英文语言选项先隐藏掉。因为现在只面向中国大陆用户，不需要英文。
-3. **生肖运势**是否需要让用户输入完整出生日期（年月日），还是只要"生肖 + 出生月"轻量版？//生肖运势不做替换，保留原有的星座运势。
-4. 是否需要新增 **"每日求签"** 模块替换首页"每日塔罗"卡位？//需要
+- 不改抽签逻辑、Edge Function、数据库结构。
+- 不替换 emoji 体系、不改文案。
+- 不引入新字体包（用系统已有 + 衬线 fallback）。

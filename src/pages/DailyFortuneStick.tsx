@@ -219,10 +219,14 @@ const DailyFortuneStick = () => {
               className="px-6 mt-2"
             >
               {/* 签头 */}
-              <div className="rounded-2xl bg-card p-5 shadow-card mb-4">
-                <div className="flex items-center gap-4">
-                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-300 to-rose-400 text-3xl shadow-md">
-                    {LEVEL_EMOJI[result.level]}
+              <div className="rounded-2xl bg-card p-5 shadow-card mb-4 relative overflow-hidden">
+                <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-gradient-to-br from-amber-300/20 to-rose-400/20 blur-2xl" />
+                <div className="flex items-center gap-4 relative">
+                  <div className="relative">
+                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-amber-300 to-rose-400 blur-md opacity-60" />
+                    <div className="relative flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-300 to-rose-400 text-3xl shadow-md ring-2 ring-amber-200/60 dark:ring-amber-300/30">
+                      {LEVEL_EMOJI[result.level]}
+                    </div>
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
@@ -230,7 +234,7 @@ const DailyFortuneStick = () => {
                         第 {result.stickNumber} 签
                       </span>
                       <span
-                        className={`rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold ${LEVEL_COLOR[result.level]}`}
+                        className={`rounded-md border border-amber-400/40 bg-gradient-to-br from-amber-100/80 to-rose-100/60 dark:from-amber-900/40 dark:to-rose-900/30 px-2 py-0.5 text-[10px] font-semibold tracking-wider ${LEVEL_COLOR[result.level]}`}
                       >
                         {result.level}
                       </span>
@@ -245,22 +249,97 @@ const DailyFortuneStick = () => {
                 </div>
               </div>
 
-              {/* 签诗 */}
-              <div className="rounded-2xl bg-gradient-to-br from-amber-50/60 to-rose-50/60 dark:from-amber-950/30 dark:to-rose-950/30 p-5 shadow-card mb-4 border border-amber-200/40 dark:border-amber-800/30">
-                <h3 className="text-xs font-semibold text-amber-700 dark:text-amber-300 uppercase tracking-wider mb-3">
-                  签诗
-                </h3>
-                <p
-                  className="font-display text-base leading-loose text-foreground whitespace-pre-line text-center"
-                  style={{ letterSpacing: "0.06em" }}
+              {/* 签诗 —— 古卷签纸风 */}
+              <div
+                className="relative rounded-2xl p-6 pt-7 mb-4 overflow-hidden border border-amber-700/40 dark:border-amber-500/30 shadow-[0_8px_30px_-12px_rgba(120,60,20,0.5)]"
+                style={{
+                  backgroundImage:
+                    "radial-gradient(circle at 20% 20%, rgba(255,210,140,0.15), transparent 60%), radial-gradient(circle at 80% 80%, rgba(220,80,60,0.15), transparent 60%), linear-gradient(135deg, #2a1810 0%, #3d1f15 45%, #4a2418 100%)",
+                }}
+              >
+                {/* 纸纹 */}
+                <div
+                  className="absolute inset-0 opacity-[0.08] mix-blend-overlay pointer-events-none"
+                  style={{
+                    backgroundImage:
+                      "repeating-linear-gradient(90deg, rgba(255,220,180,0.4) 0 1px, transparent 1px 3px), repeating-linear-gradient(0deg, rgba(255,220,180,0.3) 0 1px, transparent 1px 4px)",
+                  }}
+                />
+                {/* 中央水印（八卦/太极） */}
+                <svg
+                  className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 opacity-[0.06] pointer-events-none"
+                  viewBox="0 0 100 100"
+                  fill="none"
+                  stroke="#f0c870"
+                  strokeWidth="0.6"
                 >
-                  {result.poem}
-                </p>
+                  <circle cx="50" cy="50" r="46" />
+                  <circle cx="50" cy="50" r="38" />
+                  <path d="M50 12 A38 38 0 0 1 50 88 A19 19 0 0 1 50 50 A19 19 0 0 0 50 12 Z" fill="#f0c870" fillOpacity="0.5" />
+                  <circle cx="50" cy="31" r="3" fill="#2a1810" />
+                  <circle cx="50" cy="69" r="3" fill="#f0c870" />
+                </svg>
+                {/* 四角金线 */}
+                <span className="absolute top-2 left-2 w-4 h-4 border-t border-l border-amber-300/60" />
+                <span className="absolute top-2 right-2 w-4 h-4 border-t border-r border-amber-300/60" />
+                <span className="absolute bottom-2 left-2 w-4 h-4 border-b border-l border-amber-300/60" />
+                <span className="absolute bottom-2 right-2 w-4 h-4 border-b border-r border-amber-300/60" />
+
+                {/* 顶栏：副标 + 朱印 */}
+                <div className="relative flex items-start justify-between mb-5">
+                  <div className="text-[10px] tracking-[0.3em] text-amber-200/70">
+                    第 {result.stickNumber} 签 · {result.level}
+                  </div>
+                  <div
+                    className="flex flex-col items-center justify-center w-10 h-10 rounded-sm border-[1.5px] border-rose-300/90 text-rose-100 font-display text-[11px] leading-[1.05] tracking-[0.15em] shadow-[inset_0_0_4px_rgba(0,0,0,0.4)]"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, #b8332a 0%, #8a1f1a 100%)",
+                    }}
+                  >
+                    <span>签</span>
+                    <span>诗</span>
+                  </div>
+                </div>
+
+                {/* 签诗正文 */}
+                <div className="relative flex flex-col items-center gap-3 py-2">
+                  {result.poem.split(/\n+/).map((line, i) => (
+                    <motion.p
+                      key={i}
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.15 * i + 0.1, duration: 0.5 }}
+                      className="font-display text-lg md:text-xl text-center"
+                      style={{
+                        letterSpacing: "0.28em",
+                        paddingLeft: "0.28em",
+                        fontFamily:
+                          '"Noto Serif SC", "Songti SC", "STSong", "STKaiti", serif',
+                        background:
+                          "linear-gradient(180deg, #fbe9a7 0%, #f0c870 55%, #d4a04a 100%)",
+                        WebkitBackgroundClip: "text",
+                        WebkitTextFillColor: "transparent",
+                        backgroundClip: "text",
+                        textShadow: "0 1px 0 rgba(0,0,0,0.25)",
+                      }}
+                    >
+                      {line}
+                    </motion.p>
+                  ))}
+                </div>
+
+                {/* 落款 */}
+                <div className="relative mt-5 flex items-center justify-center gap-2 text-[10px] tracking-[0.4em] text-amber-200/50">
+                  <span className="h-px w-8 bg-amber-300/30" />
+                  心灵密语 · 灵签
+                  <span className="h-px w-8 bg-amber-300/30" />
+                </div>
               </div>
 
               {/* 解签 */}
               <div className="rounded-2xl bg-card p-5 shadow-card mb-4">
-                <h3 className="text-xs font-semibold text-secondary uppercase tracking-wider mb-3">
+                <h3 className="relative text-xs font-semibold text-secondary uppercase tracking-wider mb-3 pl-3 before:content-[''] before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-3.5 before:w-[3px] before:rounded-full before:bg-gradient-to-b before:from-amber-400 before:to-rose-500">
                   现代解签
                 </h3>
                 <p className="text-sm leading-relaxed text-foreground whitespace-pre-line">
