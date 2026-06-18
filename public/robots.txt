@@ -12,6 +12,15 @@ Allow: /
 
 User-agent: *
 Allow: /
+Disallow: /auth
+Disallow: /chat
+Disallow: /conversations
+Disallow: /assessment-reports/
+Disallow: /compatibility-reports/
+Disallow: /profile
+Disallow: /settings
+Disallow: /admin
+Disallow: /vault
 
 Sitemap: https://islandai.life/sitemap.xml
 
