@@ -31,6 +31,13 @@ import SEO from "@/components/SEO";
 import { useBond } from "@/hooks/useBond";
 import { useSubscription } from "@/hooks/useSubscription";
 import { parseGameMarkers, type BranchOption, type Atmosphere } from "@/lib/parseGameMarkers";
+import {
+  loadGuestDraft,
+  saveGuestDraft,
+  clearGuestDraft,
+  GUEST_MIGRATED_EVENT,
+  type GuestMigratedDetail,
+} from "@/lib/guestChat";
 
 import { toast } from "sonner";
 import { generateSoulFragment } from "@/hooks/useSoulFragment";
@@ -191,7 +198,16 @@ const Chat = () => {
 
   useEffect(() => {
     if (!user) {
-      setMessages([{ id: "welcome", role: "assistant", content: getWelcomeMessage(agent) }]);
+      // Restore any previously saved guest draft for this agent so a refresh doesn't
+      // wipe the conversation. Fall back to the welcome bubble when nothing is saved.
+      const draft = loadGuestDraft(agentId);
+      if (draft.length > 0) {
+        setMessages(
+          draft.map((m) => ({ id: m.id, role: m.role, content: m.content })),
+        );
+      } else {
+        setMessages([{ id: "welcome", role: "assistant", content: getWelcomeMessage(agent) }]);
+      }
       setHistoryLoaded(true);
       return;
     }
