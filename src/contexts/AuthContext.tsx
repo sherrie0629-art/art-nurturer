@@ -153,6 +153,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       const { data } = await supabase.auth.getSession();
       if (!mounted) return;
+      // Validate the bootstrapped session against the server. If the stored
+      // JWT is stale/invalid (e.g. signing key rotated), getUser() returns an
+      // auth error — clear local storage so we don't keep calling edge
+      // functions with a bad token (which surfaces as 401 overlays).
+      if (data.session) {
+        const { error: userErr } = await supabase.auth.getUser();
+        if (userErr) {
+          console.warn("[Auth] stored session invalid, signing out:", userErr.message);
+          await supabase.auth.signOut();
+          setSession(null);
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+      }
       setSession(data.session);
       setUser(data.session?.user ?? null);
       setLoading(false);

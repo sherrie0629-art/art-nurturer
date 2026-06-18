@@ -303,7 +303,15 @@ const Chat = () => {
         const { data, error } = await supabase.functions.invoke("recall-memory", {
           body: { query: query || "recent conversation context", agentId, k: 8 },
         });
-        if (error) throw error;
+        if (error) {
+          // 401 = stored JWT became invalid (e.g. signing key rotated).
+          // Clear local session so we stop calling edge fns with a bad token.
+          if ((error as any)?.context?.status === 401) {
+            await supabase.auth.signOut();
+          }
+          console.warn("[Chat] recall-memory unavailable, continuing without:", error.message);
+          return { memories: [], facts: [] };
+        }
         return { memories: (data as any)?.memories || [], facts: (data as any)?.facts || [] };
       } catch (e) {
         console.error("[Chat] recall-memory failed, falling back:", e);
