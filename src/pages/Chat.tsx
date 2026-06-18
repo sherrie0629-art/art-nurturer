@@ -387,6 +387,25 @@ const Chat = () => {
         return;
       }
 
+      // If we still have a guest draft for this agent, a migration is about to run
+      // (or just ran). Keep the in-memory messages and wait for GUEST_MIGRATED_EVENT
+      // to deliver the new conversation id, so we don't flash an empty/old thread.
+      const pendingGuest = loadGuestDraft(agentId);
+      if (pendingGuest.length > 0) {
+        const [{ memories, facts }, { data: summaries }] = await Promise.all([
+          recallFromEdge(""),
+          supabase
+            .from("conversation_summaries")
+            .select("summary, key_topics")
+            .eq("user_id", user.id)
+            .eq("agent_id", agentId)
+            .order("created_at", { ascending: false })
+            .limit(5),
+        ]);
+        setMemoryContext(formatRecall(memories, facts, summaries || []));
+        setHistoryLoaded(true);
+        return;
+      }
 
 
       const [convResult, recallResult, summariesResult] = await Promise.all([
