@@ -153,21 +153,46 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       const { data } = await supabase.auth.getSession();
       if (!mounted) return;
-      // Validate the bootstrapped session against the server. If the stored
-      // JWT is stale/invalid (e.g. signing key rotated), getUser() returns an
-      // auth error — clear local storage so we don't keep calling edge
-      // functions with a bad token (which surfaces as 401 overlays).
-      if (data.session) {
-        const { error: userErr } = await supabase.auth.getUser();
-        if (userErr) {
-          console.warn("[Auth] stored session invalid, signing out:", userErr.message);
-          await supabase.auth.signOut();
-          setSession(null);
-          setUser(null);
-          setLoading(false);
-          return;
+      // Validate the bootstrapped session. If the stored access_token is
+      // missing/expired/malformed (no `sub` claim — e.g. signing key rotated
+      // or storage corrupted), nuke local auth state so supabase-js doesn't
+      // keep silently falling back to the anon key while React still thinks
+      // a user is signed in. This shows up as 401s from edge functions and
+      // RLS violations on inserts.
+      const isValidJwt = (token?: string | null) => {
+        if (!token) return false;
+        const parts = token.split(".");
+        if (parts.length !== 3) return false;
+        try {
+          const payload = JSON.parse(
+            atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")),
+          );
+          if (!payload?.sub) return false;
+          if (payload.exp && payload.exp * 1000 < Date.now()) return false;
+          return true;
+        } catch {
+          return false;
         }
+      };
+
+      if (data.session && !isValidJwt(data.session.access_token)) {
+        console.warn("[Auth] stored session has invalid JWT, clearing");
+        try {
+          await supabase.auth.signOut();
+        } catch { /* ignore */ }
+        // Hard-clean any leftover sb-*-auth-token keys, in case signOut
+        // didn't fully drop them (e.g. multiple tab keys, legacy keys).
+        try {
+          Object.keys(localStorage)
+            .filter((k) => k.startsWith("sb-") && k.endsWith("-auth-token"))
+            .forEach((k) => localStorage.removeItem(k));
+        } catch { /* ignore */ }
+        setSession(null);
+        setUser(null);
+        setLoading(false);
+        return;
       }
+
       setSession(data.session);
       setUser(data.session?.user ?? null);
       setLoading(false);
