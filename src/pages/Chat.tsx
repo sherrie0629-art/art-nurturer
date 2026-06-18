@@ -95,12 +95,14 @@ const Chat = () => {
   const zodiacResult = (location.state as any)?.zodiacResult as { zodiacSign: string; element: string; title: string; description: string; traits: any; luckyItems?: any; advice: any } | undefined;
   const tarotResult = (location.state as any)?.tarotResult as { cardName: string; isReversed: boolean; energyScore: number; interpretation: string; actionTip: string } | undefined;
   const compatibilityResult = (location.state as any)?.compatibilityResult as { partnerName: string; partnerMbti?: string; partnerZodiac?: string; overallScore: number; title: string; summary: string; dimensions: any; strengths: string[]; conflicts: string[]; loveLanguage: { mine: string; partner: string; tip: string }; deepAnalysis?: string } | undefined;
+  const fortuneStickResult = (location.state as any)?.fortuneStick as { stickNumber: number; level: string; title: string; poem: string; interpretation: string; actionTip?: string } | undefined;
   const mbtiAutoSentRef = useRef(false);
   const emotionAutoSentRef = useRef(false);
   const enneagramAutoSentRef = useRef(false);
   const zodiacAutoSentRef = useRef(false);
   const tarotAutoSentRef = useRef(false);
   const compatibilityAutoSentRef = useRef(false);
+  const fortuneStickAutoSentRef = useRef(false);
 
   const getWelcomeMessage = (a: typeof agent) => getAgentWelcome(a, t);
 
@@ -185,7 +187,7 @@ const Chat = () => {
     }
   }, [messages, isStreaming]);
 
-  const hasAssessmentContext = !!(mbtiResult || emotionResult || enneagramResult || zodiacResult || tarotResult || compatibilityResult);
+  const hasAssessmentContext = !!(mbtiResult || emotionResult || enneagramResult || zodiacResult || tarotResult || compatibilityResult || fortuneStickResult);
 
   useEffect(() => {
     if (!user) {
@@ -312,6 +314,12 @@ const Chat = () => {
           memCtx.push(isZh
             ? `[刚刚完成测评] 用户刚抽了一张塔罗牌：${tarotResult.cardName}（${tarotResult.isReversed ? "逆位" : "正位"}），能量值 ${tarotResult.energyScore}。解读：${tarotResult.interpretation}。行动建议：${tarotResult.actionTip}`
             : `[Just assessed] User just drew a tarot card: ${tarotResult.cardName} (${tarotResult.isReversed ? "Reversed" : "Upright"}), energy ${tarotResult.energyScore}. Interpretation: ${tarotResult.interpretation}. Action tip: ${tarotResult.actionTip}`);
+        }
+        if (fortuneStickResult) {
+          const f = fortuneStickResult;
+          memCtx.push(isZh
+            ? `[刚刚求签] 用户在每日灵签中抽到第 ${f.stickNumber} 签「${f.title}」（${f.level}）。签诗：${f.poem}。解签：${f.interpretation}${f.actionTip ? `。今日小行动：${f.actionTip}` : ""}`
+            : `[Just drew] User drew daily fortune stick #${f.stickNumber} "${f.title}" (${f.level}). Poem: ${f.poem}. Interpretation: ${f.interpretation}${f.actionTip ? `. Today's tip: ${f.actionTip}` : ""}`);
         }
         if (compatibilityResult) {
           const c = compatibilityResult;
@@ -496,6 +504,17 @@ const Chat = () => {
         : `I just ran a compatibility report with ${compatibilityResult.partnerName} — we matched ${compatibilityResult.overallScore}% (${compatibilityResult.title}). Tell me real talk, what should I actually do with this? 💕`);
     }
   }, [historyLoaded, compatibilityResult, user]);
+
+  useEffect(() => {
+    if (fortuneStickResult && historyLoaded && !fortuneStickAutoSentRef.current && user) {
+      fortuneStickAutoSentRef.current = true;
+      setConversationId(null);
+      const f = fortuneStickResult;
+      handleSend(locale === "zh"
+        ? `星轨，我今天求到第 ${f.stickNumber} 签「${f.title}」（${f.level}）。签诗是：${f.poem}。这签到底在跟我说啥呀？🍃`
+        : `Xinggui, I drew fortune stick #${f.stickNumber} "${f.title}" (${f.level}) today. The poem says: ${f.poem}. What does this really mean for me? 🍃`);
+    }
+  }, [historyLoaded, fortuneStickResult, user]);
 
   const startNewConversation = useCallback(() => {
     if (conversationId && messages.length > 4 && user) {
