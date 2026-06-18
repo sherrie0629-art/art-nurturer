@@ -21,10 +21,17 @@ const POSTER_W = 1080;
 const POSTER_H = 1350;
 
 const AGENT_BG: Record<string, [string, string]> = {
-  barista: ["#5a3a2a", "#a06a3f"],
-  jax:     ["#5a2a18", "#d97b3a"],
-  mystic:  ["#3a2a5a", "#9b6bd9"],
-  bestie:  ["#5a2a4a", "#e07ab5"],
+  nuannuan: ["#5a3a2a", "#d49a6a"],
+  laowang:  ["#2a3a2e", "#6a8a5a"],
+  yunsheng: ["#1e2a4a", "#5a7ab8"],
+  xinggui:  ["#3a2a5a", "#b07ad9"],
+};
+
+const AGENT_NAME: Record<string, { zh: string; en: string }> = {
+  nuannuan: { zh: "暖暖", en: "Nuannuan" },
+  laowang:  { zh: "老王", en: "Laowang" },
+  yunsheng: { zh: "云生", en: "Yunsheng" },
+  xinggui:  { zh: "星轨", en: "Xinggui" },
 };
 
 export default function SoulMirrorDialog({ open, userId, onClose, existingMirror }: Props) {
@@ -35,6 +42,7 @@ export default function SoulMirrorDialog({ open, userId, onClose, existingMirror
   const [mirror, setMirror] = useState<SoulMirror | null>(existingMirror || null);
   const [posterUrl, setPosterUrl] = useState<string | null>(existingMirror?.poster_url || null);
   const [hoursLeft, setHoursLeft] = useState<number | undefined>(undefined);
+  const [bondTurns, setBondTurns] = useState<Record<string, number>>({});
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
@@ -49,6 +57,24 @@ export default function SoulMirrorDialog({ open, userId, onClose, existingMirror
       setPosterUrl(null);
     }
   }, [open, existingMirror]);
+
+  // Fetch chat progress for entry hint
+  useEffect(() => {
+    if (!open || !userId || phase !== "intro") return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("agent_bonds")
+        .select("agent_id, total_turns")
+        .eq("user_id", userId)
+        .in("agent_id", ["nuannuan", "laowang", "yunsheng", "xinggui"]);
+      if (cancelled) return;
+      const map: Record<string, number> = {};
+      for (const r of (data as any[] || [])) map[r.agent_id] = r.total_turns || 0;
+      setBondTurns(map);
+    })();
+    return () => { cancelled = true; };
+  }, [open, userId, phase]);
 
   const handleGenerate = useCallback(async () => {
     setPhase("generating");
@@ -159,18 +185,30 @@ export default function SoulMirrorDialog({ open, userId, onClose, existingMirror
               <p className="text-sm text-white/80 mb-6 leading-relaxed whitespace-pre-line">{t("soulMirror.unlockedDesc")}</p>
               <div className="grid grid-cols-2 gap-2 mb-6 text-left">
                 {[
-                  { e: "☕", n: "Chloe", d: t("soulMirror.lens.barista") },
-                  { e: "🔥", n: "Jax", d: t("soulMirror.lens.jax") },
-                  { e: "🔮", n: "Luna", d: t("soulMirror.lens.mystic") },
-                  { e: "💖", n: "Aria", d: t("soulMirror.lens.bestie") },
+                  { e: "🧵", id: "nuannuan", d: t("soulMirror.lens.nuannuan") },
+                  { e: "🍵", id: "laowang",  d: t("soulMirror.lens.laowang") },
+                  { e: "🌙", id: "yunsheng", d: t("soulMirror.lens.yunsheng") },
+                  { e: "✨", id: "xinggui",  d: t("soulMirror.lens.xinggui") },
                 ].map((a) => (
-                  <div key={a.n} className="rounded-xl bg-white/5 border border-white/10 p-2.5">
+                  <div key={a.id} className="rounded-xl bg-white/5 border border-white/10 p-2.5">
                     <div className="text-lg">{a.e}</div>
-                    <div className="text-xs font-semibold">{a.n}</div>
+                    <div className="text-xs font-semibold">{AGENT_NAME[a.id][i18n.language === "en" ? "en" : "zh"]}</div>
                     <div className="text-[10px] text-white/60 leading-snug">{a.d}</div>
                   </div>
                 ))}
               </div>
+              {(() => {
+                const chatted = Object.entries(bondTurns).filter(([, n]) => (n || 0) >= 3);
+                if (chatted.length === 0 && Object.keys(bondTurns).length > 0) {
+                  return <p className="text-[11px] text-white/50 mb-3 leading-snug">{t("soulMirror.entryHint.allUnmet")}</p>;
+                }
+                if (chatted.length === 1) {
+                  const id = chatted[0][0];
+                  const name = AGENT_NAME[id]?.[i18n.language === "en" ? "en" : "zh"] || id;
+                  return <p className="text-[11px] text-white/50 mb-3 leading-snug">{t("soulMirror.entryHint.onlyOne", { name })}</p>;
+                }
+                return null;
+              })()}
               <button
                 onClick={handleGenerate}
                 className="w-full rounded-2xl bg-gradient-to-r from-pink-500 to-purple-500 py-3 font-semibold text-white shadow-lg active:scale-[0.98] transition"
