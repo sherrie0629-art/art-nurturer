@@ -1241,7 +1241,7 @@
     "cta": "立即生成镜像",
     "later": "稍后再说",
     "generatingTitle": "四个视角正在凝视你…",
-    "generatingDesc": "Chloe、Jax、Luna、Aria 正同时落笔，约需 10-15 秒。",
+    "generatingDesc": "暖暖、老王、云生、星轨 正同时落笔，约需 10-15 秒。",
     "share": "分享镜像",
     "savedToast": "已保存到相册 ✨",
     "shareTitle": "我的灵魂镜像",
@@ -1252,10 +1252,14 @@
     "throttledTitle": "稍等一下",
     "throttledDesc": "距下次重新生成还有约 {{hours}} 小时。每 24 小时可生成一次。",
     "lens": {
-      "barista": "你的安静与脆弱",
-      "jax": "你压力下的样子",
-      "mystic": "你的命运底色",
-      "bestie": "你最可爱的那一面"
+      "nuannuan": "看见你安静的那一面",
+      "laowang": "看见你硬撑的那一面",
+      "yunsheng": "看见你命运的底色",
+      "xinggui": "看见你最闪光的那一面"
+    },
+    "entryHint": {
+      "allUnmet": "你还没和这四位中的任何一位认真聊过，海报会偏「初印象」。",
+      "onlyOne": "目前只和 {{name}} 聊得多，其他三位的部分会是「远观初见」。"
     },
     "vaultTitle": "灵魂镜像",
     "vaultEmptyHint": "和任一角色聊够 10 轮即可解锁。",

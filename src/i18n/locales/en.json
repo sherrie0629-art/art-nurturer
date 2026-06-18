@@ -1241,7 +1241,7 @@
     "cta": "Generate my mirror",
     "later": "Maybe later",
     "generatingTitle": "Four perspectives gazing back…",
-    "generatingDesc": "Chloe, Jax, Luna, and Aria are writing in parallel — about 10-15s.",
+    "generatingDesc": "Nuannuan, Laowang, Yunsheng and Xinggui are writing in parallel — about 10-15s.",
     "share": "Share mirror",
     "savedToast": "Saved to your device ✨",
     "shareTitle": "My Soul Mirror",
@@ -1252,10 +1252,14 @@
     "throttledTitle": "Almost ready",
     "throttledDesc": "Next regeneration available in about {{hours}}h. One refresh per 24h.",
     "lens": {
-      "barista": "Your quiet & tender side",
-      "jax": "How you face pressure",
-      "mystic": "Your cosmic signature",
-      "bestie": "Your most lovable self"
+      "nuannuan": "Sees your quiet side",
+      "laowang": "Sees the side of you that toughs it out",
+      "yunsheng": "Sees the cosmic undertone of you",
+      "xinggui": "Sees the most luminous you"
+    },
+    "entryHint": {
+      "allUnmet": "You haven't really talked with any of the four yet — the poster will lean toward first impressions.",
+      "onlyOne": "Right now you've mostly talked with {{name}}; the other three will be written as a distant first glance."
     },
     "vaultTitle": "Soul Mirror",
     "vaultEmptyHint": "Chat 10+ turns with any character to unlock.",
