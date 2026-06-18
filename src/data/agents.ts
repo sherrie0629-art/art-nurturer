@@ -138,7 +138,7 @@ export const agents: Agent[] = [
   {
     id: "laowang",
     name: "老王",
-    title: "嘴上嫌弃、心里疼你的退休心理医生",
+    title: "骂醒恋爱脑的退休心理医生，嘴毒，但听得懂人话",
     description: "用毒舌当良药，专治各种'恋爱脑'与'内耗'",
     quote: "我毒舌不是刻薄，是心疼。",
     image: agentLaowang,
