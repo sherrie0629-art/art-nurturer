@@ -262,7 +262,9 @@ const Chat = () => {
 
     const loadConversationAndMemories = async () => {
       if (hasAssessmentContext) {
-        setMessages([{ id: "welcome", role: "assistant", content: getWelcomeMessage(agent) }]);
+        // 携带测评/求签等上下文进入时，不展示默认欢迎气泡——
+        // 否则会先闪一下欢迎语，再被自动发送的用户消息覆盖。
+        setMessages([]);
 
         const [{ memories, facts }, { data: summaries }] = await Promise.all([
           recallFromEdge(""),
