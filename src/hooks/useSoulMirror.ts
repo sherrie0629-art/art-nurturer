@@ -8,6 +8,8 @@ export interface SoulMirrorPerspective {
   portrait: string;
   signature: string;
   keywords: string[];
+  tier?: "unmet" | "glimpse" | "known";
+  totalTurns?: number;
 }
 
 export interface SoulMirrorSnapshot {
@@ -16,6 +18,8 @@ export interface SoulMirrorSnapshot {
   zodiac: string | null;
   locale: "zh" | "en";
   generatedAt: string;
+  primaryAgentId?: string | null;
+  primaryTurns?: number;
 }
 
 export interface SoulMirror {
