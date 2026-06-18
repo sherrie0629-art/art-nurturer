@@ -505,6 +505,17 @@ const Chat = () => {
     }
   }, [historyLoaded, compatibilityResult, user]);
 
+  useEffect(() => {
+    if (fortuneStickResult && historyLoaded && !fortuneStickAutoSentRef.current && user) {
+      fortuneStickAutoSentRef.current = true;
+      setConversationId(null);
+      const f = fortuneStickResult;
+      handleSend(locale === "zh"
+        ? `星轨，我今天求到第 ${f.stickNumber} 签「${f.title}」（${f.level}）。签诗是：${f.poem}。这签到底在跟我说啥呀？🍃`
+        : `Xinggui, I drew fortune stick #${f.stickNumber} "${f.title}" (${f.level}) today. The poem says: ${f.poem}. What does this really mean for me? 🍃`);
+    }
+  }, [historyLoaded, fortuneStickResult, user]);
+
   const startNewConversation = useCallback(() => {
     if (conversationId && messages.length > 4 && user) {
       const msgs = messages.filter((m) => m.id !== "welcome");
