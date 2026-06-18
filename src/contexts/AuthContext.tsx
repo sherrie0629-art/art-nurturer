@@ -3,6 +3,11 @@ import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import AuthPromptDialog from "@/components/AuthPromptDialog";
 import { toast } from "sonner";
+import {
+  migrateGuestChatsToAccount,
+  GUEST_MIGRATED_EVENT,
+  type GuestMigratedDetail,
+} from "@/lib/guestChat";
 
 interface AuthContextType {
   user: User | null;
@@ -104,15 +109,38 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     let mounted = true;
+    let lastMigratedUserId: string | null = null;
+
+    const runGuestMigration = async (userId: string) => {
+      if (lastMigratedUserId === userId) return;
+      lastMigratedUserId = userId;
+      try {
+        const res = await migrateGuestChatsToAccount(userId);
+        if (res.migrated > 0) {
+          toast.success("已把未登录时的聊天同步到你的账号 ✨");
+          window.dispatchEvent(
+            new CustomEvent<GuestMigratedDetail>(GUEST_MIGRATED_EVENT, {
+              detail: { agentToConversation: res.agentToConversation },
+            }),
+          );
+        }
+      } catch (e) {
+        console.error("[Auth] guest chat migration failed", e);
+      }
+    };
 
     // Set up listener BEFORE any async work, per Supabase guidance.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
       if (session?.user) {
         setLoginPrompt({ open: false, reason: "" });
+      }
+      if (event === "SIGNED_IN" && session?.user) {
+        // Defer so the auth state update flushes first.
+        setTimeout(() => runGuestMigration(session.user.id), 0);
       }
     });
 
