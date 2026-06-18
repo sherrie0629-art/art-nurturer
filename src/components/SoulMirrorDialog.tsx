@@ -322,6 +322,10 @@ async function renderPoster(mirror: SoulMirror): Promise<string> {
   ctx.fillText("Soul Mirror · 灵魂镜像", POSTER_W / 2, 100);
 
   const snap = mirror.user_snapshot;
+  const locale: "zh" | "en" = (snap?.locale === "en" ? "en" : "zh");
+  const primaryAgentId: string | null = (snap as any)?.primaryAgentId ?? null;
+  const primaryTurns: number = (snap as any)?.primaryTurns ?? 0;
+
   if (snap) {
     ctx.font = "26px 'Inter', sans-serif";
     ctx.fillStyle = "rgba(255,255,255,0.7)";
@@ -329,26 +333,54 @@ async function renderPoster(mirror: SoulMirror): Promise<string> {
     ctx.fillText(sub, POSTER_W / 2, 140);
   }
 
-  // Four quadrants
-  const gridTop = 190;
+  // Dynamic subtitle line
+  const primary = primaryAgentId ? mirror.perspectives.find((p) => p.agentId === primaryAgentId) : null;
+  const subtitleLine = primary
+    ? (locale === "zh"
+        ? `与 ${primary.displayName} 深聊 ${primaryTurns} 次后的灵魂镜像`
+        : `Soul Mirror after ${primaryTurns} deep talks with ${primary.displayName}`)
+    : (locale === "zh"
+        ? "四位 AI 对你的第一印象"
+        : "First impressions from four AI characters");
+  ctx.font = "italic 22px 'DM Serif Display', serif";
+  ctx.fillStyle = "rgba(255,255,255,0.55)";
+  ctx.fillText(subtitleLine, POSTER_W / 2, 174);
+
+  // Layout area
+  const gridTop = 210;
   const gridBottom = POSTER_H - 130;
   const gridLeft = 50;
   const gridRight = POSTER_W - 50;
   const gridW = gridRight - gridLeft;
   const gridH = gridBottom - gridTop;
-  const cellW = gridW / 2;
-  const cellH = gridH / 2;
   const gap = 18;
 
-  for (let i = 0; i < 4 && i < mirror.perspectives.length; i++) {
-    const p = mirror.perspectives[i];
-    const col = i % 2;
-    const row = Math.floor(i / 2);
-    const x = gridLeft + col * cellW + (col === 0 ? 0 : gap / 2);
-    const y = gridTop + row * cellH + (row === 0 ? 0 : gap / 2);
-    const w = cellW - gap / 2;
-    const h = cellH - gap / 2;
-    drawQuadrant(ctx, x, y, w, h, p);
+  if (primary) {
+    // Primary layout: big top card (~58%) + 3 small cards bottom
+    const topH = Math.floor(gridH * 0.58) - gap / 2;
+    const bottomH = gridH - topH - gap;
+    drawQuadrant(ctx, gridLeft, gridTop, gridW, topH, primary, { primary: true, locale });
+    const others = mirror.perspectives.filter((p) => p.agentId !== primary.agentId);
+    const cellW = (gridW - gap * 2) / 3;
+    others.slice(0, 3).forEach((p, i) => {
+      const x = gridLeft + i * (cellW + gap);
+      const y = gridTop + topH + gap;
+      drawQuadrant(ctx, x, y, cellW, bottomH, p, { primary: false, locale, compact: true });
+    });
+  } else {
+    // Symmetric 2x2
+    const cellW = gridW / 2;
+    const cellH = gridH / 2;
+    for (let i = 0; i < 4 && i < mirror.perspectives.length; i++) {
+      const p = mirror.perspectives[i];
+      const col = i % 2;
+      const row = Math.floor(i / 2);
+      const x = gridLeft + col * cellW + (col === 0 ? 0 : gap / 2);
+      const y = gridTop + row * cellH + (row === 0 ? 0 : gap / 2);
+      const w = cellW - gap / 2;
+      const h = cellH - gap / 2;
+      drawQuadrant(ctx, x, y, w, h, p, { primary: false, locale });
+    }
   }
 
   // Footer
@@ -364,41 +396,84 @@ function drawQuadrant(
   ctx: CanvasRenderingContext2D,
   x: number, y: number, w: number, h: number,
   p: SoulMirrorPerspective,
+  opts: { primary?: boolean; locale: "zh" | "en"; compact?: boolean } = { locale: "zh" },
 ) {
+  const tier = (p as any).tier as ("unmet" | "glimpse" | "known" | undefined);
+  const isPrimary = !!opts.primary;
+  const compact = !!opts.compact;
+  const cardAlpha = tier === "unmet" ? 0.55 : 0.85;
+
   const colors = AGENT_BG[p.agentId] || ["#3a2a5a", "#7a5ab8"];
   // Card background gradient
   const grad = ctx.createLinearGradient(x, y, x + w, y + h);
-  grad.addColorStop(0, hexToRgba(colors[0], 0.85));
-  grad.addColorStop(1, hexToRgba(colors[1], 0.7));
+  grad.addColorStop(0, hexToRgba(colors[0], cardAlpha));
+  grad.addColorStop(1, hexToRgba(colors[1], cardAlpha - 0.15));
   roundRect(ctx, x, y, w, h, 24);
   ctx.fillStyle = grad;
   ctx.fill();
-  ctx.strokeStyle = "rgba(255,255,255,0.15)";
-  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = isPrimary ? "rgba(255,255,255,0.55)" : "rgba(255,255,255,0.15)";
+  ctx.lineWidth = isPrimary ? 3 : 1.5;
   roundRect(ctx, x, y, w, h, 24);
   ctx.stroke();
 
-  const padding = 28;
-  let cy = y + padding + 36;
+  const padding = compact ? 18 : 28;
+  const titleFontSize = isPrimary ? 40 : compact ? 22 : 28;
+  const emojiFontSize = isPrimary ? 60 : compact ? 32 : 44;
+  const sigFontSize = isPrimary ? 28 : compact ? 16 : 22;
+  const bodyFontSize = isPrimary ? 26 : compact ? 15 : 21;
+  const bodyLineHeight = isPrimary ? 36 : compact ? 22 : 30;
+  let cy = y + padding + (isPrimary ? 50 : compact ? 30 : 36);
 
   // Header: emoji + name
   ctx.textAlign = "left";
-  ctx.font = "44px sans-serif";
+  ctx.font = `${emojiFontSize}px sans-serif`;
   ctx.fillStyle = "#ffffff";
   ctx.fillText(p.emoji, x + padding, cy);
-  ctx.font = "700 28px 'DM Serif Display', serif";
-  ctx.fillText(p.displayName, x + padding + 56, cy - 6);
-  cy += 32;
+  ctx.font = `700 ${titleFontSize}px 'DM Serif Display', serif`;
+  ctx.fillText(p.displayName, x + padding + emojiFontSize + 12, cy - 6);
+  cy += isPrimary ? 44 : compact ? 22 : 32;
+
+  // Tier badge (top-right)
+  if (tier === "unmet" || tier === "glimpse") {
+    const badgeText = opts.locale === "zh"
+      ? (tier === "unmet" ? "远观初见" : "浅浅聊过")
+      : (tier === "unmet" ? "First glance" : "Brief talk");
+    ctx.font = `${compact ? 13 : 16}px 'Inter', sans-serif`;
+    const bw = ctx.measureText(badgeText).width + 20;
+    const bh = compact ? 22 : 26;
+    const bx = x + w - padding - bw;
+    const by = y + padding;
+    roundRect(ctx, bx, by, bw, bh, bh / 2);
+    ctx.fillStyle = "rgba(0,0,0,0.35)";
+    ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,0.85)";
+    ctx.fillText(badgeText, bx + 10, by + bh - (compact ? 6 : 7));
+  } else if (isPrimary) {
+    const badgeText = opts.locale === "zh"
+      ? `最懂你的那一位 · ${(p as any).totalTurns ?? 0} 轮`
+      : `Knows you best · ${(p as any).totalTurns ?? 0} turns`;
+    ctx.font = "16px 'Inter', sans-serif";
+    const bw = ctx.measureText(badgeText).width + 22;
+    const bh = 28;
+    const bx = x + w - padding - bw;
+    const by = y + padding;
+    roundRect(ctx, bx, by, bw, bh, bh / 2);
+    ctx.fillStyle = "rgba(255,255,255,0.18)";
+    ctx.fill();
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText(badgeText, bx + 11, by + bh - 8);
+  }
 
   // Signature
-  ctx.font = "italic 22px 'DM Serif Display', serif";
+  ctx.font = `italic ${sigFontSize}px 'DM Serif Display', serif`;
   ctx.fillStyle = "rgba(255,255,255,0.92)";
   const sigLines = wrapText(ctx, p.signature, w - padding * 2);
-  for (const line of sigLines.slice(0, 2)) {
+  const sigMax = compact ? 1 : 2;
+  for (const line of sigLines.slice(0, sigMax)) {
     ctx.fillText(line, x + padding, cy);
-    cy += 28;
+    cy += sigFontSize + 6;
   }
-  cy += 6;
+  cy += compact ? 4 : 6;
 
   // Divider
   ctx.strokeStyle = "rgba(255,255,255,0.25)";
@@ -407,14 +482,14 @@ function drawQuadrant(
   ctx.moveTo(x + padding, cy);
   ctx.lineTo(x + w - padding, cy);
   ctx.stroke();
-  cy += 22;
+  cy += compact ? 14 : 22;
 
   // Portrait body
-  ctx.font = "21px 'Inter', sans-serif";
+  ctx.font = `${bodyFontSize}px 'Inter', sans-serif`;
   ctx.fillStyle = "rgba(255,255,255,0.88)";
-  const maxBodyHeight = h - (cy - y) - 80; // leave room for keywords
-  const lineHeight = 30;
-  const maxLines = Math.floor(maxBodyHeight / lineHeight);
+  const reserveForKeywords = compact ? 36 : 80;
+  const maxBodyHeight = h - (cy - y) - reserveForKeywords;
+  const maxLines = Math.floor(maxBodyHeight / bodyLineHeight);
   const bodyLines = wrapText(ctx, p.portrait, w - padding * 2);
   const shown = bodyLines.slice(0, maxLines);
   if (bodyLines.length > maxLines && shown.length > 0) {
@@ -423,8 +498,11 @@ function drawQuadrant(
   }
   for (const line of shown) {
     ctx.fillText(line, x + padding, cy);
-    cy += lineHeight;
+    cy += bodyLineHeight;
   }
+
+  // In compact (副格) skip keyword chips — too crowded
+  if (compact) return;
 
   // Keywords at bottom
   const kwY = y + h - padding - 18;
