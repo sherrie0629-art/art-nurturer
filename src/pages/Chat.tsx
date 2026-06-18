@@ -194,6 +194,42 @@ const Chat = () => {
     }
   }, [messages, isStreaming]);
 
+  // Persist guest chat to localStorage so a page refresh doesn't wipe the conversation.
+  // Only runs when the user is signed out; signed-in users go to the database instead.
+  useEffect(() => {
+    if (user) return;
+    if (isStreaming) return;
+    const persistable = messages
+      .filter((m) => m.id !== "welcome" && m.id !== "streaming" && m.kind !== "tarot-card")
+      .map((m) => ({
+        id: m.id,
+        role: m.role,
+        content: m.content,
+        createdAt: Date.now(),
+      }));
+    if (persistable.length === 0) {
+      clearGuestDraft(agentId);
+      return;
+    }
+    saveGuestDraft(agentId, persistable);
+  }, [messages, isStreaming, user, agentId]);
+
+  // When AuthContext finishes migrating guest drafts after sign-in, adopt the
+  // freshly created conversation id for this agent so subsequent messages append
+  // to the same thread instead of spawning a new one.
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<GuestMigratedDetail>).detail;
+      const newId = detail?.agentToConversation?.[agentId];
+      if (newId) {
+        setConversationId(newId);
+        clearGuestDraft(agentId);
+      }
+    };
+    window.addEventListener(GUEST_MIGRATED_EVENT, handler as EventListener);
+    return () => window.removeEventListener(GUEST_MIGRATED_EVENT, handler as EventListener);
+  }, [agentId]);
+
   const hasAssessmentContext = !!(mbtiResult || emotionResult || enneagramResult || zodiacResult || tarotResult || compatibilityResult || fortuneStickResult);
 
   useEffect(() => {
