@@ -16,6 +16,7 @@ import AssessmentQuestionLayout from "@/components/AssessmentQuestionLayout";
 import ResultAIImage from "@/components/ResultAIImage";
 import PosterPreviewDialog from "@/components/PosterPreviewDialog";
 import DeepReportUnlock from "@/components/DeepReportUnlock";
+import { pickEnneagramQuestionSet } from "@/data/enneagramQuestionPool";
 
 interface QA { question: string; answer: string; dimension: string; }
 
@@ -115,19 +116,28 @@ const EnneagramFlow = () => {
     setStarted(true);
     setLoading(true);
     setLoadingMsg(t("assessmentFlow.common.starting"));
-    try {
-      const { data, error } = await supabase.functions.invoke("assessment-enneagram", {
-        body: { action: "batch-questions", locale },
+
+    const fetchPromise = supabase.functions
+      .invoke("assessment-enneagram", { body: { action: "batch-questions", locale } })
+      .then((res) => {
+        if (res.error) throw res.error;
+        const d = res.data;
+        return d?.type === "batch" && Array.isArray(d.data) && d.data.length >= 10 ? d.data : null;
+      })
+      .catch((e: any) => {
+        if (isDailyLimitError(e)) toast.error(t("assessmentFlow.common.limitReached", { n: 20 }));
+        return null;
       });
-      if (error) throw error;
-      if (data.type === "batch" && data.data?.length > 0) {
-        batchQuestionsRef.current = data.data.slice(1);
-        setCurrentQuestion(data.data[0]);
-      }
-    } catch (e: any) {
-      if (isDailyLimitError(e)) toast.error(t("assessmentFlow.common.limitReached", { n: 20 }));
-      else toast.error(e.message || t("assessmentFlow.common.loadFail"));
-    } finally { setLoading(false); }
+
+    const batch = await Promise.race([
+      fetchPromise,
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 500)),
+    ]);
+
+    const finalBatch = batch && batch.length >= 10 ? batch : pickEnneagramQuestionSet(locale);
+    batchQuestionsRef.current = finalBatch.slice(1);
+    setCurrentQuestion(finalBatch[0]);
+    setLoading(false);
   };
 
   const handleAnswer = (option: { label: string; text: string }) => {
