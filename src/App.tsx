@@ -6,7 +6,6 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { TTSProvider } from "@/contexts/TTSContext";
 import Index from "./pages/Index.tsx";
 import SiteFooter from "./components/SiteFooter.tsx";
 import LocaleSync from "./components/LocaleSync.tsx";
@@ -88,7 +87,6 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <TTSProvider>
           <LocaleSync />
           
           <div className="flex min-h-screen flex-col">
@@ -129,7 +127,6 @@ const App = () => (
             </Suspense>
             <SiteFooter />
           </div>
-          </TTSProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
