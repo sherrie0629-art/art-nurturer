@@ -83,6 +83,7 @@
     "promptViewHistory": "登录后查看聊天历史 📖",
     "promptDailyTarot": "登录后开启每日塔罗",
     "promptContinueChat": "登录后保存聊天记录，继续探索更多 ✨",
+    "promptAssessmentAI": "登录后生成完整 AI 解读，并把测评报告保存到你的档案。",
     "redirecting": "正在跳转..."
   },
   "profile": {
