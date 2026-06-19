@@ -706,6 +706,7 @@ const Chat = () => {
         await streamChat({
           messages: apiMessages,
           agentId,
+          persona,
           memoryContext: [],
           bondLevel: 1,
           accessToken: session?.access_token,
@@ -890,6 +891,7 @@ const Chat = () => {
       await streamChat({
         messages: apiMessages,
         agentId,
+        persona,
         memoryContext: turnMemoryContext,
         bondLevel,
 
