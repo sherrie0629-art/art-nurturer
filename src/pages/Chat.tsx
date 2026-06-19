@@ -78,6 +78,18 @@ const isTarotDrawIntent = (text: string): boolean => {
 
 const EASTER_EGG_MARKER = "【🔮 Hidden Memory Unlocked】";
 
+const hasUsableAccessToken = (token?: string | null) => {
+  if (!token) return false;
+  const parts = token.split(".");
+  if (parts.length !== 3) return false;
+  try {
+    const payload = JSON.parse(atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")));
+    return !!payload?.sub && (!payload.exp || payload.exp * 1000 > Date.now());
+  } catch {
+    return false;
+  }
+};
+
 const Chat = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -155,6 +167,32 @@ const Chat = () => {
   const { newlyUnlocked, checkAchievements, dismissAchievement } = useAchievements(user?.id);
   const { activeAgentId: ttsActiveAgentId, playingId: ttsPlayingId } = useTTS();
   const isVoiceActive = ttsActiveAgentId === agentId && !!ttsPlayingId;
+
+  const getRecallAccessToken = useCallback(async () => {
+    if (!user) return null;
+    if (hasUsableAccessToken(session?.access_token)) return session!.access_token;
+    const { data } = await supabase.auth.getSession();
+    const fresh = data.session;
+    if (fresh?.user?.id === user.id && hasUsableAccessToken(fresh.access_token)) {
+      return fresh.access_token;
+    }
+    return null;
+  }, [user, session?.access_token]);
+
+  const recallMemory = useCallback(async (query: string, k = 8): Promise<{ memories: any[]; facts: any[] }> => {
+    const accessToken = await getRecallAccessToken();
+    if (!accessToken) return { memories: [], facts: [] };
+
+    const { data, error } = await supabase.functions.invoke("recall-memory", {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      body: { query: query || "recent conversation context", agentId, k },
+    });
+    if (error) {
+      console.warn("[Chat] recall-memory unavailable, continuing without:", error.message);
+      return { memories: [], facts: [] };
+    }
+    return { memories: (data as any)?.memories || [], facts: (data as any)?.facts || [] };
+  }, [agentId, getRecallAccessToken]);
 
   // Load energy from bond
   useEffect(() => {
@@ -307,27 +345,7 @@ const Chat = () => {
     };
 
 
-    const recallFromEdge = async (query: string): Promise<{ memories: any[]; facts: any[] }> => {
-      if (!user) return { memories: [], facts: [] };
-      try {
-        const { data, error } = await supabase.functions.invoke("recall-memory", {
-          body: { query: query || "recent conversation context", agentId, k: 8 },
-        });
-        if (error) {
-          // 401 = stored JWT became invalid (e.g. signing key rotated).
-          // Clear local session so we stop calling edge fns with a bad token.
-          if ((error as any)?.context?.status === 401) {
-            await supabase.auth.signOut();
-          }
-          console.warn("[Chat] recall-memory unavailable, continuing without:", error.message);
-          return { memories: [], facts: [] };
-        }
-        return { memories: (data as any)?.memories || [], facts: (data as any)?.facts || [] };
-      } catch (e) {
-        console.error("[Chat] recall-memory failed, falling back:", e);
-        return { memories: [], facts: [] };
-      }
-    };
+    const recallFromEdge = (query: string) => recallMemory(query, 8);
 
 
     const loadConversationAndMemories = async () => {
@@ -821,11 +839,7 @@ const Chat = () => {
     let turnMemoryContext = memoryContext;
     if (user) {
       try {
-        const { data: recallData } = await supabase.functions.invoke("recall-memory", {
-          body: { query: text, agentId, k: 8 },
-        });
-        const rMems = (recallData as any)?.memories || [];
-        const rFacts = (recallData as any)?.facts || [];
+        const { memories: rMems, facts: rFacts } = await recallMemory(text, 8);
         if (rMems.length > 0 || rFacts.length > 0) {
           const fresh: string[] = [];
           const isZh = locale === "zh";
