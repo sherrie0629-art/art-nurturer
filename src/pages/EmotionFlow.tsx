@@ -1,4 +1,5 @@
 import { isDailyLimitError } from "@/lib/assessmentErrors";
+import { persistAssessmentResult } from "@/lib/guestAssessment";
 import { useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
