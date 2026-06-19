@@ -1372,7 +1372,7 @@ const Chat = () => {
               const isUnlocked = index + 1 <= bondLevel;
               return (
                 <div key={loreEntry.level} className={`rounded-xl p-3 text-xs leading-relaxed ${isUnlocked ? "bg-secondary/5 text-foreground border border-secondary/10" : "bg-muted/30 text-muted-foreground/40"}`}>
-                  <span className="text-[10px] font-medium text-muted-foreground">Lv.{loreEntry.level}</span>
+                  <span className={`text-[10px] font-medium ${isUnlocked ? "text-secondary" : "text-muted-foreground/40"}`}>Lv.{loreEntry.level}</span>
                   <p className="mt-1">{isUnlocked ? `"${loreEntry.text.slice(0, 80)}…"` : "???"}</p>
                 </div>
               );
