@@ -344,9 +344,9 @@ const AssessmentFlow = () => {
         </div>
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="px-6">
           <div className="text-center mt-4 mb-6">
-            <div className="mx-auto mb-4 h-20 w-20 rounded-full bg-gradient-mystic flex items-center justify-center"><span className="font-display text-2xl font-bold text-primary-foreground">{result.mbtiType}</span></div>
+            <div className="mx-auto mb-4 h-20 w-20 rounded-full bg-gradient-mystic flex items-center justify-center shadow-soft"><span className="font-display text-2xl font-bold text-foreground">{result.mbtiType}</span></div>
             <h1 className="font-display text-xl font-bold text-foreground">{result.mbtiType} — {result.title}</h1>
-            <p className="mt-1 text-xs text-secondary">"{result.socialCaption}"</p>
+            <p className="mt-1 text-xs text-muted-foreground">"{result.socialCaption}"</p>
           </div>
           <ResultAIImage imageUrl={resultImageUrl} loading={imageLoading} />
           <div className="rounded-2xl bg-card p-5 shadow-card mb-4"><h3 className="font-display text-sm font-semibold text-foreground mb-3">{t("assessmentFlow.mbti.personalityAnalysis")}</h3><p className="text-sm text-muted-foreground leading-relaxed">{result.description}</p></div>
