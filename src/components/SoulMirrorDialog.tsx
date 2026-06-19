@@ -184,33 +184,64 @@ export default function SoulMirrorDialog({ open, userId, onClose, existingMirror
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 shadow-glow">
                 <Sparkles className="h-8 w-8 text-white" />
               </div>
-              <h2 className="font-display text-2xl font-bold mb-2">{t("soulMirror.unlockedTitle")}</h2>
-              <p className="text-sm text-white/80 mb-6 leading-relaxed whitespace-pre-line">{t("soulMirror.unlockedDesc")}</p>
-              <div className="grid grid-cols-2 gap-2 mb-6 text-left">
-                {[
-                  { e: "🧵", id: "nuannuan", d: t("soulMirror.lens.nuannuan") },
-                  { e: "🍵", id: "laowang",  d: t("soulMirror.lens.laowang") },
-                  { e: "🌙", id: "yunsheng", d: t("soulMirror.lens.yunsheng") },
-                  { e: "✨", id: "xinggui",  d: t("soulMirror.lens.xinggui") },
-                ].map((a) => (
-                  <div key={a.id} className="rounded-xl bg-white/5 border border-white/10 p-2.5">
-                    <div className="text-lg">{a.e}</div>
-                    <div className="text-xs font-semibold">{AGENT_NAME[a.id][i18n.language === "en" ? "en" : "zh"]}</div>
-                    <div className="text-[10px] text-white/60 leading-snug">{a.d}</div>
-                  </div>
-                ))}
-              </div>
               {(() => {
-                const chatted = Object.entries(bondTurns).filter(([, n]) => (n || 0) >= 3);
-                if (chatted.length === 0 && Object.keys(bondTurns).length > 0) {
-                  return <p className="text-[11px] text-white/50 mb-3 leading-snug">{t("soulMirror.entryHint.allUnmet")}</p>;
-                }
-                if (chatted.length === 1) {
-                  const id = chatted[0][0];
+                if (isSingle) {
+                  const id = singleAgentId!;
                   const name = AGENT_NAME[id]?.[i18n.language === "en" ? "en" : "zh"] || id;
-                  return <p className="text-[11px] text-white/50 mb-3 leading-snug">{t("soulMirror.entryHint.onlyOne", { name })}</p>;
+                  const emoji = ({ nuannuan: "🧵", laowang: "🍵", yunsheng: "🌙", xinggui: "✨" } as Record<string, string>)[id] || "✨";
+                  const desc = t(`soulMirror.lens.${id}`);
+                  const title = i18n.language === "en"
+                    ? `A mirror written just by ${name}`
+                    : `${name} 为你写一张镜像`;
+                  const sub = i18n.language === "en"
+                    ? `${name} will draw what they see in you — a poster with a portrait scene in their own world.`
+                    : `${name} 会把你写成一张诗意的小镜像，附上一幅属于 ${name} 世界的场景图。`;
+                  return (
+                    <>
+                      <h2 className="font-display text-2xl font-bold mb-2">{title}</h2>
+                      <p className="text-sm text-white/80 mb-6 leading-relaxed">{sub}</p>
+                      <div className="rounded-2xl bg-white/5 border border-white/10 p-4 mb-6 text-left flex items-start gap-3">
+                        <div className="text-3xl leading-none">{emoji}</div>
+                        <div>
+                          <div className="text-sm font-semibold">{name}</div>
+                          <div className="text-xs text-white/60 leading-snug mt-1">{desc}</div>
+                        </div>
+                      </div>
+                    </>
+                  );
                 }
-                return null;
+                return (
+                  <>
+                    <h2 className="font-display text-2xl font-bold mb-2">{t("soulMirror.unlockedTitle")}</h2>
+                    <p className="text-sm text-white/80 mb-6 leading-relaxed whitespace-pre-line">{t("soulMirror.unlockedDesc")}</p>
+                    <div className="grid grid-cols-2 gap-2 mb-6 text-left">
+                      {[
+                        { e: "🧵", id: "nuannuan", d: t("soulMirror.lens.nuannuan") },
+                        { e: "🍵", id: "laowang",  d: t("soulMirror.lens.laowang") },
+                        { e: "🌙", id: "yunsheng", d: t("soulMirror.lens.yunsheng") },
+                        { e: "✨", id: "xinggui",  d: t("soulMirror.lens.xinggui") },
+                      ].map((a) => (
+                        <div key={a.id} className="rounded-xl bg-white/5 border border-white/10 p-2.5">
+                          <div className="text-lg">{a.e}</div>
+                          <div className="text-xs font-semibold">{AGENT_NAME[a.id][i18n.language === "en" ? "en" : "zh"]}</div>
+                          <div className="text-[10px] text-white/60 leading-snug">{a.d}</div>
+                        </div>
+                      ))}
+                    </div>
+                    {(() => {
+                      const chatted = Object.entries(bondTurns).filter(([, n]) => (n || 0) >= 3);
+                      if (chatted.length === 0 && Object.keys(bondTurns).length > 0) {
+                        return <p className="text-[11px] text-white/50 mb-3 leading-snug">{t("soulMirror.entryHint.allUnmet")}</p>;
+                      }
+                      if (chatted.length === 1) {
+                        const id = chatted[0][0];
+                        const name = AGENT_NAME[id]?.[i18n.language === "en" ? "en" : "zh"] || id;
+                        return <p className="text-[11px] text-white/50 mb-3 leading-snug">{t("soulMirror.entryHint.onlyOne", { name })}</p>;
+                      }
+                      return null;
+                    })()}
+                  </>
+                );
               })()}
               <button
                 onClick={handleGenerate}
