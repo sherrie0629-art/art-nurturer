@@ -99,20 +99,20 @@ const Index = () => {
               transition={{ delay: 0.05 }}
               whileHover={{ y: -2 }}
               onClick={() => navigate("/daily-fortune-stick")}
-              className="md:col-span-4 group text-left rounded-2xl md:rounded-3xl border border-[#c9a84c]/15 bg-[#1a1a1a] p-4 md:p-6 hover:border-[#c9a84c]/45 transition-colors"
+              className="md:col-span-4 group text-left rounded-2xl md:rounded-3xl border border-[#c9a84c]/15 bg-[#1a1a1a] p-3 md:p-6 hover:border-[#c9a84c]/45 transition-colors"
             >
               <div className="flex items-start justify-between gap-3">
                 <h3
-                  className="text-xl md:text-2xl text-[#c9a84c]"
+                  className="text-lg text-[#c9a84c] md:text-2xl"
                   style={{ fontFamily: serif }}
                 >
                   {t("home.dailyFortune")}
                 </h3>
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#c9a84c]/30 text-[#c9a84c] group-hover:bg-[#c9a84c] group-hover:text-[#0d0d0d] transition-colors">
-                  <ArrowRight className="h-4 w-4" />
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[#c9a84c]/30 text-[#c9a84c] group-hover:bg-[#c9a84c] group-hover:text-[#0d0d0d] transition-colors md:h-8 md:w-8">
+                  <ArrowRight className="h-3.5 w-3.5 md:h-4 md:w-4" />
                 </span>
               </div>
-              <p className="mt-2 text-xs text-[#f0d78c]/55">
+              <p className="mt-1 text-[11px] text-[#f0d78c]/55 md:text-xs md:mt-2">
                 {t("home.dailyFortuneDesc")}
               </p>
             </motion.button>
@@ -124,20 +124,20 @@ const Index = () => {
               transition={{ delay: 0.1 }}
               whileHover={{ y: -2 }}
               onClick={() => navigate("/assessment/compatibility")}
-              className="md:col-span-4 group text-left rounded-2xl md:rounded-3xl border border-[#c9a84c]/15 bg-gradient-to-br from-[#1a1a1a] to-[#141414] p-4 md:p-6 hover:border-[#c9a84c]/45 transition-colors"
+              className="md:col-span-4 group text-left rounded-2xl md:rounded-3xl border border-[#c9a84c]/15 bg-gradient-to-br from-[#1a1a1a] to-[#141414] p-3 md:p-6 hover:border-[#c9a84c]/45 transition-colors"
             >
               <div className="flex items-start justify-between gap-3">
                 <h3
-                  className="text-xl md:text-2xl text-[#c9a84c]"
+                  className="text-lg text-[#c9a84c] md:text-2xl"
                   style={{ fontFamily: serif }}
                 >
                   {t("home.chemistry")}
                 </h3>
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#c9a84c]/30 text-[#c9a84c] group-hover:bg-[#c9a84c] group-hover:text-[#0d0d0d] transition-colors">
-                  <Heart className="h-4 w-4" />
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[#c9a84c]/30 text-[#c9a84c] group-hover:bg-[#c9a84c] group-hover:text-[#0d0d0d] transition-colors md:h-8 md:w-8">
+                  <Heart className="h-3.5 w-3.5 md:h-4 md:w-4" />
                 </span>
               </div>
-              <p className="mt-2 text-xs text-[#f0d78c]/55">
+              <p className="mt-1 text-[11px] text-[#f0d78c]/55 md:text-xs md:mt-2">
                 {t("home.chemistryDesc")}
               </p>
             </motion.button>
