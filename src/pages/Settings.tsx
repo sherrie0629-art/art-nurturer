@@ -1,20 +1,17 @@
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, Check, Globe, Volume2 } from "lucide-react";
+import { ArrowLeft, Check, Globe } from "lucide-react";
 import { toast } from "sonner";
 import DesktopLayout from "@/components/DesktopLayout";
 import BottomNav from "@/components/BottomNav";
 import SEO from "@/components/SEO";
 import { useLocale } from "@/hooks/useLocale";
-import { useTTS } from "@/contexts/TTSContext";
 import type { Locale } from "@/i18n";
 
 const Settings = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { locale, setLocale } = useLocale();
-  const { enabled, setEnabled, speed, setSpeed, volume, setVolume } = useTTS();
-
   const handleSelect = async (lng: Locale) => {
     if (lng === locale) return;
     await setLocale(lng);
@@ -26,8 +23,6 @@ const Settings = () => {
     { value: "zh", label: t("settings.chinese") },
   ];
 
-  const speedOptions: { value: 0.85 | 1 | 1.15; label: string }[] = [
-    { value: 0.85, label: "0.85×" },
     { value: 1, label: "1×" },
     { value: 1.15, label: "1.15×" },
   ];
