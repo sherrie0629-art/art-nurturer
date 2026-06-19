@@ -1,35 +1,72 @@
-## 问题诊断
+## 目标
 
-当前截图是**未登录用户**走的本地兜底分支（`getFallbackMbtiResult`）：
+把"灵魂镜像"从聊天页打开时，**只生成当前角色的镜像海报**，并在海报里加一张符合该角色风格的 AI 配图；同时把单角色海报排版做得更呼吸。
+Vault 页面入口（4 位 AI 联合镜像）保持现有逻辑不动。
 
-1. **性格解析** —— 不管是 INTJ 还是 ESFP，所有人都看到同一段"用自己的节奏判断局面…"的模板话，毫无个性。
-2. **平行宇宙的你** —— 内容空白，因为 `fetchParallelUniverse` 第一行 `if (!user || !hasUsableUserToken(...)) return;` 直接 return，未登录就什么都不渲染（甚至连骨架屏都没有），只留下一个孤零零的标题。
+## 方案
 
-## 修复方案
+### 1. 入口区分：单角色 vs 全员
 
-### 1. 让"性格解析"更有趣（`src/pages/AssessmentFlow.tsx` → `getFallbackMbtiResult`）
+在 `SoulMirrorDialog` 加 `singleAgentId?: string` 属性：
 
-把固定模板换成"基于 MBTI 16 型 + 用户实际倾向比例"生成的活泼侧写：
+- `Chat.tsx` 把 `agentId` 透传给 Dialog。
+- `Vault.tsx` 不传，保留 4 位联合视图。
+- Dialog 内根据 `singleAgentId` 决定：
+  - 介绍页只展示该角色一张大卡（不再 4 宫格）。
+  - 调用 edge function 时带上 `{ agentId }`，并把节流键改成"按角色"。
+  - 渲染海报时走"单角色版式"（见 3）。
 
-- 新增一份 16 型本地文案表（中英双语），每条 80–120 字，第二人称、有画面感、带点幽默和网感（参考用户测题里"催婚、地铁、双 11"那种基调），不要"问卷腔"。
-- 文案模板支持把用户的实际倾向比例（如"S 70%"）自然嵌进去："你身上的 N 苗头有点蹿"这种口吻，让每个人读起来都觉得"说的就是我"。
-- 末尾保留一句轻量引导："登录后还有 AI 给你写一份更长的深度解读" —— 但不要再像现在这样占据整段。
+### 2. Edge function `generate-soul-mirror` 支持单角色模式
 
-### 2. 修复"平行宇宙的你"空白
+- 接受 `body.agentId`。若指定且合法（4 个角色之一）：
+  - 仅对该角色调 AI 生成 `portrait/signature/keywords`，跳过其他 3 个的 AI 调用，节省 75% 时长 / 配额。
+  - 节流改为 per-(user, agentId)：扫描 `soul_mirrors` 时按 `user_snapshot->>singleAgentId = ?` 过滤，24h 内同一角色不能重复生成；不同角色互不冲突。
+  - **新增角色风格配图**：调用 AI Gateway `/v1/images/generations`（非流式、`openai/gpt-image-2`、`quality: "low"`、`size: "1024x1536"` 竖图），prompt 模板按角色硬编码：
+    - 暖暖：温暖橘调、毛线/茶光、室内柔光，类似日系暖调插画。
+    - 老王：青灰水墨、茶汤、苔石，沉静水墨风。
+    - 云生：深蓝紫夜空、月相、星座线条，神秘魔幻插画。
+    - 星轨：霓虹紫粉、星轨、轻赛博梦核风。
+    - prompt 末尾固定追加："no text, no letters, vertical portrait composition, soft cinematic lighting"。
+    - 失败时跳过图片，仍正常返回文字。
+  - 把生成的 PNG 上传到 `shared-posters` storage（命名 `soul-mirror-img_<id>.png`），URL 写进返回体 `imageUrl` 字段，并存进 `user_snapshot.singleAgentId` / `user_snapshot.imageUrl`。
 
-未登录时不调用 edge function，改为**本地生成 16 型的平行宇宙身份**：
+返回体扩展：
+```json
+{
+  "id": "...",
+  "perspectives": [<just-one>],
+  "userSnapshot": { ..., "singleAgentId": "nuannuan", "imageUrl": "https://.../..." }
+}
+```
 
-- 新增 `src/lib/fallbackParallelUniverse.ts`，导出 `getFallbackParallelUniverse(mbtiType, locale)`，返回 `{ magic: {role, description}, cyberpunk: {role, description} }`。
-- 内置 16 型 × 2 世界（魔法 / 赛博朋克）× 中英双语的角色卡，例如 INTJ 魔法世界 = "深塔里的禁咒推演者"，赛博朋克 = "黑市算法掮客"，每张卡 30–50 字、够中二够有趣、可分享。
-- 在 `fetchResult` 的 fallback 分支调用 `setParallelData(getFallbackParallelUniverse(fallback.mbtiType, locale))`，结果区直接渲染（无需骨架屏）。
-- AI 分支保持原逻辑不变；只在未登录 / 401 兜底时使用本地版本。
+### 3. 海报版式（单角色专属）`renderPoster`
 
-### 3. 顺手清理
+如果 `snap.singleAgentId` 存在：
+- 上半部分：左侧 360×480 角色配图（圆角，若加载失败就用纯渐变色占位）；右侧角色名 + emoji + 一句 signature。
+- 中部：一条细分割线 + portrait 正文（字号比现在大、行高更松、最多 6–7 行，超出截断）。
+- 底部：3 个 keyword chip 一排居中。
+- 完全不画那 3 个副卡片。
+- 标题保留 "Soul Mirror · 灵魂镜像"，副标题改成 `与 暖暖 第 N 轮深聊后的镜像片段`。
 
-- 渲染处把当前"`parallelLoading ? Skeleton : parallelData ? 卡片 : null`"的 `null` 分支保留，避免登录用户在加载失败时仍然看到空白容器 —— 失败也回退到本地版本。
+整体留白比当前明显加大，看上去不再密密麻麻。
+
+### 4. Dialog 介绍 / 结果文案
+
+- 单角色模式时，介绍区改成只展示当前角色一行（emoji + 名 + 一句描述），CTA 文案：「让 ${agentName} 写一张你的镜像」。
+- 节流提示改成「${agentName} 24 小时内只能生成一次」。
 
 ## 技术细节
 
-- 只改 2 个文件：新建 `src/lib/fallbackParallelUniverse.ts`，编辑 `src/pages/AssessmentFlow.tsx`。
-- 不动 edge function、不动数据库、不动 i18n key（继续用现有 `assessmentFlow.mbti.parallelUniverse` / `fantasyWorld` / `cyberpunk`）。
-- 文案直接写在 ts 文件里（不进 i18n json），因为是 16 × 2 × 2 = 64 段，集中维护更顺手。
+涉及文件：
+
+- `src/components/SoulMirrorDialog.tsx`：新增 `singleAgentId` prop；介绍页分支；`renderPoster` 加单角色分支；用 `Image()` 预加载 `userSnapshot.imageUrl` 后再 `ctx.drawImage`（CORS：storage 桶已 public，需 `crossOrigin = "anonymous"`）。
+- `src/hooks/useSoulMirror.ts`：`generate(agentId?)` 透传到 edge function；`SoulMirrorSnapshot` 加 `singleAgentId?: string; imageUrl?: string;`。
+- `src/pages/Chat.tsx`：`<SoulMirrorDialog singleAgentId={agentId} ... />`。
+- `supabase/functions/generate-soul-mirror/index.ts`：支持 `agentId`，单角色 AI 调用 + 单角色图片生成 + per-agent 节流。
+- 不动 Vault.tsx、不改数据库 schema（`user_snapshot` 是 jsonb，直接塞新字段即可）。
+
+注意事项：
+
+- AI Gateway 图片生成可能失败/超时 → 包 try/catch，失败时 `imageUrl = null`，前端拿不到就走纯色占位，不阻塞主流程。
+- 图片 1024×1536 base64 可能较大（≈1MB），上传后只在 jsonb 存 URL 不存 base64。
+- 节流：单角色之间互相独立；全员模式（无 agentId）仍用原 24h 全局节流。

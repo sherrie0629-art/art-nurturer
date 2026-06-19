@@ -13,6 +13,8 @@ interface Props {
   onClose: () => void;
   /** Existing mirror to show instead of triggering generation. */
   existingMirror?: SoulMirror | null;
+  /** When set, only generate the mirror from this single agent (chat-page mode). */
+  singleAgentId?: string;
 }
 
 type Phase = "intro" | "generating" | "result" | "pro_required" | "throttled" | "error";
@@ -34,10 +36,11 @@ const AGENT_NAME: Record<string, { zh: string; en: string }> = {
   xinggui:  { zh: "星轨", en: "Xinggui" },
 };
 
-export default function SoulMirrorDialog({ open, userId, onClose, existingMirror }: Props) {
+export default function SoulMirrorDialog({ open, userId, onClose, existingMirror, singleAgentId }: Props) {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { generate, attachPosterUrl } = useSoulMirror(userId);
+  const isSingle = !!singleAgentId;
   const [phase, setPhase] = useState<Phase>(existingMirror ? "result" : "intro");
   const [mirror, setMirror] = useState<SoulMirror | null>(existingMirror || null);
   const [posterUrl, setPosterUrl] = useState<string | null>(existingMirror?.poster_url || null);
@@ -78,7 +81,7 @@ export default function SoulMirrorDialog({ open, userId, onClose, existingMirror
 
   const handleGenerate = useCallback(async () => {
     setPhase("generating");
-    const res: any = await generate();
+    const res: any = await generate(singleAgentId);
     if (!res.ok) {
       if (res.reason === "requires_pro") {
         setPhase("pro_required");
@@ -92,7 +95,7 @@ export default function SoulMirrorDialog({ open, userId, onClose, existingMirror
     }
     setMirror(res.mirror);
     setPhase("result");
-  }, [generate]);
+  }, [generate, singleAgentId]);
 
   // Render poster onto canvas once mirror appears
   useEffect(() => {
@@ -181,33 +184,64 @@ export default function SoulMirrorDialog({ open, userId, onClose, existingMirror
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 shadow-glow">
                 <Sparkles className="h-8 w-8 text-white" />
               </div>
-              <h2 className="font-display text-2xl font-bold mb-2">{t("soulMirror.unlockedTitle")}</h2>
-              <p className="text-sm text-white/80 mb-6 leading-relaxed whitespace-pre-line">{t("soulMirror.unlockedDesc")}</p>
-              <div className="grid grid-cols-2 gap-2 mb-6 text-left">
-                {[
-                  { e: "🧵", id: "nuannuan", d: t("soulMirror.lens.nuannuan") },
-                  { e: "🍵", id: "laowang",  d: t("soulMirror.lens.laowang") },
-                  { e: "🌙", id: "yunsheng", d: t("soulMirror.lens.yunsheng") },
-                  { e: "✨", id: "xinggui",  d: t("soulMirror.lens.xinggui") },
-                ].map((a) => (
-                  <div key={a.id} className="rounded-xl bg-white/5 border border-white/10 p-2.5">
-                    <div className="text-lg">{a.e}</div>
-                    <div className="text-xs font-semibold">{AGENT_NAME[a.id][i18n.language === "en" ? "en" : "zh"]}</div>
-                    <div className="text-[10px] text-white/60 leading-snug">{a.d}</div>
-                  </div>
-                ))}
-              </div>
               {(() => {
-                const chatted = Object.entries(bondTurns).filter(([, n]) => (n || 0) >= 3);
-                if (chatted.length === 0 && Object.keys(bondTurns).length > 0) {
-                  return <p className="text-[11px] text-white/50 mb-3 leading-snug">{t("soulMirror.entryHint.allUnmet")}</p>;
-                }
-                if (chatted.length === 1) {
-                  const id = chatted[0][0];
+                if (isSingle) {
+                  const id = singleAgentId!;
                   const name = AGENT_NAME[id]?.[i18n.language === "en" ? "en" : "zh"] || id;
-                  return <p className="text-[11px] text-white/50 mb-3 leading-snug">{t("soulMirror.entryHint.onlyOne", { name })}</p>;
+                  const emoji = ({ nuannuan: "🧵", laowang: "🍵", yunsheng: "🌙", xinggui: "✨" } as Record<string, string>)[id] || "✨";
+                  const desc = t(`soulMirror.lens.${id}`);
+                  const title = i18n.language === "en"
+                    ? `A mirror written just by ${name}`
+                    : `${name} 为你写一张镜像`;
+                  const sub = i18n.language === "en"
+                    ? `${name} will draw what they see in you — a poster with a portrait scene in their own world.`
+                    : `${name} 会把你写成一张诗意的小镜像，附上一幅属于 ${name} 世界的场景图。`;
+                  return (
+                    <>
+                      <h2 className="font-display text-2xl font-bold mb-2">{title}</h2>
+                      <p className="text-sm text-white/80 mb-6 leading-relaxed">{sub}</p>
+                      <div className="rounded-2xl bg-white/5 border border-white/10 p-4 mb-6 text-left flex items-start gap-3">
+                        <div className="text-3xl leading-none">{emoji}</div>
+                        <div>
+                          <div className="text-sm font-semibold">{name}</div>
+                          <div className="text-xs text-white/60 leading-snug mt-1">{desc}</div>
+                        </div>
+                      </div>
+                    </>
+                  );
                 }
-                return null;
+                return (
+                  <>
+                    <h2 className="font-display text-2xl font-bold mb-2">{t("soulMirror.unlockedTitle")}</h2>
+                    <p className="text-sm text-white/80 mb-6 leading-relaxed whitespace-pre-line">{t("soulMirror.unlockedDesc")}</p>
+                    <div className="grid grid-cols-2 gap-2 mb-6 text-left">
+                      {[
+                        { e: "🧵", id: "nuannuan", d: t("soulMirror.lens.nuannuan") },
+                        { e: "🍵", id: "laowang",  d: t("soulMirror.lens.laowang") },
+                        { e: "🌙", id: "yunsheng", d: t("soulMirror.lens.yunsheng") },
+                        { e: "✨", id: "xinggui",  d: t("soulMirror.lens.xinggui") },
+                      ].map((a) => (
+                        <div key={a.id} className="rounded-xl bg-white/5 border border-white/10 p-2.5">
+                          <div className="text-lg">{a.e}</div>
+                          <div className="text-xs font-semibold">{AGENT_NAME[a.id][i18n.language === "en" ? "en" : "zh"]}</div>
+                          <div className="text-[10px] text-white/60 leading-snug">{a.d}</div>
+                        </div>
+                      ))}
+                    </div>
+                    {(() => {
+                      const chatted = Object.entries(bondTurns).filter(([, n]) => (n || 0) >= 3);
+                      if (chatted.length === 0 && Object.keys(bondTurns).length > 0) {
+                        return <p className="text-[11px] text-white/50 mb-3 leading-snug">{t("soulMirror.entryHint.allUnmet")}</p>;
+                      }
+                      if (chatted.length === 1) {
+                        const id = chatted[0][0];
+                        const name = AGENT_NAME[id]?.[i18n.language === "en" ? "en" : "zh"] || id;
+                        return <p className="text-[11px] text-white/50 mb-3 leading-snug">{t("soulMirror.entryHint.onlyOne", { name })}</p>;
+                      }
+                      return null;
+                    })()}
+                  </>
+                );
               })()}
               <button
                 onClick={handleGenerate}
@@ -325,6 +359,8 @@ async function renderPoster(mirror: SoulMirror): Promise<string> {
   const locale: "zh" | "en" = (snap?.locale === "en" ? "en" : "zh");
   const primaryAgentId: string | null = (snap as any)?.primaryAgentId ?? null;
   const primaryTurns: number = (snap as any)?.primaryTurns ?? 0;
+  const singleAgentId: string | null = (snap as any)?.singleAgentId ?? null;
+  const imageUrl: string | null = (snap as any)?.imageUrl ?? null;
 
   if (snap) {
     ctx.font = "26px 'Inter', sans-serif";
@@ -335,7 +371,11 @@ async function renderPoster(mirror: SoulMirror): Promise<string> {
 
   // Dynamic subtitle line
   const primary = primaryAgentId ? mirror.perspectives.find((p) => p.agentId === primaryAgentId) : null;
-  const subtitleLine = primary
+  const subtitleLine = singleAgentId && primary
+    ? (locale === "zh"
+        ? `${primary.displayName} 写给你的灵魂镜像`
+        : `A soul mirror written by ${primary.displayName}`)
+    : primary
     ? (locale === "zh"
         ? `与 ${primary.displayName} 深聊 ${primaryTurns} 次后的灵魂镜像`
         : `Soul Mirror after ${primaryTurns} deep talks with ${primary.displayName}`)
@@ -345,6 +385,23 @@ async function renderPoster(mirror: SoulMirror): Promise<string> {
   ctx.font = "italic 22px 'DM Serif Display', serif";
   ctx.fillStyle = "rgba(255,255,255,0.55)";
   ctx.fillText(subtitleLine, POSTER_W / 2, 174);
+
+  // ===== Single-agent layout =====
+  if (singleAgentId && primary) {
+    let img: HTMLImageElement | null = null;
+    if (imageUrl) {
+      try {
+        img = await loadImage(imageUrl);
+      } catch { img = null; }
+    }
+    await drawSingleAgentCard(ctx, primary, img, locale);
+    // Footer
+    ctx.fillStyle = "rgba(255,255,255,0.45)";
+    ctx.font = "italic 24px 'DM Serif Display', serif";
+    ctx.textAlign = "center";
+    ctx.fillText("islandai.life · 心灵镜像", POSTER_W / 2, POSTER_H - 60);
+    return canvas.toDataURL("image/png");
+  }
 
   // Layout area
   const gridTop = 210;
@@ -390,6 +447,144 @@ async function renderPoster(mirror: SoulMirror): Promise<string> {
   ctx.fillText("islandai.life · 心灵镜像", POSTER_W / 2, POSTER_H - 60);
 
   return canvas.toDataURL("image/png");
+}
+
+function loadImage(url: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => resolve(img);
+    img.onerror = (e) => reject(e);
+    img.src = url;
+  });
+}
+
+async function drawSingleAgentCard(
+  ctx: CanvasRenderingContext2D,
+  p: SoulMirrorPerspective,
+  img: HTMLImageElement | null,
+  locale: "zh" | "en",
+) {
+  const cardX = 60;
+  const cardY = 210;
+  const cardW = POSTER_W - 120;
+  const cardH = POSTER_H - 210 - 130;
+
+  // Card background
+  const colors = AGENT_BG[p.agentId] || ["#3a2a5a", "#7a5ab8"];
+  const grad = ctx.createLinearGradient(cardX, cardY, cardX + cardW, cardY + cardH);
+  grad.addColorStop(0, hexToRgba(colors[0], 0.92));
+  grad.addColorStop(1, hexToRgba(colors[1], 0.78));
+  roundRect(ctx, cardX, cardY, cardW, cardH, 32);
+  ctx.fillStyle = grad;
+  ctx.fill();
+  ctx.strokeStyle = "rgba(255,255,255,0.25)";
+  ctx.lineWidth = 2;
+  roundRect(ctx, cardX, cardY, cardW, cardH, 32);
+  ctx.stroke();
+
+  // Image area (top ~46%)
+  const imgPad = 40;
+  const imgX = cardX + imgPad;
+  const imgY = cardY + imgPad;
+  const imgW = cardW - imgPad * 2;
+  const imgH = Math.floor(cardH * 0.46);
+
+  // Image clip
+  ctx.save();
+  roundRect(ctx, imgX, imgY, imgW, imgH, 24);
+  ctx.clip();
+  if (img) {
+    // cover
+    const ir = img.width / img.height;
+    const fr = imgW / imgH;
+    let dw = imgW, dh = imgH, dx = imgX, dy = imgY;
+    if (ir > fr) {
+      dh = imgH; dw = imgH * ir; dx = imgX - (dw - imgW) / 2; dy = imgY;
+    } else {
+      dw = imgW; dh = imgW / ir; dx = imgX; dy = imgY - (dh - imgH) / 2;
+    }
+    ctx.drawImage(img, dx, dy, dw, dh);
+  } else {
+    // Fallback gradient with emoji
+    const g2 = ctx.createLinearGradient(imgX, imgY, imgX + imgW, imgY + imgH);
+    g2.addColorStop(0, hexToRgba(colors[0], 1));
+    g2.addColorStop(1, hexToRgba(colors[1], 1));
+    ctx.fillStyle = g2;
+    ctx.fillRect(imgX, imgY, imgW, imgH);
+    ctx.font = "180px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "rgba(255,255,255,0.85)";
+    ctx.fillText(p.emoji, imgX + imgW / 2, imgY + imgH / 2);
+    ctx.textBaseline = "alphabetic";
+  }
+  ctx.restore();
+
+  // Name row beneath image
+  let cy = imgY + imgH + 56;
+  ctx.textAlign = "left";
+  ctx.font = "56px sans-serif";
+  ctx.fillStyle = "#ffffff";
+  ctx.fillText(p.emoji, cardX + imgPad, cy);
+  ctx.font = "700 44px 'DM Serif Display', serif";
+  ctx.fillText(p.displayName, cardX + imgPad + 70, cy - 6);
+
+  // Signature
+  cy += 56;
+  ctx.font = "italic 30px 'DM Serif Display', serif";
+  ctx.fillStyle = "rgba(255,255,255,0.92)";
+  const sigLines = wrapText(ctx, p.signature, cardW - imgPad * 2);
+  for (const line of sigLines.slice(0, 2)) {
+    ctx.fillText(line, cardX + imgPad, cy);
+    cy += 38;
+  }
+
+  // Divider
+  cy += 14;
+  ctx.strokeStyle = "rgba(255,255,255,0.28)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(cardX + imgPad, cy);
+  ctx.lineTo(cardX + cardW - imgPad, cy);
+  ctx.stroke();
+  cy += 32;
+
+  // Body
+  ctx.font = "26px 'Inter', sans-serif";
+  ctx.fillStyle = "rgba(255,255,255,0.9)";
+  const lineH = 38;
+  const reserveBottom = 90; // for chips
+  const maxBodyH = (cardY + cardH - imgPad) - cy - reserveBottom;
+  const maxLines = Math.max(2, Math.floor(maxBodyH / lineH));
+  const bodyLines = wrapText(ctx, p.portrait, cardW - imgPad * 2);
+  const shown = bodyLines.slice(0, maxLines);
+  if (bodyLines.length > maxLines && shown.length > 0) {
+    shown[shown.length - 1] = truncateToWidth(ctx, shown[shown.length - 1] + "…", cardW - imgPad * 2);
+  }
+  for (const line of shown) {
+    ctx.fillText(line, cardX + imgPad, cy);
+    cy += lineH;
+  }
+
+  // Keyword chips centered
+  const kwY = cardY + cardH - imgPad - 6;
+  ctx.font = "22px 'Inter', sans-serif";
+  const kws = p.keywords.slice(0, 3).map((k) => `#${k}`);
+  const widths = kws.map((k) => ctx.measureText(k).width + 28);
+  const chipGap = 14;
+  const totalW = widths.reduce((a, b) => a + b, 0) + chipGap * (kws.length - 1);
+  let kx = cardX + (cardW - totalW) / 2;
+  for (let i = 0; i < kws.length; i++) {
+    const w = widths[i];
+    roundRect(ctx, kx, kwY - 28, w, 36, 18);
+    ctx.fillStyle = "rgba(255,255,255,0.2)";
+    ctx.fill();
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText(kws[i], kx + 14, kwY);
+    kx += w + chipGap;
+  }
+  void locale;
 }
 
 function drawQuadrant(
