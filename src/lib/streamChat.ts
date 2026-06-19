@@ -2,9 +2,16 @@ const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 
 export type Msg = { role: "user" | "assistant"; content: string };
 
+export type AgentPersona = {
+  systemPrompt: string;
+  lore: string[];
+  easterEggs: { trigger: string; aliases?: string[]; response: string }[];
+};
+
 export async function streamChat({
   messages,
   agentId,
+  persona,
   memoryContext,
   bondLevel,
   accessToken,
@@ -16,6 +23,7 @@ export async function streamChat({
 }: {
   messages: Msg[];
   agentId: string;
+  persona?: AgentPersona;
   memoryContext?: string[];
   bondLevel?: number;
   accessToken?: string;
@@ -31,7 +39,7 @@ export async function streamChat({
       "Content-Type": "application/json",
       Authorization: `Bearer ${accessToken || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
     },
-    body: JSON.stringify({ messages, agentId, memoryContext, bondLevel, locale, unlockedShards }),
+    body: JSON.stringify({ messages, agentId, persona, memoryContext, bondLevel, locale, unlockedShards }),
   });
 
   if (!resp.ok) {
