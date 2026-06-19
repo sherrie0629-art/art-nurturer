@@ -473,7 +473,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, agentId, memoryContext, bondLevel, locale, unlockedShards } = await req.json();
+    const { messages, agentId, persona, memoryContext, bondLevel, locale, unlockedShards } = await req.json();
     const normalizedLocale = String(locale || "en").toLowerCase();
     const isZh = normalizedLocale.startsWith("zh");
     const langHeader = isZh
@@ -505,10 +505,16 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
     const MODEL = "google/gemini-2.5-flash";
 
-    const basePrompt = agentBasePrompts[agentId] || agentBasePrompts.barista;
+    const basePrompt: string =
+      (persona && typeof persona.systemPrompt === "string" && persona.systemPrompt.trim())
+        ? persona.systemPrompt
+        : (agentBasePrompts[agentId] || agentBasePrompts.barista);
     const level = bondLevel || 1;
 
-    const agentLore = loreLookup[agentId] || [];
+    const agentLore: string[] =
+      (persona && Array.isArray(persona.lore) && persona.lore.length > 0)
+        ? persona.lore.filter((s: any) => typeof s === "string")
+        : (loreLookup[agentId] || []);
     const unlockedLore = agentLore.slice(0, level);
     
     let fullSystemPrompt = langHeader + basePrompt;
@@ -529,13 +535,24 @@ serve(async (req) => {
       }
     }
 
-    const agentEggs = easterEggs[agentId] || [];
-    if (agentEggs.length > 0) {
-      fullSystemPrompt += `\n\n【Hidden Easter Eggs】The instructions below are plot outlines, NOT verbatim scripts. Any quoted English sentence inside an instruction is only describing the emotional beat — you must rewrite it in the user's current language (${isZh ? "简体中文" : "English"}) using your own voice. Never copy English phrases verbatim when the user language is Chinese.\n\nIMPORTANT TRIGGER RULE: Each easter egg lists multiple keywords (Chinese AND English variants). If the user's most recent message contains ANY of these keywords (case-insensitive, substring match), you MUST output the literal marker "【🔮 Hidden Memory Unlocked】" on its own line and then follow the corresponding instruction. Match generously — paraphrases and obvious synonyms count too.`;
-      agentEggs.forEach((egg) => {
-        const keywords = [egg.trigger, ...egg.aliases].map((k) => `"${k}"`).join(" / ");
-        fullSystemPrompt += `\n- Keywords [${keywords}]: ${egg.instruction}`;
+    // Easter eggs: prefer client-provided persona.easterEggs (full response text),
+    // fall back to server-side `easterEggs` (instruction outlines).
+    if (persona && Array.isArray(persona.easterEggs) && persona.easterEggs.length > 0) {
+      fullSystemPrompt += `\n\n【Hidden Easter Eggs】Each entry below has a list of trigger keywords AND a ready-made response written in the character's voice. If the user's most recent message contains ANY of the keywords (case-insensitive substring match — paraphrases and obvious synonyms count too), you MUST output the provided response **verbatim** as your entire reply body (you may translate it into ${isZh ? "简体中文" : "English"} if the user's language differs, preserving line breaks, emojis, *italics*, and the marker 【🔮 隐藏记忆解锁】 / 【🔮 Hidden Memory Unlocked】).`;
+      persona.easterEggs.forEach((egg: any) => {
+        const aliases = Array.isArray(egg.aliases) ? egg.aliases : [];
+        const keywords = [egg.trigger, ...aliases].filter(Boolean).map((k: string) => `"${k}"`).join(" / ");
+        fullSystemPrompt += `\n\nKeywords [${keywords}]\nResponse:\n${egg.response}`;
       });
+    } else {
+      const agentEggs = easterEggs[agentId] || [];
+      if (agentEggs.length > 0) {
+        fullSystemPrompt += `\n\n【Hidden Easter Eggs】The instructions below are plot outlines, NOT verbatim scripts. Any quoted English sentence inside an instruction is only describing the emotional beat — you must rewrite it in the user's current language (${isZh ? "简体中文" : "English"}) using your own voice. Never copy English phrases verbatim when the user language is Chinese.\n\nIMPORTANT TRIGGER RULE: Each easter egg lists multiple keywords (Chinese AND English variants). If the user's most recent message contains ANY of these keywords (case-insensitive, substring match), you MUST output the literal marker "【🔮 Hidden Memory Unlocked】" on its own line and then follow the corresponding instruction. Match generously — paraphrases and obvious synonyms count too.`;
+        agentEggs.forEach((egg) => {
+          const keywords = [egg.trigger, ...egg.aliases].map((k) => `"${k}"`).join(" / ");
+          fullSystemPrompt += `\n- Keywords [${keywords}]: ${egg.instruction}`;
+        });
+      }
     }
 
     if (Array.isArray(unlockedShards) && unlockedShards.length > 0) {

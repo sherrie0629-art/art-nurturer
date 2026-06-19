@@ -113,6 +113,16 @@ const Chat = () => {
 
   const getWelcomeMessage = (a: typeof agent) => getAgentWelcome(a, t);
 
+  const persona = {
+    systemPrompt: rawAgent.systemPrompt,
+    lore: rawAgent.lore.map((l) => l.text),
+    easterEggs: rawAgent.easterEggs.map((e) => ({
+      trigger: e.trigger,
+      aliases: e.aliases,
+      response: e.response,
+    })),
+  };
+
   const quickReplies: Record<string, string[]> = {
     [agentId]: getAgentQuickReplies(agent, t),
   };
@@ -696,6 +706,7 @@ const Chat = () => {
         await streamChat({
           messages: apiMessages,
           agentId,
+          persona,
           memoryContext: [],
           bondLevel: 1,
           accessToken: session?.access_token,
@@ -880,6 +891,7 @@ const Chat = () => {
       await streamChat({
         messages: apiMessages,
         agentId,
+        persona,
         memoryContext: turnMemoryContext,
         bondLevel,
 
