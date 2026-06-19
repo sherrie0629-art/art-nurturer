@@ -359,6 +359,8 @@ async function renderPoster(mirror: SoulMirror): Promise<string> {
   const locale: "zh" | "en" = (snap?.locale === "en" ? "en" : "zh");
   const primaryAgentId: string | null = (snap as any)?.primaryAgentId ?? null;
   const primaryTurns: number = (snap as any)?.primaryTurns ?? 0;
+  const singleAgentId: string | null = (snap as any)?.singleAgentId ?? null;
+  const imageUrl: string | null = (snap as any)?.imageUrl ?? null;
 
   if (snap) {
     ctx.font = "26px 'Inter', sans-serif";
@@ -369,7 +371,11 @@ async function renderPoster(mirror: SoulMirror): Promise<string> {
 
   // Dynamic subtitle line
   const primary = primaryAgentId ? mirror.perspectives.find((p) => p.agentId === primaryAgentId) : null;
-  const subtitleLine = primary
+  const subtitleLine = singleAgentId && primary
+    ? (locale === "zh"
+        ? `${primary.displayName} 写给你的灵魂镜像`
+        : `A soul mirror written by ${primary.displayName}`)
+    : primary
     ? (locale === "zh"
         ? `与 ${primary.displayName} 深聊 ${primaryTurns} 次后的灵魂镜像`
         : `Soul Mirror after ${primaryTurns} deep talks with ${primary.displayName}`)
@@ -379,6 +385,23 @@ async function renderPoster(mirror: SoulMirror): Promise<string> {
   ctx.font = "italic 22px 'DM Serif Display', serif";
   ctx.fillStyle = "rgba(255,255,255,0.55)";
   ctx.fillText(subtitleLine, POSTER_W / 2, 174);
+
+  // ===== Single-agent layout =====
+  if (singleAgentId && primary) {
+    let img: HTMLImageElement | null = null;
+    if (imageUrl) {
+      try {
+        img = await loadImage(imageUrl);
+      } catch { img = null; }
+    }
+    await drawSingleAgentCard(ctx, primary, img, locale);
+    // Footer
+    ctx.fillStyle = "rgba(255,255,255,0.45)";
+    ctx.font = "italic 24px 'DM Serif Display', serif";
+    ctx.textAlign = "center";
+    ctx.fillText("islandai.life · 心灵镜像", POSTER_W / 2, POSTER_H - 60);
+    return canvas.toDataURL("image/png");
+  }
 
   // Layout area
   const gridTop = 210;
@@ -424,6 +447,144 @@ async function renderPoster(mirror: SoulMirror): Promise<string> {
   ctx.fillText("islandai.life · 心灵镜像", POSTER_W / 2, POSTER_H - 60);
 
   return canvas.toDataURL("image/png");
+}
+
+function loadImage(url: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => resolve(img);
+    img.onerror = (e) => reject(e);
+    img.src = url;
+  });
+}
+
+async function drawSingleAgentCard(
+  ctx: CanvasRenderingContext2D,
+  p: SoulMirrorPerspective,
+  img: HTMLImageElement | null,
+  locale: "zh" | "en",
+) {
+  const cardX = 60;
+  const cardY = 210;
+  const cardW = POSTER_W - 120;
+  const cardH = POSTER_H - 210 - 130;
+
+  // Card background
+  const colors = AGENT_BG[p.agentId] || ["#3a2a5a", "#7a5ab8"];
+  const grad = ctx.createLinearGradient(cardX, cardY, cardX + cardW, cardY + cardH);
+  grad.addColorStop(0, hexToRgba(colors[0], 0.92));
+  grad.addColorStop(1, hexToRgba(colors[1], 0.78));
+  roundRect(ctx, cardX, cardY, cardW, cardH, 32);
+  ctx.fillStyle = grad;
+  ctx.fill();
+  ctx.strokeStyle = "rgba(255,255,255,0.25)";
+  ctx.lineWidth = 2;
+  roundRect(ctx, cardX, cardY, cardW, cardH, 32);
+  ctx.stroke();
+
+  // Image area (top ~46%)
+  const imgPad = 40;
+  const imgX = cardX + imgPad;
+  const imgY = cardY + imgPad;
+  const imgW = cardW - imgPad * 2;
+  const imgH = Math.floor(cardH * 0.46);
+
+  // Image clip
+  ctx.save();
+  roundRect(ctx, imgX, imgY, imgW, imgH, 24);
+  ctx.clip();
+  if (img) {
+    // cover
+    const ir = img.width / img.height;
+    const fr = imgW / imgH;
+    let dw = imgW, dh = imgH, dx = imgX, dy = imgY;
+    if (ir > fr) {
+      dh = imgH; dw = imgH * ir; dx = imgX - (dw - imgW) / 2; dy = imgY;
+    } else {
+      dw = imgW; dh = imgW / ir; dx = imgX; dy = imgY - (dh - imgH) / 2;
+    }
+    ctx.drawImage(img, dx, dy, dw, dh);
+  } else {
+    // Fallback gradient with emoji
+    const g2 = ctx.createLinearGradient(imgX, imgY, imgX + imgW, imgY + imgH);
+    g2.addColorStop(0, hexToRgba(colors[0], 1));
+    g2.addColorStop(1, hexToRgba(colors[1], 1));
+    ctx.fillStyle = g2;
+    ctx.fillRect(imgX, imgY, imgW, imgH);
+    ctx.font = "180px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "rgba(255,255,255,0.85)";
+    ctx.fillText(p.emoji, imgX + imgW / 2, imgY + imgH / 2);
+    ctx.textBaseline = "alphabetic";
+  }
+  ctx.restore();
+
+  // Name row beneath image
+  let cy = imgY + imgH + 56;
+  ctx.textAlign = "left";
+  ctx.font = "56px sans-serif";
+  ctx.fillStyle = "#ffffff";
+  ctx.fillText(p.emoji, cardX + imgPad, cy);
+  ctx.font = "700 44px 'DM Serif Display', serif";
+  ctx.fillText(p.displayName, cardX + imgPad + 70, cy - 6);
+
+  // Signature
+  cy += 56;
+  ctx.font = "italic 30px 'DM Serif Display', serif";
+  ctx.fillStyle = "rgba(255,255,255,0.92)";
+  const sigLines = wrapText(ctx, p.signature, cardW - imgPad * 2);
+  for (const line of sigLines.slice(0, 2)) {
+    ctx.fillText(line, cardX + imgPad, cy);
+    cy += 38;
+  }
+
+  // Divider
+  cy += 14;
+  ctx.strokeStyle = "rgba(255,255,255,0.28)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(cardX + imgPad, cy);
+  ctx.lineTo(cardX + cardW - imgPad, cy);
+  ctx.stroke();
+  cy += 32;
+
+  // Body
+  ctx.font = "26px 'Inter', sans-serif";
+  ctx.fillStyle = "rgba(255,255,255,0.9)";
+  const lineH = 38;
+  const reserveBottom = 90; // for chips
+  const maxBodyH = (cardY + cardH - imgPad) - cy - reserveBottom;
+  const maxLines = Math.max(2, Math.floor(maxBodyH / lineH));
+  const bodyLines = wrapText(ctx, p.portrait, cardW - imgPad * 2);
+  const shown = bodyLines.slice(0, maxLines);
+  if (bodyLines.length > maxLines && shown.length > 0) {
+    shown[shown.length - 1] = truncateToWidth(ctx, shown[shown.length - 1] + "…", cardW - imgPad * 2);
+  }
+  for (const line of shown) {
+    ctx.fillText(line, cardX + imgPad, cy);
+    cy += lineH;
+  }
+
+  // Keyword chips centered
+  const kwY = cardY + cardH - imgPad - 6;
+  ctx.font = "22px 'Inter', sans-serif";
+  const kws = p.keywords.slice(0, 3).map((k) => `#${k}`);
+  const widths = kws.map((k) => ctx.measureText(k).width + 28);
+  const chipGap = 14;
+  const totalW = widths.reduce((a, b) => a + b, 0) + chipGap * (kws.length - 1);
+  let kx = cardX + (cardW - totalW) / 2;
+  for (let i = 0; i < kws.length; i++) {
+    const w = widths[i];
+    roundRect(ctx, kx, kwY - 28, w, 36, 18);
+    ctx.fillStyle = "rgba(255,255,255,0.2)";
+    ctx.fill();
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText(kws[i], kx + 14, kwY);
+    kx += w + chipGap;
+  }
+  void locale;
 }
 
 function drawQuadrant(
