@@ -144,6 +144,7 @@ const AssessmentFlow = () => {
     setLoading(true); setLoadingMsg(t("assessmentFlow.common.analyzing"));
     try {
       if (!user || !hasUsableUserToken(session?.access_token)) {
+        if (user) await signOut();
         const fallback = getFallbackMbtiResult(finalHistory, locale);
         setResult(fallback);
         setCurrentQuestion(null);
