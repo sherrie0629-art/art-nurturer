@@ -584,8 +584,8 @@ const Chat = () => {
       zodiacAutoSentRef.current = true;
       setConversationId(null);
       handleSend(locale === "zh"
-        ? `Luna，我刚拿到 ${zodiacResult.zodiacSign} 的解读——「${zodiacResult.title}」。能帮我看看这对我现在意味着什么吗？✨🌙`
-        : `Luna, I just got my ${zodiacResult.zodiacSign} reading — "${zodiacResult.title}". Can you read into what this means for me right now? ✨🌙`);
+        ? `星轨，我刚拿到 ${zodiacResult.zodiacSign} 的解读——「${zodiacResult.title}」。能帮我看看这对我现在意味着什么吗？✨🌙`
+        : `Xinggui, I just got my ${zodiacResult.zodiacSign} reading — "${zodiacResult.title}". Can you read into what this means for me right now? ✨🌙`);
     }
   }, [historyLoaded, zodiacResult, user]);
 
@@ -594,8 +594,8 @@ const Chat = () => {
       tarotAutoSentRef.current = true;
       setConversationId(null);
       handleSend(locale === "zh"
-        ? `Luna，我今天抽到了 ${tarotResult.cardName}（${tarotResult.isReversed ? "逆位" : "正位"}）。这张牌对我到底意味着什么？🔮`
-        : `Luna, I just drew ${tarotResult.cardName} (${tarotResult.isReversed ? "reversed" : "upright"}) today. What does it really mean for me? 🔮`);
+        ? `星轨，我今天抽到了 ${tarotResult.cardName}（${tarotResult.isReversed ? "逆位" : "正位"}）。这张牌对我到底意味着什么？🔮`
+        : `Xinggui, I just drew ${tarotResult.cardName} (${tarotResult.isReversed ? "reversed" : "upright"}) today. What does it really mean for me? 🔮`);
     }
   }, [historyLoaded, tarotResult, user]);
 
@@ -807,7 +807,7 @@ const Chat = () => {
       } catch (err) {
         console.error("[Chat] tarot draw error", err);
         setMessages((prev) => prev.filter((m) => m.id !== cardMsgId));
-        toast.error(locale === "zh" ? "牌堆暂时无法响应，Luna 会直接为你解读。" : "Card deck unavailable; Luna will read intuitively.");
+        toast.error(locale === "zh" ? "牌堆暂时无法响应，星轨会直接为你解读。" : "Card deck unavailable; Xinggui will read intuitively.");
       }
     }
 
