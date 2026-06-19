@@ -3,6 +3,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 
 const AI_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
+const AI_IMAGE_URL = "https://ai.gateway.lovable.dev/v1/images/generations";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -40,6 +41,20 @@ const AGENTS = [
       "the perspective of a best friend who delights in their quirks — what makes them lovable, magnetic, their hidden creative spark",
   },
 ] as const;
+
+// Character-style image prompts (no humans/text) — pure stylized scenes that match each agent's vibe.
+const AGENT_IMAGE_PROMPT: Record<string, string> = {
+  nuannuan:
+    "A warm cozy still life: a steaming vanilla latte in a ceramic mug on a wooden table, soft yarn ball, golden afternoon light through a window, dreamy japanese illustration style, warm amber and peach palette, gentle film grain.",
+  laowang:
+    "A quiet ink-wash scene: a hot tea cup steaming on a mossy stone, a single bamboo leaf, soft greys and deep ink greens, traditional chinese shuimo aesthetic, calm, meditative composition.",
+  yunsheng:
+    "A mystical celestial scene: a glowing crescent moon over a tranquil dark lake, scattered tarot cards floating, constellations and gold zodiac lines drawn over deep indigo and violet sky, ethereal fantasy illustration.",
+  xinggui:
+    "A dreamy synthwave landscape: neon star trails arcing across a magenta and electric purple horizon, glowing geometric ribbons, soft cyber-dreamcore aesthetic, no characters, vertical composition.",
+};
+
+const IMAGE_SUFFIX = " No text, no letters, no people, vertical portrait composition, soft cinematic lighting, ultra detailed.";
 
 const FREE_LIMIT = 1;
 const PRO_REGENERATE_INTERVAL_MS = 24 * 60 * 60 * 1000;
@@ -198,6 +213,16 @@ serve(async (req) => {
     }
     const userId = claimsData.claims.sub as string;
 
+    // --- Parse optional body ---
+    let singleAgentId: string | null = null;
+    try {
+      const body = await req.json().catch(() => null);
+      const aid = body?.agentId;
+      if (typeof aid === "string" && AGENTS.some((a) => a.id === aid)) {
+        singleAgentId = aid;
+      }
+    } catch { /* noop */ }
+
     const admin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -211,21 +236,21 @@ serve(async (req) => {
       .maybeSingle();
     const isPlus = true; // payments removed — all users treated as plus
 
-    const { data: existing } = await admin
+    // --- Throttle: per-agent when singleAgentId, else global ---
+    let existingQuery = admin
       .from("soul_mirrors")
-      .select("id, created_at")
+      .select("id, created_at, user_snapshot")
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
-
-    const existingCount = existing?.length || 0;
-    if (!isPlus && existingCount >= FREE_LIMIT) {
-      return new Response(
-        JSON.stringify({ error: "requires_pro", requires_pro: true }),
-        { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
-    }
-    if (isPlus && existing?.[0]) {
-      const last = new Date(existing[0].created_at as string).getTime();
+    const { data: existingAll } = await existingQuery;
+    const matchScope = (existingAll || []).filter((r: any) => {
+      const snapAgent = r?.user_snapshot?.singleAgentId ?? null;
+      return singleAgentId
+        ? snapAgent === singleAgentId
+        : !snapAgent; // global mode only collides with prior global mirrors
+    });
+    if (matchScope[0]) {
+      const last = new Date(matchScope[0].created_at as string).getTime();
       const diff = Date.now() - last;
       if (diff < PRO_REGENERATE_INTERVAL_MS) {
         const hoursLeft = Math.ceil((PRO_REGENERATE_INTERVAL_MS - diff) / 3600000);
@@ -262,9 +287,12 @@ serve(async (req) => {
     const nickname = profile.display_name || (locale === "zh" ? "你" : "you");
 
     // --- Per-agent memories (top 8 by importance) ---
+    const targetAgents = singleAgentId
+      ? AGENTS.filter((a) => a.id === singleAgentId)
+      : [...AGENTS];
     const memoriesPerAgent: Record<string, string[]> = {};
     await Promise.all(
-      AGENTS.map(async (a) => {
+      targetAgents.map(async (a) => {
         const { data } = await admin
           .from("user_memories")
           .select("content")
@@ -277,9 +305,9 @@ serve(async (req) => {
       }),
     );
 
-    // --- 4 parallel AI calls ---
+    // --- AI calls (1 or 4 in parallel) ---
     const results = await Promise.all(
-      AGENTS.map(async (agent) => {
+      targetAgents.map(async (agent) => {
         const bond = bondsMap[agent.id] || { bond_level: 1, total_turns: 0 };
         const messages = buildPrompt(agent, {
           locale,
@@ -311,23 +339,38 @@ serve(async (req) => {
       }),
     );
 
-    // Pick C-position: agent with most turns; tie-break by memory count
+    // --- Pick primary agent ---
     let primaryAgentId: string | null = null;
     let primaryTurns = 0;
-    for (const p of results) {
-      const memCount = (memoriesPerAgent[p.agentId] || []).length;
-      const score = p.totalTurns * 100 + memCount;
-      const currentBest = primaryAgentId
-        ? (results.find((r) => r.agentId === primaryAgentId)!.totalTurns * 100 +
-           (memoriesPerAgent[primaryAgentId] || []).length)
-        : -1;
-      if (p.totalTurns > 0 && score > currentBest) {
-        primaryAgentId = p.agentId;
-        primaryTurns = p.totalTurns;
+    if (singleAgentId) {
+      primaryAgentId = singleAgentId;
+      primaryTurns = results[0]?.totalTurns ?? 0;
+    } else {
+      for (const p of results) {
+        const memCount = (memoriesPerAgent[p.agentId] || []).length;
+        const score = p.totalTurns * 100 + memCount;
+        const currentBest = primaryAgentId
+          ? (results.find((r) => r.agentId === primaryAgentId)!.totalTurns * 100 +
+             (memoriesPerAgent[primaryAgentId] || []).length)
+          : -1;
+        if (p.totalTurns > 0 && score > currentBest) {
+          primaryAgentId = p.agentId;
+          primaryTurns = p.totalTurns;
+        }
       }
     }
 
-    const userSnapshot = {
+    // --- Character-style image (single-agent mode only) ---
+    let imageUrl: string | null = null;
+    if (singleAgentId) {
+      try {
+        imageUrl = await generateAndUploadAgentImage(admin, singleAgentId);
+      } catch (e) {
+        console.error("[soul-mirror] image gen failed", e);
+      }
+    }
+
+    const userSnapshot: any = {
       nickname,
       mbti,
       zodiac,
@@ -336,6 +379,10 @@ serve(async (req) => {
       primaryAgentId,
       primaryTurns,
     };
+    if (singleAgentId) {
+      userSnapshot.singleAgentId = singleAgentId;
+      userSnapshot.imageUrl = imageUrl;
+    }
 
     const { data: inserted, error: insertErr } = await admin
       .from("soul_mirrors")
@@ -361,6 +408,7 @@ serve(async (req) => {
         perspectives: results,
         userSnapshot,
         primaryAgentId,
+        imageUrl,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
@@ -372,3 +420,50 @@ serve(async (req) => {
     );
   }
 });
+
+// =============== Image generation helper ===============
+
+async function generateAndUploadAgentImage(
+  admin: ReturnType<typeof createClient>,
+  agentId: string,
+): Promise<string | null> {
+  const apiKey = Deno.env.get("LOVABLE_API_KEY");
+  if (!apiKey) return null;
+  const basePrompt = AGENT_IMAGE_PROMPT[agentId];
+  if (!basePrompt) return null;
+  const prompt = basePrompt + IMAGE_SUFFIX;
+
+  const res = await fetch(AI_IMAGE_URL, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "openai/gpt-image-2",
+      prompt,
+      quality: "low",
+      size: "1024x1536",
+      n: 1,
+    }),
+  });
+  if (!res.ok) {
+    console.error("[soul-mirror] image status", res.status, await res.text().catch(() => ""));
+    return null;
+  }
+  const data = await res.json();
+  const b64 = data?.data?.[0]?.b64_json;
+  if (!b64) return null;
+
+  const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+  const fileName = `soul-mirror-img_${agentId}_${crypto.randomUUID()}.png`;
+  const { error } = await admin.storage
+    .from("shared-posters")
+    .upload(fileName, bytes, { contentType: "image/png", upsert: true });
+  if (error) {
+    console.error("[soul-mirror] upload err", error);
+    return null;
+  }
+  const { data: pub } = admin.storage.from("shared-posters").getPublicUrl(fileName);
+  return pub?.publicUrl || null;
+}
