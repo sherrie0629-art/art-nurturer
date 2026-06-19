@@ -23,10 +23,6 @@ const Settings = () => {
     { value: "zh", label: t("settings.chinese") },
   ];
 
-    { value: 1, label: "1×" },
-    { value: 1.15, label: "1.15×" },
-  ];
-
   return (
     <DesktopLayout>
       <div className="min-h-screen bg-gradient-calm pb-24 md:pb-8">
