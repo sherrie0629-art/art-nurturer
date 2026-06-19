@@ -60,7 +60,7 @@ serve(async (req) => {
       const weekStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - now.getUTCDay()));
       const weekKey = weekStart.toISOString().split("T")[0];
       const sign = (body.zodiacSign || "unknown").toString().toLowerCase().replace(/[^a-z0-9]/g, "");
-      const PROMPT_VERSION = "v3"; // bump to invalidate stale cached questions
+      const PROMPT_VERSION = "v4"; // bump to invalidate stale cached questions
       // N variants per (sign, locale, week); client rotates per user.
       const VARIANT_COUNT = 5;
       const rawVariant = Number.isFinite(Number(body.variant)) ? Math.floor(Number(body.variant)) : Math.floor(Math.random() * VARIANT_COUNT);
@@ -81,37 +81,59 @@ serve(async (req) => {
         }
       } catch (_) { /* cache miss */ }
 
-      const zhSystem = `你是一位会占卜的"损友"，正在带朋友玩一场轻松的心理小测验。星座：${body.zodiacSign || "未知"}。
-出 10 道题，覆盖 综合能量 / 爱情 / 事业 / 财运（每个维度 2-3 题），但不要直白点题，用具体生活场景包装。
+      const zhSystem = `你是一位月光下的占卜师，正在为来访者读取此刻的能量。星座：${body.zodiacSign || "未知"}。
+出 10 道"占卜直觉题"，覆盖 综合能量 / 爱情 / 事业 / 财运（每个维度 2-3 题），dimension 字段如实填写。
 
-【硬性要求】
-1. 每题是一个具体小场景 + "你的反应/选择/脑内小剧场"。例如：
-   - "周五晚上手机突然弹出前任的朋友圈，你的第一反应是？"
-   - "工位上的多肉今早莫名歪了，你心想……"
-   - "老板群里发了个意味不明的'嗯'，你脑补的下一句是？"
-2. 4 个选项每个 8-20 字，要有画面感/情绪/自嘲/玄学梗，例如"装作没看见，但已经截图发闺蜜"。
-3. 严禁出现纯形容词选项（如"开心/难过/平静/焦虑"），严禁"你认为/你觉得/你的 X 如何"开头超过 2 题。
-4. 语气像小红书占卜博主，俏皮但不油腻，emoji 最多每题 1 个，可不用。
-5. 必须调用 batch_questions 工具返回。`;
+【题型只能从下列五类中挑选，每类至少 1 题】
+1. 抽牌式："闭上眼，从这 4 张牌里抽一张，你的指尖停在了——"
+2. 吸引力式："此刻最让你心动的颜色 / 声音 / 气味是？"
+3. 意象联想："闭眼想'最近的我'，最像下面哪个画面？"
+4. 梦境直觉："如果今晚做梦，你最希望梦见——" / "推开一扇旧门，里面是——"
+5. 能量感应："此刻身体哪个部位最沉？" / "你想在掌心握住的是？"
 
-      const enSystem = `You are a witty psychic best friend running a playful personality quiz. Sign: ${body.zodiacSign || "unknown"}.
-Write 10 questions covering overall vibe / love / career / money (2-3 each), wrapped in vivid everyday micro-scenes — never name the dimension out loud.
+【题干硬性要求】
+- 全部第二人称，轻盈、留白、有诗意，像塔罗师在引导冥想，每题 ≤ 35 字。
+- 每题以一个占卜系 emoji 开头，从 🌙 ✨ 🕯 🍃 🪞 🐚 🌊 🎴 🔮 🌒 🪷 🌬 中挑，10 题不重复。
+- 严禁出现任何现实生活事件 / 人物 / 场景。下列词一律不许出现：
+  老板、KPI、加班、同事、家族群、催婚、亲戚、相亲、前任、闺蜜、外卖、双 11、地铁、群聊、朋友圈、微信、手机、工位、年会、春运、体检。
+- 不要"你会怎么做 / 你的反应是"这种行为题；问的是直觉、意象、吸引、感受。
+
+【选项硬性要求】
+- 4 个选项每个 6-18 字，是一个**意象 / 画面 / 颜色 / 触感 / 声音**，不带解释，不带行动。
+- 例子风格：「一只展翅的白鹤」「一杯倒满未饮的茶」「生锈的铜钥匙」「飘落在水面的羽毛」「深夜窗外的潮声」。
+- 严禁纯形容词（开心/平静/焦虑）和现代物品（手机/外卖/地铁）。
+
+必须调用 batch_questions 工具返回。`;
+
+      const enSystem = `You are a moonlit oracle reading the querent's current energy. Sign: ${body.zodiacSign || "unknown"}.
+Generate 10 "divination intuition" questions covering overall / love / career / fortune (2-3 each); fill the dimension field truthfully.
+
+[Question types — pick from these five only, at least 1 of each]
+1. Card-pull: "Close your eyes. Of these 4 cards, your fingertip lands on —"
+2. Attraction: "Which colour / sound / scent pulls you in right now?"
+3. Imagery: "Picture 'me, lately'. Which image is it closest to?"
+4. Dream/door: "If you could dream anything tonight, you'd dream —" / "You push open an old door. Inside is —"
+5. Body energy: "Where does your body feel heaviest right now?" / "What do you want to hold in your palm?"
 
 [Rules]
-1. Each question is a tiny scene + "your reaction/inner monologue", e.g.:
-   - "Your ex's story pops up at 11:47pm. First instinct?"
-   - "Boss replies just 'k' in the group chat. Your brain immediately…"
-2. Each of 4 options is 8-20 words, with imagery, emotion, self-deprecation or cosmic humor (e.g. "Pretend I didn't see it. Already screenshot to bestie though.").
-3. No bare adjective options ("Happy / Sad / Calm"). No more than 2 questions starting with "Do you think / How do you feel".
-4. Voice = Co-Star meets group-chat oracle. Max 1 emoji per question, optional.
-5. Must call batch_questions.`;
+- 2nd person, hushed and poetic — like a tarot reader guiding a meditation. ≤ 18 words.
+- Each question opens with one divination emoji (🌙 ✨ 🕯 🍃 🪞 🐚 🌊 🎴 🔮 🌒 🪷 🌬), no repeats across the 10.
+- BANNED — no real-life scenes, people, or events. Never use: boss, KPI, overtime, coworker, family chat, marriage pressure, in-laws, ex, bestie, takeout, Black Friday, subway, group chat, Instagram, phone, cubicle, office party.
+- No "what would you do" behaviour questions. Ask intuition, imagery, attraction, sensation.
+
+[Options]
+- 4 options, each 4-10 words, a single **image / colour / texture / sound**. No explanations, no actions.
+- Style: "a white crane mid-flight", "a full cup of untouched tea", "a rusted brass key", "a feather drifting on water".
+- No bare adjectives, no modern objects.
+
+You MUST call batch_questions.`;
 
       const response = await fetchAI(model, {
         messages: [
           { role: "system", content: (locale === "zh" ? zhSystem : enSystem) + langInstr },
           { role: "user", content: (locale === "zh" ? "出 10 道场景化星座小测验题。" : "Generate 10 scene-based horoscope quiz questions.") + (locale === "zh" ? `\n\n本套编号：#${variant + 1}（共 ${VARIANT_COUNT} 套）。请使用与其他编号截然不同的场景与措辞，5 套之间无重复题目。` : `\n\nVariant #${variant + 1} of ${VARIANT_COUNT}. Use scenes and phrasing clearly different from the other variants — no overlapping questions.`) },
         ],
-        tools: [{ type: "function" as const, function: { name: "batch_questions", description: "Return 10 scene-based horoscope quiz questions", parameters: { type: "object", properties: { questions: { type: "array", items: { type: "object", properties: { question: { type: "string", description: "A vivid everyday micro-scene + the user's reaction. NOT an abstract feeling question." }, options: { type: "array", items: { type: "object", properties: { label: { type: "string" }, text: { type: "string", description: "8-20 chars, concrete and visual, with emotion/humor/self-deprecation. Never a bare adjective." } }, required: ["label", "text"] } }, dimension: { type: "string", description: "Aspect: overall/love/career/fortune" } }, required: ["question", "options", "dimension"] }, minItems: 10, maxItems: 10 } }, required: ["questions"] } } }],
+        tools: [{ type: "function" as const, function: { name: "batch_questions", description: "Return 10 divination-style intuition questions", parameters: { type: "object", properties: { questions: { type: "array", items: { type: "object", properties: { question: { type: "string", description: "A short, poetic divination prompt asking for intuition/imagery/attraction. NOT a real-life scene, NOT a behaviour question." }, options: { type: "array", items: { type: "object", properties: { label: { type: "string" }, text: { type: "string", description: "A single image/colour/texture/sound. No actions, no modern objects, no bare adjectives." } }, required: ["label", "text"] } }, dimension: { type: "string", description: "Aspect: overall/love/career/fortune" } }, required: ["question", "options", "dimension"] }, minItems: 10, maxItems: 10 } }, required: ["questions"] } } }],
         tool_choice: { type: "function" as const, function: { name: "batch_questions" } },
         temperature: 0.85, max_tokens: 1500,
       });
