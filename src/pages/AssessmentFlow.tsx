@@ -149,6 +149,11 @@ const AssessmentFlow = () => {
         const fallback = getFallbackMbtiResult(finalHistory, locale);
         setResult(fallback);
         setCurrentQuestion(null);
+        // Persist the fallback so the result still shows up in the user's
+        // report list (stashed locally if they're not signed in, then
+        // migrated after sign-in).
+        const newId = await persistAssessmentResult(user?.id ?? null, "mbti", fallback);
+        if (newId) { resultIdRef.current = newId; setSavedReportId(newId); }
         promptLogin(t("auth.promptAssessmentAI"));
         return;
       }
@@ -156,7 +161,9 @@ const AssessmentFlow = () => {
       if (error) throw error;
       if (data.type === "result") {
         setResult(data.data); setCurrentQuestion(null); fetchResultImage(data.data); fetchParallelUniverse(data.data.mbtiType);
-        if (user) { const { data: inserted } = await supabase.from("assessment_results").insert({ user_id: user.id, assessment_type: "mbti", result_data: data.data }).select("id").single(); if (inserted) { resultIdRef.current = inserted.id; setSavedReportId(inserted.id); } generateSoulFragment(user.id, "assessment", "mbti", `MBTI result: ${data.data.mbtiType} ${data.data.title}. ${data.data.description}`); }
+        const newId = await persistAssessmentResult(user?.id ?? null, "mbti", data.data);
+        if (newId) { resultIdRef.current = newId; setSavedReportId(newId); }
+        if (user) generateSoulFragment(user.id, "assessment", "mbti", `MBTI result: ${data.data.mbtiType} ${data.data.title}. ${data.data.description}`);
       }
     } catch (e: any) {
       if (isDailyLimitError(e)) toast.error(t("assessmentFlow.common.limitReached", { n: 20 }));
@@ -165,6 +172,8 @@ const AssessmentFlow = () => {
         const fallback = getFallbackMbtiResult(finalHistory, locale);
         setResult(fallback);
         setCurrentQuestion(null);
+        // Stash so it's not lost; sign-in will migrate.
+        await persistAssessmentResult(null, "mbti", fallback);
         toast.error(t("auth.signInFirst"));
         promptLogin(t("auth.promptAssessmentAI"));
       } else toast.error(e.message || t("assessmentFlow.common.loadFail"));
