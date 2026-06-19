@@ -113,6 +113,16 @@ const Chat = () => {
 
   const getWelcomeMessage = (a: typeof agent) => getAgentWelcome(a, t);
 
+  const persona = {
+    systemPrompt: rawAgent.systemPrompt,
+    lore: rawAgent.lore.map((l) => l.text),
+    easterEggs: rawAgent.easterEggs.map((e) => ({
+      trigger: e.trigger,
+      aliases: e.aliases,
+      response: e.response,
+    })),
+  };
+
   const quickReplies: Record<string, string[]> = {
     [agentId]: getAgentQuickReplies(agent, t),
   };
