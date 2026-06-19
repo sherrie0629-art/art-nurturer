@@ -117,7 +117,7 @@ serve(async (req) => {
       // We keep N variants per locale; client rotates variant per user so
       // the same person rarely sees the same question set twice in a row.
       const VARIANT_COUNT = 5;
-      const PROMPT_VERSION = "v3"; // bump to invalidate stale caches
+      const PROMPT_VERSION = "v4"; // bump to invalidate stale caches
       const rawVariant = Number.isFinite(Number(body.variant)) ? Math.floor(Number(body.variant)) : Math.floor(Math.random() * VARIANT_COUNT);
       const variant = ((rawVariant % VARIANT_COUNT) + VARIANT_COUNT) % VARIANT_COUNT;
       const CACHE_BUCKET = "assessment-cache";
@@ -166,6 +166,7 @@ serve(async (req) => {
 - 严禁出现：平行宇宙、外星观察员、奇幻冒险、星际飞船等西式幻想场景。
 - 严禁问卷腔："你更倾向于…"、"通常情况下…"、"在工作中…"、"以下哪种…" —— 一律不要。
 - 文化基调：基于中国内地（微信、外卖、地铁、KPI、家族群、催婚、内卷、躺平）。绝不要出现 LinkedIn、Thanksgiving、Halloween、Uber、Tinder 之类海外词。
+- 严禁占卜/玄学题型与词汇（这套是 MBTI 人格题，不是星座占卜）：不要出现 抽牌、塔罗、月相、水逆、宇宙能量、星轨、占卜、求签、托梦、第六感、冥想、闭上眼睛、掌心、能量场、灵感、意象 等词；不要"此刻最让你心动的颜色 / 你想梦见什么 / 从 4 张牌里抽一张"这种直觉题。题目必须是具体生活困境 + 你的反应。
 
 【选项硬性要求】
 - 4 个选项 (A/B/C/D)，每个 10–22 字，是"我会这样做 / 这样想"的具体行动或念头，自带性格色彩。
@@ -194,6 +195,7 @@ You are an interactive-fiction MBTI quiz designer. Generate 10 short story-like 
 - Start each question with one scene-setting emoji (🌙 ☕ 🛸 🪞 🎭 📮 🚪 🎲 🌧 🪐 ...), no emoji repeated across the 10 questions.
 - Diverse scenes: late-night convenience store, parallel-universe party, mystery text, 3am in a shared flat, alien observer, stuck elevator, childhood drawer, stranger in the mirror, anonymous gift, 24h shapeshift, etc.
 - Banned phrasing: "Do you prefer...", "In general...", "At work...", "Which of the following..." — none of that.
+- BANNED — no divination / tarot / astrology vibe (that belongs to the horoscope quiz, not this MBTI one). Never use: tarot, draw a card, moon phase, mercury retrograde, cosmic energy, oracle, divine, dream of, palm, aura, close your eyes, picture an image, which colour attracts you. Questions must be concrete real-life situations with a behavioural reaction.
 
 [Option rules]
 - 4 options (A/B/C/D), each 6–14 words, written as a concrete action or inner thought ("I'd ...").
