@@ -364,7 +364,7 @@ const DailyFortuneStick = () => {
                 <motion.button
                   whileTap={{ scale: 0.97 }}
                   onClick={() =>
-                    navigate(`/chat?agent=xinggui`, {
+                    navigate(`/chat?agent=yunsheng`, {
                       state: {
                         fortuneStick: {
                           stickNumber: result.stickNumber,
@@ -379,7 +379,7 @@ const DailyFortuneStick = () => {
                   }
                   className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-br from-amber-400 to-rose-500 py-3 text-sm font-semibold text-white shadow-lg"
                 >
-                  <Sparkles className="h-4 w-4" /> 找星轨细聊
+                  <Sparkles className="h-4 w-4" /> 找云生细聊
                 </motion.button>
               </div>
 
