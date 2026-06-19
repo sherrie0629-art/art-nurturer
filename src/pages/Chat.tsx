@@ -807,7 +807,7 @@ const Chat = () => {
       } catch (err) {
         console.error("[Chat] tarot draw error", err);
         setMessages((prev) => prev.filter((m) => m.id !== cardMsgId));
-        toast.error(locale === "zh" ? "牌堆暂时无法响应，Luna 会直接为你解读。" : "Card deck unavailable; Luna will read intuitively.");
+        toast.error(locale === "zh" ? "牌堆暂时无法响应，星轨会直接为你解读。" : "Card deck unavailable; Xinggui will read intuitively.");
       }
     }
 
