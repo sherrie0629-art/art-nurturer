@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useEffect, useMemo, useState } from "react";
 
 interface AssessmentQuestionLayoutProps {
   title: string;
@@ -19,7 +20,26 @@ const AssessmentQuestionLayout = ({ title, backPath, questionNumber, totalQuesti
   const navigate = useNavigate();
   const { t } = useTranslation();
   const messages = t("assessmentFlow.common.loadingMessages", { returnObjects: true }) as string[];
-  const displayLoadingMsg = loadingMessage || messages[Math.floor(Math.random() * messages.length)];
+  // Rotate through dynamic loading messages every ~2.2s so the wait feels lively.
+  const shuffled = useMemo(() => {
+    if (!Array.isArray(messages) || messages.length === 0) return [] as string[];
+    const arr = [...messages];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading]);
+  const [msgIdx, setMsgIdx] = useState(0);
+  useEffect(() => {
+    if (!loading || shuffled.length <= 1) return;
+    setMsgIdx(0);
+    const id = setInterval(() => setMsgIdx((i) => (i + 1) % shuffled.length), 2200);
+    return () => clearInterval(id);
+  }, [loading, shuffled]);
+  const rotatingMsg = shuffled[msgIdx] || "";
+  const displayLoadingMsg = loadingMessage || rotatingMsg;
 
   return (
     <div className="min-h-screen bg-gradient-calm flex flex-col">
@@ -38,7 +58,18 @@ const AssessmentQuestionLayout = ({ title, backPath, questionNumber, totalQuesti
           {loading ? (
             <motion.div key="loading" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.2 }} className="flex flex-col items-center gap-4">
               <Loader2 className="h-8 w-8 animate-spin text-secondary" />
-              <p className="text-sm text-muted-foreground text-center leading-relaxed">{displayLoadingMsg}</p>
+              <AnimatePresence mode="wait">
+                <motion.p
+                  key={displayLoadingMsg}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.35 }}
+                  className="text-sm text-muted-foreground text-center leading-relaxed min-h-[1.25rem]"
+                >
+                  {displayLoadingMsg}
+                </motion.p>
+              </AnimatePresence>
             </motion.div>
           ) : (
             question && (
