@@ -13,17 +13,28 @@ export async function generateSoulFragment(
     const { data, error } = await supabase.functions.invoke("generate-soul-fragment", {
       body: { type: sourceType, context, sourceId, locale },
     });
-    if (error || !data?.name) return;
+    if (error || !data?.name) {
+      if (error) console.error("generate-soul-fragment error:", error);
+      return;
+    }
 
-    await (supabase as any).from("soul_fragments").insert({
+    // Map to actual schema: source_type stores the concrete kind
+    // (mbti/enneagram/zodiac/emotion/chat); source_agent stores the agent id for chats.
+    const concreteType = sourceType === "chat" ? "chat" : sourceId;
+
+    const { error: insertError } = await (supabase as any).from("soul_fragments").insert({
       user_id: userId,
       name: data.name,
       description: data.description,
       icon: data.icon,
       color: data.color,
-      source_type: sourceType,
-      source_id: sourceId,
+      source_type: concreteType,
+      source_agent: sourceType === "chat" ? sourceId : null,
     });
+    if (insertError) {
+      console.error("soul_fragments insert error:", insertError);
+      return;
+    }
 
     toast.success(i18n.t("soulFragment.newToast", { name: data.name, defaultValue: `✨ New Soul Fragment: ${data.name}` }));
   } catch (e) {
