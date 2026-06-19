@@ -19,6 +19,7 @@ import { isDailyLimitError } from "@/lib/assessmentErrors";
 import { Skeleton } from "@/components/ui/skeleton";
 import { pickQuestionSet } from "@/data/mbtiQuestionPool";
 import { getNextVariant } from "@/lib/assessmentVariant";
+import { persistAssessmentResult } from "@/lib/guestAssessment";
 
 interface QA { question: string; answer: string; dimension: string; }
 interface MBTIResult { mbtiType: string; title: string; description: string; traits: { E_I: number; S_N: number; T_F: number; J_P: number }; socialCaption: string; }
