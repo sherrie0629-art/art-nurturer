@@ -17,6 +17,7 @@ import ResultAIImage from "@/components/ResultAIImage";
 import PosterPreviewDialog from "@/components/PosterPreviewDialog";
 import DeepReportUnlock from "@/components/DeepReportUnlock";
 import { getNextVariant } from "@/lib/assessmentVariant";
+import { pickZodiacQuestionSet } from "@/data/zodiacQuestionPool";
 
 interface QA { question: string; answer: string; dimension: string; }
 
@@ -191,20 +192,32 @@ const ZodiacFlow = () => {
     if (signMeta) startImageFetch(signName, signMeta.element);
     setLoading(true);
     setLoadingMsg(t("assessmentFlow.common.starting"));
-    try {
-      const variant = getNextVariant(`zodiac:${signName}`, locale);
-      const { data, error } = await supabase.functions.invoke("assessment-zodiac", {
-        body: { action: "batch-questions", zodiacSign: signName, locale, variant },
+
+    // Kick off AI batch fetch, but don't block UI on it. If it lands within
+    // ~500ms we use it; otherwise we fall back to the local pool so Q1 shows
+    // immediately. Daily-limit errors still surface as a toast.
+    const variant = getNextVariant(`zodiac:${signName}`, locale);
+    const fetchPromise = supabase.functions
+      .invoke("assessment-zodiac", { body: { action: "batch-questions", zodiacSign: signName, locale, variant } })
+      .then((res) => {
+        if (res.error) throw res.error;
+        const d = res.data;
+        return d?.type === "batch" && Array.isArray(d.data) && d.data.length >= 10 ? d.data : null;
+      })
+      .catch((e: any) => {
+        if (isDailyLimitError(e)) toast.error(t("assessmentFlow.common.limitReached", { n: 20 }));
+        return null;
       });
-      if (error) throw error;
-      if (data.type === "batch" && data.data?.length > 0) {
-        batchQuestionsRef.current = data.data.slice(1);
-        setCurrentQuestion(data.data[0]);
-      }
-    } catch (e: any) {
-      if (isDailyLimitError(e)) toast.error(t("assessmentFlow.common.limitReached", { n: 20 }));
-      else toast.error(e.message || t("assessmentFlow.common.loadFail"));
-    } finally { setLoading(false); }
+
+    const batch = await Promise.race([
+      fetchPromise,
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 500)),
+    ]);
+
+    const finalBatch = batch && batch.length >= 10 ? batch : pickZodiacQuestionSet(locale);
+    batchQuestionsRef.current = finalBatch.slice(1);
+    setCurrentQuestion(finalBatch[0]);
+    setLoading(false);
   };
 
   const handleAnswer = (option: { label: string; text: string }) => {
