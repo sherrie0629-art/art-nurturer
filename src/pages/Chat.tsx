@@ -18,8 +18,6 @@ import EasterEggEffect from "@/components/EasterEggEffect";
 import BranchSelector from "@/components/BranchSelector";
 import ChatParticles from "@/components/ChatParticles";
 import AgentProfileDrawer from "@/components/AgentProfileDrawer";
-import MessageVoiceButton from "@/components/MessageVoiceButton";
-import { useTTS } from "@/contexts/TTSContext";
 import { useAchievements } from "@/hooks/useAchievements";
 import { agents as RAW_AGENTS, BOND_LABELS } from "@/data/agents";
 import { localizeAgent, getAgentWelcome, getAgentQuickReplies } from "@/lib/localizeAgent";
@@ -165,9 +163,6 @@ const Chat = () => {
     useBond(user?.id, agentId);
   const { canChat, chatCount, chatLimit, plan, freeTrialExpired, incrementChat } = useSubscription(user?.id, user?.created_at);
   const { newlyUnlocked, checkAchievements, dismissAchievement } = useAchievements(user?.id);
-  const { activeAgentId: ttsActiveAgentId, playingId: ttsPlayingId } = useTTS();
-  const isVoiceActive = ttsActiveAgentId === agentId && !!ttsPlayingId;
-
   const getRecallAccessToken = useCallback(async () => {
     if (!user) return null;
     if (hasUsableAccessToken(session?.access_token)) return session!.access_token;
@@ -1134,9 +1129,6 @@ const Chat = () => {
             <ArrowLeft className="h-5 w-5" />
           </button>
           <button onClick={() => setProfileOpen(true)} className="shrink-0 active:scale-95 transition-transform relative">
-            {isVoiceActive && (
-              <span className="pointer-events-none absolute -inset-1 rounded-2xl ring-2 ring-secondary/60 animate-pulse" aria-hidden />
-            )}
             <img src={agent.image} alt={agent.name} className="h-9 w-9 rounded-xl object-cover relative" />
           </button>
           <div className="flex-1 min-w-0">
@@ -1207,14 +1199,6 @@ const Chat = () => {
                     msg.content
                   )}
                 </div>
-                {msg.role === "assistant" && msg.id !== "welcome" && msg.id !== "streaming" && msg.content.trim() && (
-                  <MessageVoiceButton
-                    messageId={msg.id}
-                    agentId={agentId}
-                    text={msg.content}
-                    disabled={isStreaming}
-                  />
-                )}
                 {msg.role === "assistant" && msg.branchOptions && msg.branchOptions.length > 0 && !isStreaming && (
                   <BranchSelector options={msg.branchOptions} onSelect={handleSend} />
                 )}
