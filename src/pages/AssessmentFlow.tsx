@@ -20,6 +20,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { pickQuestionSet } from "@/data/mbtiQuestionPool";
 import { getNextVariant } from "@/lib/assessmentVariant";
 import { persistAssessmentResult } from "@/lib/guestAssessment";
+import { getFallbackParallelUniverse } from "@/lib/fallbackParallelUniverse";
 
 interface QA { question: string; answer: string; dimension: string; }
 interface MBTIResult { mbtiType: string; title: string; description: string; traits: { E_I: number; S_N: number; T_F: number; J_P: number }; socialCaption: string; }
@@ -67,6 +68,31 @@ const hasUsableUserToken = (token?: string | null) => {
   }
 };
 
+const MBTI_FLAVOR: Record<string, { zh: { title: string; line: string }; en: { title: string; line: string } }> = {
+  INTJ: { zh: { title: "深夜推演的策略脑", line: "你做决定前像在脑子里下三盘棋，别人还在纠结A还是B，你已经在算C会不会反噬。情绪先放一边，结论先递上来。" }, en: { title: "Late-Night Strategist", line: "You play three chess games in your head before choosing. While others debate A vs B, you're checking if C backfires. Feelings later, conclusion first." } },
+  INTP: { zh: { title: "拆解一切的好奇脑", line: "你不爱跟着大家点头，更想知道「为什么这玩意儿能跑」。一旦琢磨上一个问题，外卖凉了你都没发觉。" }, en: { title: "Curious Disassembler", line: "You'd rather know why it works than nod along. Once a question grabs you, even the takeout going cold can't pull you out." } },
+  ENTJ: { zh: { title: "天生带节奏的指挥官", line: "走进一个乱糟糟的局，三分钟你就能排好优先级。别人觉得你强势，其实你只是受不了「明明能更好」还在原地耗。" }, en: { title: "Natural-Born Conductor", line: "Walk into chaos, leave with a ranked todo list in three minutes. People call it pushy; you just can't watch potential get wasted." } },
+  ENTP: { zh: { title: "脑洞永动机", line: "你嘴里随口一句「如果反过来呢」，别人能琢磨一周。规则对你来说不是墙，是健身器材。" }, en: { title: "Idea Perpetual Machine", line: "Your offhand 'what if we flipped it' keeps others up for a week. Rules aren't walls to you — they're gym equipment." } },
+  INFJ: { zh: { title: "看一眼就懂的洞察者", line: "你能从一句客套里听出对方真正想说的那半句。心里替很多人想过了，嘴上却只留温柔的那部分。" }, en: { title: "One-Glance Insight", line: "You hear the half-sentence people don't say. You've already thought it through for everyone — and only let the gentle part out loud." } },
+  INFP: { zh: { title: "把世界写成诗的灵魂", line: "你做选择不靠利弊表，靠「这件事像不像我」。看起来安静，心里其实正在为一只流浪猫安排三种未来。" }, en: { title: "Soul That Writes the World as Poetry", line: "You don't pick with pros-and-cons; you pick what feels like you. Quiet outside, plotting three futures for a stray cat inside." } },
+  ENFJ: { zh: { title: "自带聚光灯的暖人", line: "你走进房间，话题就自动柔软。别人没说出口的需要，你先递了过去——结果常常自己累，还安慰别人没事。" }, en: { title: "Warmth With a Spotlight", line: "You walk in and the room softens. You hand people the thing they didn't ask for — then comfort them about your own tired." } },
+  ENFP: { zh: { title: "灵感乱蹦的彩虹", line: "你一天可以同时爱上三个项目，再用第四个把它们串起来。被人说三分钟热度时，你已经在第六件事里发光了。" }, en: { title: "Rainbow on Caffeine", line: "You fall for three projects a day and lash them together with a fourth. While they call you flaky, you're already glowing inside project six." } },
+  ISTJ: { zh: { title: "靠谱到发亮的定海针", line: "答应的事按时交，不答应的事不模糊。别人慌的时候第一反应是找你，因为你那儿什么都有备份。" }, en: { title: "The Anchor That Quietly Shines", line: "You ship on time and never half-promise. When others panic, they look for you — your backups have backups." } },
+  ISFJ: { zh: { title: "把人都记心里的守护者", line: "你记得每个朋友的过敏源、生日和上次没说完的那句话。你的好藏在细节里，像有人偷偷把你冬天的鞋烘暖了。" }, en: { title: "Quiet Guardian Who Remembers Everything", line: "You remember everyone's allergy, birthday, and the sentence they didn't finish. Your care hides in details — like warm shoes on a cold morning." } },
+  ESTJ: { zh: { title: "雷厉风行的执行派", line: "你不爱开会爱拍板。流程在你手里像被拧紧的螺丝，谁拖延都会被你温柔地——按时——盯回正轨。" }, en: { title: "Get-It-Done Executor", line: "You hate meetings, love decisions. Processes tighten under you like screws; procrastinators get politely — and punctually — corrected." } },
+  ESFJ: { zh: { title: "把饭桌坐满的连结者", line: "你记得谁不吃香菜、谁刚分手、谁该被夸一句。你的厉害不在镁光灯下，而在每个人离场时心里那点暖。" }, en: { title: "The One Who Fills the Table", line: "You know who skips cilantro, who just got dumped, who needs a compliment. Your magic isn't on stage — it's in the warmth people leave with." } },
+  ISTP: { zh: { title: "话不多但手很稳", line: "出问题的瞬间，别人在吵，你已经蹲下来在拆。你不擅长解释心情，但你修过的东西从不假装。" }, en: { title: "Quiet Hands That Just Fix It", line: "When something breaks, others argue; you've already crouched down to take it apart. You can't always explain feelings — but the things you fix never fake it." } },
+  ISFP: { zh: { title: "活成审美本身的人", line: "你挑伞、挑歌单、挑外卖盒都讲究那一点点「对」。话不多，但你住过的角落，朋友都会忍不住多坐一会儿。" }, en: { title: "Aesthetic in Human Form", line: "You pick umbrellas, playlists and takeout boxes by some private rightness. You don't say much, but friends linger in any corner you've touched." } },
+  ESTP: { zh: { title: "动了才会想清楚的行动派", line: "你不爱开十次会改三版PPT，先冲一波再说。失败也认，反正下一秒已经换路线了。" }, en: { title: "Think-By-Doing Mover", line: "You hate ten meetings and three slide revisions. Charge first, learn fast. Failure? Sure — already pivoting before you finish admitting it." } },
+  ESFP: { zh: { title: "把日子过成花絮的快乐源", line: "你不挑天气，雨天也能凑成一场临时街头演唱会。朋友圈最舍不得屏蔽你，因为没有你那场聚会就缺了一半声音。" }, en: { title: "The Source Spot of Joy", line: "Rain doesn't bother you — it just becomes an impromptu street gig. Nobody mutes you online; the group chat is half-silent when you're not in it." } },
+};
+
+const dominantSide = (val: number, leftHigh: string, leftLow: string, rightHigh: string) => {
+  if (val >= 65) return `${leftHigh} ${val}%`;
+  if (val <= 35) return `${rightHigh} ${100 - val}%`;
+  return `${leftLow} ${val}%`;
+};
+
 const getFallbackMbtiResult = (history: QA[], locale: string): MBTIResult => {
   const score = { E: 0, I: 0, S: 0, N: 0, T: 0, F: 0, J: 0, P: 0 };
   const optionWeight: Record<string, [number, number]> = { A: [1.8, 0.2], B: [0.6, 1.4], C: [1.4, 0.6], D: [0.2, 1.8] };
@@ -89,15 +115,41 @@ const getFallbackMbtiResult = (history: QA[], locale: string): MBTIResult => {
   const traits = { E_I: pct("E", "I"), S_N: pct("S", "N"), T_F: pct("T", "F"), J_P: pct("J", "P") };
   const mbtiType = `${traits.E_I >= 50 ? "E" : "I"}${traits.S_N >= 50 ? "S" : "N"}${traits.T_F >= 50 ? "T" : "F"}${traits.J_P >= 50 ? "J" : "P"}`;
   const isZh = locale === "zh";
+  const flavor = MBTI_FLAVOR[mbtiType] || MBTI_FLAVOR.INFP;
+  const f = isZh ? flavor.zh : flavor.en;
+
+  // Build a small "where you lean" line from the strongest two axes.
+  const axes = isZh
+    ? [
+        { v: traits.E_I, hi: "外向 E", lo: "外向 E", hiR: "内向 I" },
+        { v: traits.S_N, hi: "实感 S", lo: "实感 S", hiR: "直觉 N" },
+        { v: traits.T_F, hi: "思考 T", lo: "思考 T", hiR: "情感 F" },
+        { v: traits.J_P, hi: "判断 J", lo: "判断 J", hiR: "知觉 P" },
+      ]
+    : [
+        { v: traits.E_I, hi: "Extraverted", lo: "Extraverted", hiR: "Introverted" },
+        { v: traits.S_N, hi: "Sensing", lo: "Sensing", hiR: "Intuitive" },
+        { v: traits.T_F, hi: "Thinking", lo: "Thinking", hiR: "Feeling" },
+        { v: traits.J_P, hi: "Judging", lo: "Judging", hiR: "Perceiving" },
+      ];
+  const ranked = axes
+    .map((a) => ({ ...a, dist: Math.abs(a.v - 50) }))
+    .sort((a, b) => b.dist - a.dist)
+    .slice(0, 2)
+    .map((a) => dominantSide(a.v, a.hi, a.lo, a.hiR));
+  const leanLine = isZh
+    ? `从这 ${history.length} 题里看，你身上 ${ranked.join("、")} 的味道最浓。`
+    : `Across your ${history.length} answers, the strongest currents are ${ranked.join(" and ")}.`;
+  const cta = isZh
+    ? `（登录后还能解锁一份更长的 AI 深度解读，并把结果留进你的档案。）`
+    : `(Sign in for a longer AI deep-read and to save this to your archive.)`;
 
   return {
     mbtiType,
-    title: isZh ? "即时性格侧写" : "Instant Personality Sketch",
-    description: isZh
-      ? `这是一份基于你刚才 ${history.length} 个选择生成的本地侧写。你在题目里的反应显示：面对外界刺激时，你更习惯用自己的节奏判断局面；在信息、情绪和计划之间，会优先选择让当下更可控、更贴近真实感受的做法。登录后可以获得更完整的 AI 深度解读，并把结果保存到你的档案。`
-      : `This local sketch is based on your ${history.length} choices. Your answers suggest that you read situations through your own rhythm, balancing information, emotion, and plans in a way that keeps the moment manageable and true to you. Sign in for the fuller AI interpretation and saved reports.`,
+    title: f.title,
+    description: `${f.line} ${leanLine} ${cta}`,
     traits,
-    socialCaption: isZh ? "我刚完成了一次灵魂小测。" : "I just mapped a small corner of myself.",
+    socialCaption: isZh ? `我是 ${mbtiType}，刚被这份测评说中了。` : `I'm ${mbtiType} — and this quiz called me out.`,
   };
 };
 
@@ -133,12 +185,18 @@ const AssessmentFlow = () => {
   }, [fetchAIImage]);
 
   const fetchParallelUniverse = useCallback(async (mbtiType: string) => {
-    if (!user || !hasUsableUserToken(session?.access_token)) return;
+    if (!user || !hasUsableUserToken(session?.access_token)) {
+      setParallelData(getFallbackParallelUniverse(mbtiType, locale));
+      return;
+    }
     setParallelLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("assessment", { body: { action: "parallel-universe", mbtiType, locale } });
       if (!error && data) { setParallelData(data); if (resultIdRef.current) { const { data: existing } = await supabase.from("assessment_results").select("result_data").eq("id", resultIdRef.current).single(); if (existing) { await supabase.from("assessment_results").update({ result_data: { ...existing.result_data as any, parallelUniverse: data } }).eq("id", resultIdRef.current); } } }
-    } catch {} finally { setParallelLoading(false); }
+      else setParallelData(getFallbackParallelUniverse(mbtiType, locale));
+    } catch {
+      setParallelData(getFallbackParallelUniverse(mbtiType, locale));
+    } finally { setParallelLoading(false); }
   }, [locale, session?.access_token, user]);
 
   const fetchResult = async (finalHistory: QA[]) => {
@@ -149,6 +207,7 @@ const AssessmentFlow = () => {
         const fallback = getFallbackMbtiResult(finalHistory, locale);
         setResult(fallback);
         setCurrentQuestion(null);
+        setParallelData(getFallbackParallelUniverse(fallback.mbtiType, locale));
         // Persist the fallback so the result still shows up in the user's
         // report list (stashed locally if they're not signed in, then
         // migrated after sign-in).
@@ -172,6 +231,7 @@ const AssessmentFlow = () => {
         const fallback = getFallbackMbtiResult(finalHistory, locale);
         setResult(fallback);
         setCurrentQuestion(null);
+        setParallelData(getFallbackParallelUniverse(fallback.mbtiType, locale));
         // Stash so it's not lost; sign-in will migrate.
         await persistAssessmentResult(null, "mbti", fallback);
         toast.error(t("auth.signInFirst"));
