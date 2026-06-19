@@ -1332,6 +1332,7 @@ const Chat = () => {
         open={soulMirrorOpen}
         userId={user?.id}
         onClose={() => setSoulMirrorOpen(false)}
+        singleAgentId={agentId}
       />
     </div>
 
