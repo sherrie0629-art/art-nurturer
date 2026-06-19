@@ -46,11 +46,65 @@ const getImagePrompt = (result: MBTIResult) => {
   return `Modern editorial illustration for MBTI ${result.mbtiType} "${result.title}", featuring ${motif}. Deep indigo and violet palette with one warm accent color (gold or coral), mix of geometric and organic shapes, intellectual yet poetic mood, hand-drawn linework with subtle paper texture. Square format, no text, no letters.`;
 };
 
+const isUnauthorizedFunctionError = (e: any) => {
+  const status = e?.context?.status;
+  const msg = String(e?.message || e || "").toLowerCase();
+  return status === 401 || msg.includes("401") || msg.includes("unauthorized");
+};
+
+const hasUsableUserToken = (token?: string | null) => {
+  if (!token) return false;
+  const parts = token.split(".");
+  if (parts.length !== 3) return false;
+  try {
+    const payload = JSON.parse(atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")));
+    if (!payload?.sub) return false;
+    if (payload.exp && payload.exp * 1000 < Date.now()) return false;
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const getFallbackMbtiResult = (history: QA[], locale: string): MBTIResult => {
+  const score = { E: 0, I: 0, S: 0, N: 0, T: 0, F: 0, J: 0, P: 0 };
+  const optionWeight: Record<string, [number, number]> = { A: [1.8, 0.2], B: [0.6, 1.4], C: [1.4, 0.6], D: [0.2, 1.8] };
+
+  history.forEach((item) => {
+    const [left, right] = item.dimension.split("/") as [keyof typeof score, keyof typeof score];
+    const letter = item.answer.trim().charAt(0).toUpperCase();
+    const [leftWeight, rightWeight] = optionWeight[letter] || [1, 1];
+    if (left && right && left in score && right in score) {
+      score[left] += leftWeight;
+      score[right] += rightWeight;
+    }
+  });
+
+  const pct = (left: keyof typeof score, right: keyof typeof score) => {
+    const total = score[left] + score[right] || 1;
+    return Math.round((score[left] / total) * 100);
+  };
+
+  const traits = { E_I: pct("E", "I"), S_N: pct("S", "N"), T_F: pct("T", "F"), J_P: pct("J", "P") };
+  const mbtiType = `${traits.E_I >= 50 ? "E" : "I"}${traits.S_N >= 50 ? "S" : "N"}${traits.T_F >= 50 ? "T" : "F"}${traits.J_P >= 50 ? "J" : "P"}`;
+  const isZh = locale === "zh";
+
+  return {
+    mbtiType,
+    title: isZh ? "即时性格侧写" : "Instant Personality Sketch",
+    description: isZh
+      ? `这是一份基于你刚才 ${history.length} 个选择生成的本地侧写。你在题目里的反应显示：面对外界刺激时，你更习惯用自己的节奏判断局面；在信息、情绪和计划之间，会优先选择让当下更可控、更贴近真实感受的做法。登录后可以获得更完整的 AI 深度解读，并把结果保存到你的档案。`
+      : `This local sketch is based on your ${history.length} choices. Your answers suggest that you read situations through your own rhythm, balancing information, emotion, and plans in a way that keeps the moment manageable and true to you. Sign in for the fuller AI interpretation and saved reports.`,
+    traits,
+    socialCaption: isZh ? "我刚完成了一次灵魂小测。" : "I just mapped a small corner of myself.",
+  };
+};
+
 const AssessmentFlow = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { locale } = useLocale();
-  const { user } = useAuth();
+  const { user, session, promptLogin, signOut } = useAuth();
   const { sharePoster, fetchAIImage, posterDataUrl, showPosterPreview, closePosterPreview, downloadPoster } = useSharePoster();
   const { canAssess, assessmentLimit, incrementAssessment } = useSubscription(user?.id);
   const [history, setHistory] = useState<QA[]>([]);
@@ -78,16 +132,25 @@ const AssessmentFlow = () => {
   }, [fetchAIImage]);
 
   const fetchParallelUniverse = useCallback(async (mbtiType: string) => {
+    if (!user || !hasUsableUserToken(session?.access_token)) return;
     setParallelLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("assessment", { body: { action: "parallel-universe", mbtiType, locale } });
       if (!error && data) { setParallelData(data); if (resultIdRef.current) { const { data: existing } = await supabase.from("assessment_results").select("result_data").eq("id", resultIdRef.current).single(); if (existing) { await supabase.from("assessment_results").update({ result_data: { ...existing.result_data as any, parallelUniverse: data } }).eq("id", resultIdRef.current); } } }
     } catch {} finally { setParallelLoading(false); }
-  }, [locale]);
+  }, [locale, session?.access_token, user]);
 
   const fetchResult = async (finalHistory: QA[]) => {
     setLoading(true); setLoadingMsg(t("assessmentFlow.common.analyzing"));
     try {
+      if (!user || !hasUsableUserToken(session?.access_token)) {
+        if (user) await signOut();
+        const fallback = getFallbackMbtiResult(finalHistory, locale);
+        setResult(fallback);
+        setCurrentQuestion(null);
+        promptLogin(t("auth.promptAssessmentAI"));
+        return;
+      }
       const { data, error } = await supabase.functions.invoke("assessment", { body: { history: finalHistory, locale } });
       if (error) throw error;
       if (data.type === "result") {
@@ -96,7 +159,14 @@ const AssessmentFlow = () => {
       }
     } catch (e: any) {
       if (isDailyLimitError(e)) toast.error(t("assessmentFlow.common.limitReached", { n: 20 }));
-      else toast.error(e.message || t("assessmentFlow.common.loadFail"));
+      else if (isUnauthorizedFunctionError(e)) {
+        await signOut();
+        const fallback = getFallbackMbtiResult(finalHistory, locale);
+        setResult(fallback);
+        setCurrentQuestion(null);
+        toast.error(t("auth.signInFirst"));
+        promptLogin(t("auth.promptAssessmentAI"));
+      } else toast.error(e.message || t("assessmentFlow.common.loadFail"));
     } finally { setLoading(false); }
   };
 
@@ -106,12 +176,13 @@ const AssessmentFlow = () => {
   const prefetchedRef = useRef<Promise<any[] | null> | null>(null);
   useEffect(() => {
     if (started || prefetchedRef.current) return;
+    if (!user || !hasUsableUserToken(session?.access_token)) return;
     if (variantRef.current === null) variantRef.current = getNextVariant("mbti", locale);
     prefetchedRef.current = supabase.functions
       .invoke("assessment", { body: { action: "batch-questions", locale, variant: variantRef.current } })
       .then(({ data, error }) => (!error && data?.type === "batch" && Array.isArray(data.data) && data.data.length >= 10 ? data.data : null))
       .catch(() => null);
-  }, [started, locale]);
+  }, [started, locale, session?.access_token, user]);
 
   const handleStart = async () => {
     // Allow anonymous users to take the quiz; saving + deep report are gated later.
@@ -132,7 +203,7 @@ const AssessmentFlow = () => {
     if (!batch || batch.length < 10) {
       batch = pickQuestionSet(locale);
       // Keep the prefetch running so a later session can use it; also kick a new one for next time.
-      if (!prefetchedRef.current) {
+      if (user && hasUsableUserToken(session?.access_token) && !prefetchedRef.current) {
         const v = variantRef.current ?? getNextVariant("mbti", locale);
         supabase.functions.invoke("assessment", { body: { action: "batch-questions", locale, variant: v } }).catch(() => {});
       }

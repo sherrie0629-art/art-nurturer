@@ -83,6 +83,7 @@
     "promptViewHistory": "Sign in to view chat history 📖",
     "promptDailyTarot": "Sign in to draw your daily tarot card",
     "promptContinueChat": "Sign in to save your chat and continue exploring ✨",
+    "promptAssessmentAI": "Sign in to generate the full AI interpretation and save this report to your archive.",
     "redirecting": "Redirecting..."
   },
   "profile": {
