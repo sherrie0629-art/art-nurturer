@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import DesktopLayout from "@/components/DesktopLayout";
 import SEO from "@/components/SEO";
 
-interface SoulFragment { id: string; name: string; description: string | null; icon: string; color: string; source_type: string; source_id: string | null; created_at: string; }
+interface SoulFragment { id: string; name: string; description: string | null; icon: string; color: string; source_type: string; source_agent: string | null; created_at: string; }
 
 const SOURCE_GROUPS = [
   { key: "assessment", sources: ["mbti", "enneagram", "zodiac", "emotion"] },
