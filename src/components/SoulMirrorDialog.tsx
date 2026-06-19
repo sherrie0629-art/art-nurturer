@@ -13,6 +13,8 @@ interface Props {
   onClose: () => void;
   /** Existing mirror to show instead of triggering generation. */
   existingMirror?: SoulMirror | null;
+  /** When set, only generate the mirror from this single agent (chat-page mode). */
+  singleAgentId?: string;
 }
 
 type Phase = "intro" | "generating" | "result" | "pro_required" | "throttled" | "error";
@@ -34,10 +36,11 @@ const AGENT_NAME: Record<string, { zh: string; en: string }> = {
   xinggui:  { zh: "星轨", en: "Xinggui" },
 };
 
-export default function SoulMirrorDialog({ open, userId, onClose, existingMirror }: Props) {
+export default function SoulMirrorDialog({ open, userId, onClose, existingMirror, singleAgentId }: Props) {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { generate, attachPosterUrl } = useSoulMirror(userId);
+  const isSingle = !!singleAgentId;
   const [phase, setPhase] = useState<Phase>(existingMirror ? "result" : "intro");
   const [mirror, setMirror] = useState<SoulMirror | null>(existingMirror || null);
   const [posterUrl, setPosterUrl] = useState<string | null>(existingMirror?.poster_url || null);
@@ -78,7 +81,7 @@ export default function SoulMirrorDialog({ open, userId, onClose, existingMirror
 
   const handleGenerate = useCallback(async () => {
     setPhase("generating");
-    const res: any = await generate();
+    const res: any = await generate(singleAgentId);
     if (!res.ok) {
       if (res.reason === "requires_pro") {
         setPhase("pro_required");
@@ -92,7 +95,7 @@ export default function SoulMirrorDialog({ open, userId, onClose, existingMirror
     }
     setMirror(res.mirror);
     setPhase("result");
-  }, [generate]);
+  }, [generate, singleAgentId]);
 
   // Render poster onto canvas once mirror appears
   useEffect(() => {
