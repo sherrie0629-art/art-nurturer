@@ -1,4 +1,5 @@
 import { isDailyLimitError } from "@/lib/assessmentErrors";
+import { persistAssessmentResult } from "@/lib/guestAssessment";
 import { useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -171,13 +172,9 @@ const ZodiacFlow = () => {
         setResult(data.data);
         setCurrentQuestion(null);
         awaitResultImage();
-        if (user) {
-          const { data: inserted } = await supabase.from("assessment_results").insert({
-            user_id: user.id, assessment_type: "zodiac", result_data: data.data,
-          }).select("id").single();
-          if (inserted) { resultIdRef.current = inserted.id; setSavedReportId(inserted.id); }
-          generateSoulFragment(user.id, "assessment", "zodiac", `Horoscope: ${data.data.zodiacSign} ${data.data.title}. ${data.data.description}`);
-        }
+        const newId = await persistAssessmentResult(user?.id ?? null, "zodiac", data.data);
+        if (newId) { resultIdRef.current = newId; setSavedReportId(newId); }
+        if (user) generateSoulFragment(user.id, "assessment", "zodiac", `Horoscope: ${data.data.zodiacSign} ${data.data.title}. ${data.data.description}`);
       }
     } catch (e: any) {
       if (isDailyLimitError(e)) toast.error(t("assessmentFlow.common.limitReached", { n: 20 }));
