@@ -20,6 +20,8 @@ export interface SoulMirrorSnapshot {
   generatedAt: string;
   primaryAgentId?: string | null;
   primaryTurns?: number;
+  singleAgentId?: string | null;
+  imageUrl?: string | null;
 }
 
 export interface SoulMirror {
@@ -52,12 +54,15 @@ export function useSoulMirror(userId: string | undefined) {
 
   useEffect(() => { load(); }, [load]);
 
-  const generate = useCallback(async (): Promise<
+  const generate = useCallback(async (agentId?: string): Promise<
     | { ok: true; mirror: SoulMirror }
     | { ok: false; reason: "requires_pro" | "throttled" | "error"; hoursLeft?: number; message?: string }
   > => {
     try {
-      const { data, error } = await supabase.functions.invoke("generate-soul-mirror", { body: {} });
+      const { data, error } = await supabase.functions.invoke(
+        "generate-soul-mirror",
+        { body: agentId ? { agentId } : {} },
+      );
       if (error) {
         // Edge function 4xx/429 errors come through as FunctionsHttpError with the body
         const ctx: any = (error as any).context;
