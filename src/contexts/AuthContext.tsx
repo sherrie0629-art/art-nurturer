@@ -8,6 +8,7 @@ import {
   GUEST_MIGRATED_EVENT,
   type GuestMigratedDetail,
 } from "@/lib/guestChat";
+import { migrateGuestAssessmentsToAccount } from "@/lib/guestAssessment";
 
 interface AuthContextType {
   user: User | null;
@@ -141,6 +142,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (event === "SIGNED_IN" && session?.user) {
         // Defer so the auth state update flushes first.
         setTimeout(() => runGuestMigration(session.user.id), 0);
+        setTimeout(async () => {
+          try {
+            const res = await migrateGuestAssessmentsToAccount(session.user.id);
+            if (res.migrated > 0) {
+              toast.success(`已把未登录时完成的 ${res.migrated} 份测评同步到你的账号 ✨`);
+            }
+          } catch (e) {
+            console.error("[Auth] guest assessment migration failed", e);
+          }
+        }, 0);
       }
     });
 
