@@ -1,70 +1,55 @@
 ## 目标
+在 `/admin` 用户管理列表中，为每个用户增加"禁用 / 解禁"按钮。被禁用的用户无法登录，也无法继续调用聊天、测评、深度报告等消耗成本的接口。
 
-保留两套测评的现有维度结构（人格 = E/I·S/N·T/F·J/P，星座 = 综合/爱情/事业/财运），只重写 prompt 的"素材池"和"语气"，让用户做题时一眼能感受到差别。
+## 实现方案
 
-## 改动范围
+### 1. 数据层（迁移）
+在 `public.profiles` 表新增字段：
+- `is_banned boolean not null default false`
+- `banned_at timestamptz`
+- `banned_reason text`（可选，先做空字段，后续可填）
 
-只动两个边缘函数的 system prompt 字符串，不动前端、不动数据结构、不动维度：
+通过 `has_role(auth.uid(), 'admin')` 让管理员可以更新所有 profile 的封禁字段；普通用户保持现状（只能读写自己）。
 
-- `supabase/functions/assessment/index.ts`（人格 MBTI）
-- `supabase/functions/assessment-zodiac/index.ts`（星座运势）
+### 2. 后端拦截（成本守门）
+在所有消耗 LOVABLE_API_KEY / ElevenLabs 的 Edge Function 入口加一道统一检查：拿到 JWT 中的 user_id → 查 `profiles.is_banned` → 若为 true，立刻返回 `403 { error: "account_banned" }`，不走 AI 调用。
 
-同时把两个文件里的 `PROMPT_VERSION` 都往上 bump 一位，让旧缓存（`assessment-cache` 桶里的 `mbti-batch-*` 和 `zodiac-questions-*`）失效。
+需要打补丁的函数（按"会花钱"清单）：
+- `chat`
+- `chat-tarot-draw`、`tarot-draw`、`daily-fortune-stick`
+- `assessment`、`assessment-emotion`、`assessment-enneagram`、`assessment-zodiac`、`assessment-compatibility`
+- `generate-deep-report`、`generate-soul-fragment`、`generate-soul-mirror`、`generate-poster-image`
+- `extract-memory-incremental`、`recall-memory`、`summarize-conversation`
+- `tts-speak`
 
-## 素材池分家方案
+做法：新建 `supabase/functions/_shared/ban-check.ts`，导出 `assertNotBanned(req)`，每个函数在 CORS 之后、业务逻辑之前调用一次。失败返回带 CORS 头的 403。
 
-### 人格测评（assessment）—— 保留"现实生活困境"
+### 3. 强制登出已封禁用户
+- 新增 Edge Function `admin-ban-user`（service_role）：校验调用者是 admin，然后
+  1. `UPDATE profiles SET is_banned = $1, banned_at = ...`
+  2. 当封禁时，调用 `admin.auth.admin.signOut(user_id, 'global')` 让现存 session 全部失效。
+- 前端 `AuthContext` 监听到 session 失效时已经会跳登录页，无需额外改动。
 
-考察的是稳定性格，所以场景围绕**外部世界 + 你的反应模式**：
+### 4. 前端（Admin 页面）
+在 `src/pages/Admin.tsx` 的 users tab 中：
+- `loadUsers` 一并拉取 `profiles.is_banned`
+- 每个用户卡片右上角显示状态徽章：正常 / 已禁用（红色）
+- 在"管理订阅"按钮旁加一个按钮：
+  - 未禁用 → `禁用此用户`（红色 ghost 样式，点击二次确认）
+  - 已禁用 → `解除禁用`
+- 点击后调用 `supabase.functions.invoke("admin-ban-user", { body: { user_id, banned: true/false } })`，成功后 toast 并 `loadUsers()` 刷新。
+- 被禁用的用户卡片整体降低透明度，便于一眼识别。
 
-- 职场协作：老板甩活、同事抢功、KPI 季、加班、跨部门撕、年会节目
-- 家庭社会：家族群催婚、过年亲戚追问、楼下大爷凶你、相亲迟到
-- 社交困境：朋友群被 cue、闺蜜借钱、前任朋友圈、群里冷场
-- 决策瞬间：双 11 购物车、外卖差评、抢春运票、体检异常
+### 5. 文案
+中文为主，新增 i18n key（`admin.banUser` / `admin.unbanUser` / `admin.banned` / `admin.confirmBan` / `admin.bannedToast`），同步英文兜底。
 
-prompt 里**显式 ban 掉**以下星座侧关键词，避免漂移：抽牌、塔罗、月相、水逆、宇宙、能量、星轨、占卜、签、灵感、托梦、玄学、第六感。
-
-### 星座运势（assessment-zodiac）—— 改成"占卜直觉题"
-
-考察的是当下运势能量，不再问"你会怎么做"，改成问**直觉/意象/吸引**：
-
-题型限定为以下几类，每题只能从中挑（system prompt 里硬性枚举）：
-
-1. **抽牌式**："闭眼从 4 张牌里抽一张，你的手停在了——" + 4 个意象选项（如：一只展翅的鹤 / 一杯倒满的茶 / 一把生锈的钥匙 / 一片飘落的羽毛）
-2. **吸引力式**："此刻最让你心动的颜色是？" / "下面哪个声音最让你想靠近？"
-3. **意象联想**："闭上眼睛，'最近的我'最像下面哪个画面？"
-4. **梦境/直觉**："如果今晚做梦，你希望梦见——" / "推开一扇门，里面最可能是？"
-5. **能量感应**："此刻身体哪个部位最沉？" / "你想在掌心握住的是？"
-
-题干硬性要求：
-- 不出现具体生活事件（不提职场、家庭、前任、消费）
-- 全部第二人称 + 轻盈意象，emoji 用 🌙 ✨ 🕯 🍃 🪞 🐚 🌊 🎴 🔮 🌒 等占卜系
-- 选项是"意象 / 颜色 / 触感 / 声音 / 画面"，不是"行动 / 想法"
-- 选项 6-18 字，要有画面感但不写解释
-
-prompt 里**显式 ban 掉**人格侧关键词：老板、KPI、家族群、相亲、外卖、双 11、地铁、催婚、闺蜜、前任、加班、群聊。
-
-### 维度映射保持不变
-
-- 人格仍然标 E/I·S/N·T/F·J/P
-- 星座仍然标 overall/love/career/fortune（占卜题里 AI 自行推断每题侧重哪个领域，dimension 字段照填）
-
-## 缓存失效
-
-两个文件分别：
-
-- `assessment/index.ts`: `PROMPT_VERSION = "v3"` → `"v4"`
-- `assessment-zodiac/index.ts`: `PROMPT_VERSION = "v3"` → `"v4"`
-
-bump 后旧缓存键自动失效，下次请求会重新生成并落盘。
-
-## 不动的部分
-
-- 前端 `AssessmentFlow.tsx` / `ZodiacFlow.tsx` 完全不改
-- 题数（10）、4 选项结构、tool schema、quota、变体数（5）、locale 处理全部保留
-- 结果生成 prompt 不动
-- 海报、AI 配图、维度雷达图不动
+## 技术细节
+- 迁移使用 `ALTER TABLE public.profiles ADD COLUMN ...`，无需 GRANT（profiles 已有授权）。
+- 封禁检查函数读取 profiles 时使用 service role client，避免被 RLS 影响。
+- 不删除用户数据，仅打标 + 全局登出，随时可恢复。
+- 管理员账户自身不允许被禁（接口内校验 `target !== caller && !has_role(target,'admin')`，避免误操作锁死后台）。
 
 ## 验收
-
-打开任意星座做题，10 题应**全部是直觉/抽牌/意象类**，不出现任何职场/家庭/社交事件；打开 MBTI 测评，10 题应**全部是现实困境**，不出现抽牌/月相/能量等词。
+1. 在 Admin → 用户 中对一个测试账号点"禁用此用户"，徽章变为"已禁用"。
+2. 该账号若在线，下次任意请求被踢回登录页；登录后调用 chat 接口直接 403，不消耗 AI 额度。
+3. 解除禁用后恢复正常。
