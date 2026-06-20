@@ -13,7 +13,7 @@ interface UserRow {
   display_name: string | null;
   created_at: string;
   is_banned?: boolean;
-  ban_reason?: string | null;
+  banned_reason?: string | null;
   subscription?: { plan: string; expires_at: string | null; billing_period?: string };
   usage?: { chat_count: number; assessment_count: number; deep_report_count: number };
 }
@@ -64,7 +64,7 @@ const Admin = () => {
   const loadUsers = useCallback(async () => {
     const [authRes, profilesRes, subsRes, usageRes] = await Promise.all([
       supabase.functions.invoke("admin-list-users"),
-      supabase.from("profiles").select("user_id, display_name, created_at, is_banned, ban_reason"),
+      supabase.from("profiles").select("user_id, display_name, created_at, is_banned, banned_reason"),
       supabase.from("user_subscriptions").select("user_id, plan, expires_at, billing_period"),
       supabase.from("usage_tracking").select("user_id, chat_count, assessment_count, deep_report_count").eq("track_date", new Date().toISOString().split("T")[0]),
     ]);
@@ -86,7 +86,7 @@ const Admin = () => {
           display_name: profileMap.get(u.user_id)?.display_name || u.display_name || null,
           created_at: u.created_at,
           is_banned: profileMap.get(u.user_id)?.is_banned ?? false,
-          ban_reason: profileMap.get(u.user_id)?.ban_reason ?? null,
+          banned_reason: profileMap.get(u.user_id)?.banned_reason ?? null,
           subscription: subMap.get(u.user_id) as any,
           usage: usageMap.get(u.user_id) as any,
         }))
@@ -348,8 +348,8 @@ const Admin = () => {
 
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-muted-foreground mb-2">
                     <span>{t("admin.registeredAt", { d: new Date(u.created_at).toLocaleDateString(dateLocale) })}</span>
-                    {u.is_banned && u.ban_reason && (
-                      <span className="text-destructive">原因：{u.ban_reason}</span>
+                    {u.is_banned && u.banned_reason && (
+                      <span className="text-destructive">原因：{u.banned_reason}</span>
                     )}
                     {isPlus && u.subscription?.expires_at && (
                       <span>{t("admin.expiryAt", { d: new Date(u.subscription.expires_at).toLocaleDateString(dateLocale) })}</span>
