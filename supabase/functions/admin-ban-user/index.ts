@@ -80,7 +80,6 @@ Deno.serve(async (req) => {
           is_banned: true,
           banned_at: now,
           banned_reason: reason || "管理员封禁",
-          banned_by: userData.user.id,
         })
         .eq("user_id", targetUserId);
       if (profileErr) throw profileErr;
@@ -93,7 +92,6 @@ Deno.serve(async (req) => {
           is_banned: false,
           banned_at: null,
           banned_reason: null,
-          banned_by: null,
         })
         .eq("user_id", targetUserId);
       if (profileErr) throw profileErr;
