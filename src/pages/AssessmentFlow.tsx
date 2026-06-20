@@ -23,9 +23,18 @@ import { getNextVariant } from "@/lib/assessmentVariant";
 import { persistAssessmentResult } from "@/lib/guestAssessment";
 import { getFallbackParallelUniverse } from "@/lib/fallbackParallelUniverse";
 import { probeMbtiPosterCached } from "@/lib/mbtiPosterCache";
+import { buildMbtiPosterConfig } from "@/lib/assessmentPosterConfig";
 
 interface QA { question: string; answer: string; dimension: string; }
-interface MBTIResult { mbtiType: string; title: string; description: string; traits: { E_I: number; S_N: number; T_F: number; J_P: number }; socialCaption: string; }
+interface MBTIResult {
+  mbtiType: string;
+  title: string;
+  description: string;
+  profileHook?: string;
+  profileBullets?: string[];
+  traits: { E_I: number; S_N: number; T_F: number; J_P: number };
+  socialCaption: string;
+}
 
 const MBTI_MOTIF: Record<string, string> = {
   INTJ: "a chess king on a starry strategic board with subtle architectural blueprint lines",
@@ -324,21 +333,18 @@ const AssessmentFlow = () => {
 
   const handleSharePoster = () => {
     if (!result) return;
-    sharePoster({
-      title: result.mbtiType, subtitle: result.title, description: result.description, icon: "🧠", caption: result.socialCaption,
-      profileHook: result.profileHook,
-      profileBullets: result.profileBullets,
-      accentColor: "#6366f1", accentColorLight: "#818cf8",
-      barsSectionTitle: t("assessmentDetail.dimensions"),
-      bars: [
-        { label1: dimEI[0], label2: dimEI[1], value: result.traits.E_I },
-        { label1: dimSN[0], label2: dimSN[1], value: result.traits.S_N },
-        { label1: dimTF[0], label2: dimTF[1], value: result.traits.T_F },
-        { label1: dimJP[0], label2: dimJP[1], value: result.traits.J_P },
-      ],
-      extraLines: parallelData ? [`${t("assessmentFlow.mbti.fantasyWorld")}: ${parallelData.magic.role}`, `${t("assessmentFlow.mbti.cyberpunk")}: ${parallelData.cyberpunk.role}`] : undefined,
-      preloadedImageUrl: resultImageUrl || undefined, imagePrompt: !resultImageUrl ? getImagePrompt(result) : undefined,
-    });
+    sharePoster(
+      buildMbtiPosterConfig(result, t, {
+        parallelExtraLines: parallelData
+          ? [
+              `${t("assessmentFlow.mbti.fantasyWorld")}: ${parallelData.magic.role}`,
+              `${t("assessmentFlow.mbti.cyberpunk")}: ${parallelData.cyberpunk.role}`,
+            ]
+          : undefined,
+        preloadedImageUrl: resultImageUrl || undefined,
+        imagePrompt: !resultImageUrl ? getImagePrompt(result) : undefined,
+      }),
+    );
   };
 
   if (!started) {

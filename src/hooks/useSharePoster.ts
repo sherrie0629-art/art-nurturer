@@ -8,7 +8,7 @@ const POSTER_WIDTH = 750;
 const POSTER_PADDING = 75;
 const CONTENT_WIDTH = POSTER_WIDTH - POSTER_PADDING * 2;
 
-interface PosterConfig {
+export interface PosterConfig {
   title: string;
   subtitle: string;
   description: string;
@@ -26,6 +26,19 @@ interface PosterConfig {
   brandCta?: string;
   profileHook?: string;
   profileBullets?: string[];
+  posterStyle?: "dark" | "light";
+}
+
+interface PosterPalette {
+  bgStops: [string, string, string];
+  title: string;
+  body: string;
+  bodyMuted: string;
+  bodyFaint: string;
+  cardFill: string;
+  cardStroke: string;
+  extraCardFill: string;
+  orbAlpha: number;
 }
 
 const imageCache = new Map<string, string>();
@@ -127,15 +140,17 @@ export function useSharePoster() {
     const ctx = canvas.getContext("2d")!;
     canvasRef.current = canvas;
 
+    const palette = getPosterPalette(config.posterStyle);
+
     // Background
     const bgGrad = ctx.createLinearGradient(0, 0, 0, POSTER_HEIGHT);
-    bgGrad.addColorStop(0, "#1a1625");
-    bgGrad.addColorStop(0.5, "#1e1a2e");
-    bgGrad.addColorStop(1, "#12101c");
+    bgGrad.addColorStop(0, palette.bgStops[0]);
+    bgGrad.addColorStop(0.5, palette.bgStops[1]);
+    bgGrad.addColorStop(1, palette.bgStops[2]);
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, POSTER_WIDTH, POSTER_HEIGHT);
 
-    ctx.globalAlpha = 0.06;
+    ctx.globalAlpha = palette.orbAlpha;
     ctx.fillStyle = config.accentColor;
     ctx.beginPath(); ctx.arc(620, 180, 280, 0, Math.PI * 2); ctx.fill();
     ctx.beginPath(); ctx.arc(130, POSTER_HEIGHT * 0.65, 200, 0, Math.PI * 2); ctx.fill();
@@ -148,12 +163,12 @@ export function useSharePoster() {
     // Icon
     ctx.font = "64px serif";
     ctx.textAlign = "center";
-    ctx.fillStyle = "#ffffff";
+    ctx.fillStyle = palette.title;
     ctx.fillText(config.icon, POSTER_WIDTH / 2, y + 60);
     y += 90;
 
     // Title — wrap instead of hard truncate
-    y = drawCenteredTitle(ctx, config.title, POSTER_WIDTH / 2, y + 20, CONTENT_WIDTH);
+    y = drawCenteredTitle(ctx, config.title, POSTER_WIDTH / 2, y + 20, CONTENT_WIDTH, palette.title);
     y += 20;
 
     // Subtitle
@@ -192,26 +207,26 @@ export function useSharePoster() {
     // Description Card
     const cardX = 60;
     const cardWidth = POSTER_WIDTH - 120;
-    ctx.fillStyle = "rgba(255,255,255,0.05)";
+    ctx.fillStyle = palette.cardFill;
     roundRect(ctx, cardX, y, cardWidth, descCardHeight, 18);
     ctx.fill();
-    ctx.strokeStyle = "rgba(255,255,255,0.08)";
+    ctx.strokeStyle = palette.cardStroke;
     ctx.lineWidth = 1;
     roundRect(ctx, cardX, y, cardWidth, descCardHeight, 18);
     ctx.stroke();
 
-    drawProfileInCard(ctx, profile, cardX, y, cardWidth, descMaxWidth, config.accentColor);
+    drawProfileInCard(ctx, profile, cardX, y, cardWidth, descMaxWidth, config.accentColor, palette.body);
     y += descCardHeight + sectionGap;
 
     // Bars Section
-    ctx.fillStyle = "#ffffff";
+    ctx.fillStyle = palette.title;
     ctx.font = "bold 26px 'DM Serif Display', serif";
     ctx.textAlign = "left";
     ctx.fillText(config.barsSectionTitle || "维度分析", POSTER_PADDING, y + 20);
     y += 40;
 
     for (const bar of config.bars) {
-      ctx.fillStyle = "rgba(255,255,255,0.6)";
+      ctx.fillStyle = palette.bodyMuted;
       ctx.font = "20px 'Inter', sans-serif";
       ctx.textAlign = "left";
       ctx.fillText(bar.label1, POSTER_PADDING, y + 16);
@@ -220,14 +235,14 @@ export function useSharePoster() {
         ctx.fillText(bar.label2, POSTER_WIDTH - POSTER_PADDING, y + 16);
       } else {
         ctx.textAlign = "right";
-        ctx.fillStyle = "rgba(255,255,255,0.5)";
+        ctx.fillStyle = palette.bodyFaint;
         ctx.font = "18px 'Inter', sans-serif";
         ctx.fillText(`${bar.value}%`, POSTER_WIDTH - POSTER_PADDING, y + 16);
       }
       y += 26;
 
       const barWidth = CONTENT_WIDTH;
-      ctx.fillStyle = "rgba(255,255,255,0.08)";
+      ctx.fillStyle = palette.cardStroke;
       roundRect(ctx, POSTER_PADDING, y, barWidth, 14, 7);
       ctx.fill();
 
@@ -243,7 +258,7 @@ export function useSharePoster() {
 
       if (bar.label2) {
         ctx.textAlign = "right";
-        ctx.fillStyle = "rgba(255,255,255,0.5)";
+        ctx.fillStyle = palette.bodyFaint;
         ctx.font = "18px 'Inter', sans-serif";
         ctx.fillText(`${bar.value}%`, POSTER_WIDTH - POSTER_PADDING, y + 28);
       }
@@ -254,11 +269,11 @@ export function useSharePoster() {
     if (config.extraLines && config.extraLines.length > 0) {
       y += 10;
       const extraCardH = config.extraLines.length * 40 + 30;
-      ctx.fillStyle = "rgba(255,255,255,0.04)";
+      ctx.fillStyle = palette.extraCardFill;
       roundRect(ctx, 60, y, cardWidth, extraCardH, 18);
       ctx.fill();
 
-      ctx.fillStyle = "rgba(255,255,255,0.8)";
+      ctx.fillStyle = palette.body;
       ctx.font = "22px 'Inter', sans-serif";
       ctx.textAlign = "left";
       for (let i = 0; i < config.extraLines.length; i++) {
@@ -289,12 +304,12 @@ export function useSharePoster() {
     }
     ctx.fillText(displayCaption, POSTER_WIDTH / 2, captionY);
 
-    ctx.fillStyle = "rgba(255,255,255,0.3)";
+    ctx.fillStyle = palette.bodyFaint;
     ctx.font = "18px 'Inter', sans-serif";
     ctx.fillText(config.appName || "心灵密语", POSTER_WIDTH / 2, captionY + 45);
 
     // Brand CTA
-    ctx.fillStyle = "rgba(255,255,255,0.2)";
+    ctx.fillStyle = palette.bodyFaint;
     ctx.font = "15px 'Inter', sans-serif";
     ctx.fillText(config.brandCta || "访问 islandai.life · 探索你的内心地图", POSTER_WIDTH / 2, captionY + 75);
 
@@ -398,12 +413,40 @@ async function ensurePosterFonts() {
   }
 }
 
+function getPosterPalette(style?: PosterConfig["posterStyle"]): PosterPalette {
+  if (style === "light") {
+    return {
+      bgStops: ["#faf8f5", "#f5f1ec", "#eef3f0"],
+      title: "#3d3835",
+      body: "rgba(61,56,53,0.88)",
+      bodyMuted: "rgba(61,56,53,0.62)",
+      bodyFaint: "rgba(61,56,53,0.45)",
+      cardFill: "rgba(255,255,255,0.82)",
+      cardStroke: "rgba(61,56,53,0.08)",
+      extraCardFill: "rgba(255,255,255,0.65)",
+      orbAlpha: 0.05,
+    };
+  }
+  return {
+    bgStops: ["#1a1625", "#1e1a2e", "#12101c"],
+    title: "#ffffff",
+    body: "rgba(255,255,255,0.88)",
+    bodyMuted: "rgba(255,255,255,0.6)",
+    bodyFaint: "rgba(255,255,255,0.5)",
+    cardFill: "rgba(255,255,255,0.05)",
+    cardStroke: "rgba(255,255,255,0.08)",
+    extraCardFill: "rgba(255,255,255,0.04)",
+    orbAlpha: 0.06,
+  };
+}
+
 function drawCenteredTitle(
   ctx: CanvasRenderingContext2D,
   text: string,
   centerX: number,
   startY: number,
   maxWidth: number,
+  fillStyle = "#ffffff",
 ): number {
   let fontSize = 48;
   let lines: string[] = [];
@@ -418,7 +461,7 @@ function drawCenteredTitle(
     const last = lines[1];
     lines[1] = last.length > 1 ? `${last.slice(0, -1)}…` : `${last}…`;
   }
-  ctx.fillStyle = "#ffffff";
+  ctx.fillStyle = fillStyle;
   ctx.textAlign = "center";
   let y = startY + fontSize;
   for (const line of lines) {
@@ -465,6 +508,7 @@ function drawProfileInCard(
   _cardWidth: number,
   maxWidth: number,
   accentColor: string,
+  bulletColor = "rgba(255,255,255,0.88)",
 ) {
   const textX = cardX + 30;
   let textY = cardY + 38;
@@ -486,7 +530,7 @@ function drawProfileInCard(
       ctx.font = "18px 'Inter', sans-serif";
       ctx.fillText("✦", textX, textY);
 
-      ctx.fillStyle = "rgba(255,255,255,0.88)";
+      ctx.fillStyle = bulletColor;
       ctx.font = "22px 'Inter', sans-serif";
       const lines = getWrappedLines(ctx, bullet, maxWidth - 28);
       for (let i = 0; i < lines.length; i++) {

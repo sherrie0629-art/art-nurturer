@@ -19,6 +19,7 @@ import ResultAIImage from "@/components/ResultAIImage";
 import PosterPreviewDialog from "@/components/PosterPreviewDialog";
 import DeepReportUnlock from "@/components/DeepReportUnlock";
 import { pickEmotionQuestionSet } from "@/data/emotionQuestionPool";
+import { buildEmotionPosterConfig } from "@/lib/assessmentPosterConfig";
 
 interface QA { question: string; answer: string; dimension: string; }
 
@@ -152,26 +153,13 @@ const EmotionFlow = () => {
 
   const handleSharePoster = () => {
     if (!result) return;
-    const analysisText = profileToPlainText(result) || result.description;
-    sharePoster({
-      title: `${result.emoji} ${result.emotionLevel}`,
-      subtitle: result.title,
-      description: analysisText,
-      icon: result.emoji,
-      caption: result.socialCaption,
-      accentColor: "#e07a7a",
-      accentColorLight: "#f0a0a0",
-      bars: [
-        { label1: t("assessmentFlow.emotion.burnout"), label2: t("assessmentFlow.emotion.lowerIsBetter"), value: result.traits.burnout },
-        { label1: t("assessmentFlow.emotion.energy"), label2: "", value: result.traits.energy },
-        { label1: t("assessmentFlow.emotion.boundaries"), label2: "", value: result.traits.boundaries },
-        { label1: t("assessmentFlow.emotion.sleep"), label2: "", value: result.traits.sleep },
-      ],
-      extraLines: result.suggestions.map((s, i) => `${i + 1}. ${s}`),
-      preloadedImageUrl: resultImageUrl || undefined,
-      imagePrompt: !resultImageUrl ? getImagePrompt(result) : undefined,
-      imageCacheKey: getImageCacheKey(result),
-    });
+    sharePoster(
+      buildEmotionPosterConfig(result, t, {
+        preloadedImageUrl: resultImageUrl || undefined,
+        imagePrompt: !resultImageUrl ? getImagePrompt(result) : undefined,
+        imageCacheKey: getImageCacheKey(result),
+      }),
+    );
   };
 
   if (!started) {

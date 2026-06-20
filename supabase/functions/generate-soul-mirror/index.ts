@@ -81,6 +81,8 @@ function buildPrompt(
     bondLevel: number;
     totalTurns: number;
     memories: string[];
+    newMemories?: string[];
+    edition?: number;
     profileFacts: string[];
   },
 ) {
@@ -101,6 +103,12 @@ function buildPrompt(
       : `You and ${ctx.nickname} have only had a few light exchanges. Use a restrained, spacious observational voice; do not pretend to know them deeply.`;
   }
 
+  const newMemoryNote = ctx.newMemories?.length
+    ? ctx.locale === "zh"
+      ? `\n- 这是第 ${ctx.edition ?? 2} 版镜像。下方「自上次镜像以来」的新记忆必须自然融入 portrait，至少引用 1 条，让用户感到被记住。`
+      : `\n- This is mirror edition ${ctx.edition ?? 2}. Weave at least ONE item from NEW memories since last mirror into portrait — surprise them by remembering recent details.`
+    : "";
+
   return [
     {
       role: "system",
@@ -108,7 +116,7 @@ function buildPrompt(
 
 Lens: ${agent.lens}
 ${toneNote}
-${signatureNote}
+${signatureNote}${newMemoryNote}
 
 Return STRICTLY a single valid JSON object — no markdown, no code fences, no commentary:
 {
@@ -127,6 +135,11 @@ Return STRICTLY a single valid JSON object — no markdown, no code fences, no c
 
 Memories you (${agent.displayName}) have of them:
 ${ctx.memories.length ? ctx.memories.map((m, i) => `${i + 1}. ${m}`).join("\n") : "(few direct memories)"}
+${
+  ctx.newMemories?.length
+    ? `\nNEW since last mirror (prioritize these):\n${ctx.newMemories.map((m, i) => `${i + 1}. ${m}`).join("\n")}`
+    : ""
+}
 
 Cross-context facts about them:
 ${ctx.profileFacts.length ? ctx.profileFacts.map((f, i) => `${i + 1}. ${f}`).join("\n") : "(none)"}
@@ -265,6 +278,12 @@ serve(async (req) => {
       }
     }
 
+    const lastMirror: any = matchScope[0] ?? null;
+    const sinceIso = lastMirror?.created_at as string | undefined;
+    const edition = lastMirror
+      ? ((lastMirror.user_snapshot as any)?.edition ?? 1) + 1
+      : 1;
+
     // --- Gather user context ---
     const [profileRes, bondsRes, factsRes, assessRes] = await Promise.all([
       admin.from("profiles").select("display_name, locale").eq("user_id", userId).maybeSingle(),
@@ -295,6 +314,8 @@ serve(async (req) => {
       ? AGENTS.filter((a) => a.id === singleAgentId)
       : [...AGENTS];
     const memoriesPerAgent: Record<string, string[]> = {};
+    const newMemoriesPerAgent: Record<string, string[]> = {};
+    const highlights: Array<{ text: string; agentId: string; category?: string }> = [];
     await Promise.all(
       targetAgents.map(async (a) => {
         const { data } = await admin
@@ -306,6 +327,27 @@ serve(async (req) => {
           .order("created_at", { ascending: false })
           .limit(8);
         memoriesPerAgent[a.id] = (data as any[] || []).map((m) => m.content).filter(Boolean);
+
+        if (sinceIso) {
+          const { data: delta } = await admin
+            .from("user_memories")
+            .select("content, category")
+            .eq("user_id", userId)
+            .eq("agent_id", a.id)
+            .gt("created_at", sinceIso)
+            .order("importance", { ascending: false })
+            .order("created_at", { ascending: false })
+            .limit(5);
+          const rows = (delta as any[] || []).filter((m) => m.content);
+          newMemoriesPerAgent[a.id] = rows.map((m) => String(m.content));
+          for (const m of rows.slice(0, 2)) {
+            highlights.push({
+              text: String(m.content).slice(0, 120),
+              agentId: a.id,
+              category: m.category,
+            });
+          }
+        }
       }),
     );
 
@@ -321,6 +363,8 @@ serve(async (req) => {
           bondLevel: bond.bond_level,
           totalTurns: bond.total_turns,
           memories: memoriesPerAgent[agent.id] || [],
+          newMemories: newMemoriesPerAgent[agent.id] || [],
+          edition,
           profileFacts,
         });
         const json = await callAI(messages);
@@ -382,6 +426,12 @@ serve(async (req) => {
       generatedAt: new Date().toISOString(),
       primaryAgentId,
       primaryTurns,
+      edition,
+      triggerTurn: singleAgentId
+        ? (bondsMap[singleAgentId]?.total_turns ?? 0)
+        : primaryTurns,
+      sinceMirrorId: lastMirror?.id ?? null,
+      highlights: highlights.slice(0, 4),
     };
     if (singleAgentId) {
       userSnapshot.singleAgentId = singleAgentId;

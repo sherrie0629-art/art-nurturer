@@ -13,6 +13,7 @@ import DesktopLayout from "@/components/DesktopLayout";
 import SEO from "@/components/SEO";
 import SoulMirrorDialog from "@/components/SoulMirrorDialog";
 import { useSoulMirror } from "@/hooks/useSoulMirror";
+import { isMirrorUnlocked } from "@/lib/soulMirrorRules";
 
 interface BondRow { agent_id: string; bond_level: number | null; total_turns: number | null; easter_eggs_found: string[] | null; }
 interface BondInfo { level: number; turns: number; eggs: string[]; }
@@ -27,7 +28,7 @@ const Vault = () => {
   const [mirrorOpen, setMirrorOpen] = useState(false);
   const { mirrors } = useSoulMirror(user?.id);
   const hasMirror = mirrors.length > 0;
-  const mirrorUnlockedByTurns = Object.values(bonds).some((b) => (b.turns || 0) >= 10);
+  const mirrorUnlockedByTurns = Object.values(bonds).some((b) => isMirrorUnlocked(b.turns || 0));
 
   const agents = RAW_AGENTS.map((a) => localizeAgent(a, t));
 
@@ -273,7 +274,11 @@ const Vault = () => {
             <button
               key={tt.key}
               onClick={() => setTab(tt.key)}
-              className={`flex items-center gap-1.5 rounded-2xl px-3.5 py-2 text-xs font-medium transition-all active:scale-95 ${tab === tt.key ? "bg-secondary text-primary-foreground shadow-sm" : "bg-card text-muted-foreground border border-border"}`}
+              className={`flex items-center gap-1.5 rounded-2xl px-3.5 py-2 text-xs font-medium transition-all active:scale-95 ${
+                tab === tt.key
+                  ? "bg-primary text-primary-foreground border border-primary shadow-glow"
+                  : "bg-card text-muted-foreground border border-border hover:border-primary/30"
+              }`}
             >
               <tt.icon className="h-3.5 w-3.5" />
               {tt.label}

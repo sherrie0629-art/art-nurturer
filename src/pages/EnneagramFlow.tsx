@@ -17,6 +17,7 @@ import ResultAIImage from "@/components/ResultAIImage";
 import PosterPreviewDialog from "@/components/PosterPreviewDialog";
 import DeepReportUnlock from "@/components/DeepReportUnlock";
 import { pickEnneagramQuestionSet } from "@/data/enneagramQuestionPool";
+import { buildEnneagramPosterConfig } from "@/lib/assessmentPosterConfig";
 
 interface QA { question: string; answer: string; dimension: string; }
 
@@ -154,30 +155,12 @@ const EnneagramFlow = () => {
 
   const handleSharePoster = () => {
     if (!result) return;
-    sharePoster({
-      title: `Type ${result.type}`,
-      subtitle: result.title,
-      description: result.description,
-      icon: "🎯",
-      caption: result.socialCaption,
-      accentColor: "#2dd4bf",
-      accentColorLight: "#5eead4",
-      bars: [
-        { label1: t("assessmentDetail.dim.thinking"), label2: "", value: result.traits.selfAwareness },
-        { label1: t("assessmentDetail.dim.feeling"), label2: "", value: result.traits.empathy },
-        { label1: t("assessmentDetail.dim.instinct"), label2: "", value: result.traits.resilience },
-        { label1: t("assessmentDetail.dim.growth"), label2: "", value: result.traits.growth },
-      ],
-      extraLines: [
-        `🎯 ${t("assessmentFlow.enneagram.wing")}: ${result.wing}`,
-        `💡 ${t("assessmentFlow.enneagram.growth")}: ${result.growthPath}`,
-        `⚡ ${t("assessmentFlow.enneagram.underStress")}: ${result.stressArrow}`,
-        `🌱 ${result.advice}`,
-      ],
-      preloadedImageUrl: resultImageUrl || undefined,
-      imagePrompt: !resultImageUrl ? getImagePrompt(result) : undefined,
-      imageCacheKey: `enneagram-${result.type}`,
-    });
+    sharePoster(
+      buildEnneagramPosterConfig(result, t, {
+        preloadedImageUrl: resultImageUrl || undefined,
+        imagePrompt: !resultImageUrl ? getImagePrompt(result) : undefined,
+      }),
+    );
   };
 
   if (!started) {

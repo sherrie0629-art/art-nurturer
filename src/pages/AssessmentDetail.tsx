@@ -12,12 +12,13 @@ import { toast } from "sonner";
 import DeepReportUnlock from "@/components/DeepReportUnlock";
 import AssessmentProfileCard from "@/components/AssessmentProfileCard";
 import ZodiacFortuneCards, { buildZodiacFortuneCards } from "@/components/ZodiacFortuneCards";
+import ZodiacReadingCards from "@/components/ZodiacReadingCards";
+import { normalizeZodiacReading } from "@/lib/zodiacReading";
+import { buildSavedAssessmentPosterConfig } from "@/lib/assessmentPosterConfig";
 import type { ShareScene } from "@/lib/shareChannels";
 import { useTranslation } from "react-i18next";
 import i18n from "@/i18n";
 import { normalizeTraitScores } from "@/lib/scoreNormalize";
-import { buildAssessmentPosterBars } from "@/lib/posterBars";
-import { probeMbtiPosterCached } from "@/lib/mbtiPosterCache";
 
 const typeIcons: Record<string, typeof Brain> = {
   mbti: Brain, enneagram: Compass, zodiac: Stars, emotion: Flame,
@@ -78,28 +79,11 @@ const AssessmentDetail = () => {
   const typeLabel = t(`assessmentReports.labels.${type}`, { defaultValue: type });
 
   const handleShare = async () => {
-    const iconMap: Record<string, string> = { mbti: "🧠", enneagram: "🧭", zodiac: "⭐", emotion: "🔥" };
-    const bars = buildAssessmentPosterBars(type, d.traits as Record<string, number> | undefined, t);
-    let preloadedImageUrl: string | undefined;
-    if (type === "mbti" && d.mbtiType) {
-      preloadedImageUrl = (await probeMbtiPosterCached(d.mbtiType)) || undefined;
-    }
+    const isZh = (i18n.resolvedLanguage || i18n.language || "en").startsWith("zh");
     try {
-      const canvas = await generatePoster({
-        title: getTitle(),
-        subtitle: typeLabel,
-        description: d.description || "",
-        profileHook: d.profileHook,
-        profileBullets: d.profileBullets,
-        bars,
-        accentColor: type === "mbti" ? "#6366f1" : "#8b5cf6",
-        accentColorLight: type === "mbti" ? "#818cf8" : "#a78bfa",
-        icon: iconMap[type] || "✨",
-        caption: d.socialCaption || t("assessmentDetail.shareDescAI"),
-        barsSectionTitle: t("assessmentDetail.dimensions"),
-        preloadedImageUrl,
-        imageCacheKey: type === "mbti" && d.mbtiType ? `mbti-${d.mbtiType}` : undefined,
-      });
+      const canvas = await generatePoster(
+        await buildSavedAssessmentPosterConfig(type, d, t, isZh),
+      );
       setShareImageUrl(canvas.toDataURL("image/png"));
       setShareOpen(true);
     } catch {
@@ -229,7 +213,15 @@ const AssessmentDetail = () => {
             <p className="mb-4 text-xs text-gold-light/85 italic leading-relaxed">"{d.socialCaption}"</p>
           )}
 
-          <AssessmentProfileCard data={d} variant={type === "emotion" ? "warm" : "default"} />
+          {type === "zodiac" ? (
+            <ZodiacReadingCards
+              reading={normalizeZodiacReading(d)}
+              labelFn={(key) => t(`assessmentDetail.dim.${key}`, { defaultValue: key })}
+              hookLabel={t("assessmentFlow.zodiac.readingHook")}
+            />
+          ) : (
+            <AssessmentProfileCard data={d} variant={type === "emotion" ? "warm" : "default"} />
+          )}
         </motion.div>
 
         {/* Dimensions */}

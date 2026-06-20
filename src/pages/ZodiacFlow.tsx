@@ -19,6 +19,9 @@ import DeepReportUnlock from "@/components/DeepReportUnlock";
 import { getNextVariant } from "@/lib/assessmentVariant";
 import { pickZodiacQuestionSet } from "@/data/zodiacQuestionPool";
 import ZodiacFortuneCards, { buildZodiacFortuneCards } from "@/components/ZodiacFortuneCards";
+import ZodiacReadingCards from "@/components/ZodiacReadingCards";
+import { normalizeZodiacReading, zodiacReadingToPlainText, type ZodiacReading } from "@/lib/zodiacReading";
+import { buildZodiacPosterConfig } from "@/lib/assessmentPosterConfig";
 
 interface QA { question: string; answer: string; dimension: string; }
 
@@ -59,6 +62,7 @@ interface ZodiacResult {
   element: string;
   title: string;
   description: string;
+  reading?: ZodiacReading;
   traits: { overall: number; love: number; career: number; fortune: number };
   luckyItems: { color: string; number: string; direction: string };
   advice: string | {
@@ -176,7 +180,7 @@ const ZodiacFlow = () => {
         awaitResultImage();
         const newId = await persistAssessmentResult(user?.id ?? null, "zodiac", data.data);
         if (newId) { resultIdRef.current = newId; setSavedReportId(newId); }
-        if (user) generateSoulFragment(user.id, "assessment", "zodiac", `Horoscope: ${data.data.zodiacSign} ${data.data.title}. ${data.data.description}`);
+        if (user) generateSoulFragment(user.id, "assessment", "zodiac", `Horoscope: ${data.data.zodiacSign} ${data.data.title}. ${zodiacReadingToPlainText(normalizeZodiacReading(data.data)) || data.data.description}`);
       }
     } catch (e: any) {
       if (isDailyLimitError(e)) toast.error(t("assessmentFlow.common.limitReached", { n: 20 }));
@@ -235,31 +239,13 @@ const ZodiacFlow = () => {
 
   const handleSharePoster = () => {
     if (!result) return;
-    const signData = ZODIAC_SIGNS.find(z => z.name === result.zodiacSign);
-    sharePoster({
-      title: localizeName(result.zodiacSign),
-      subtitle: `${localizeElement(result.element)} · ${result.title}`,
-      description: result.description,
-      icon: signData?.icon || "⭐",
-      caption: result.socialCaption,
-      accentColor: "#8b6fcf",
-      accentColorLight: "#b794f6",
-      bars: [
-        { label1: t("assessmentDetail.dim.overall"), label2: "", value: result.traits.overall },
-        { label1: t("assessmentDetail.dim.love"), label2: "", value: result.traits.love },
-        { label1: t("assessmentDetail.dim.career"), label2: "", value: result.traits.career },
-        { label1: t("assessmentDetail.dim.fortune"), label2: "", value: result.traits.fortune },
-      ],
-      extraLines: [
-        `🎨 ${t("assessmentFlow.zodiac.luckyColor")}: ${result.luckyItems.color}`,
-        `🔢 ${t("assessmentFlow.zodiac.luckyNumber")}: ${result.luckyItems.number}`,
-        `🧭 ${t("assessmentFlow.zodiac.luckyDirection")}: ${result.luckyItems.direction}`,
-        `💡 ${typeof result.advice === "string" ? result.advice : result.advice.mantra}`,
-      ],
-      preloadedImageUrl: resultImageUrl || undefined,
-      imagePrompt: !resultImageUrl ? getImagePromptForSign(result.zodiacSign, result.element) : undefined,
-      imageCacheKey: getCacheKeyForSign(result.zodiacSign),
-    });
+    sharePoster(
+      buildZodiacPosterConfig(result, t, isZh, {
+        preloadedImageUrl: resultImageUrl || undefined,
+        imagePrompt: !resultImageUrl ? getImagePromptForSign(result.zodiacSign, result.element) : undefined,
+        imageCacheKey: getCacheKeyForSign(result.zodiacSign),
+      }),
+    );
   };
 
   if (!selectedSign) {
@@ -293,6 +279,7 @@ const ZodiacFlow = () => {
 
   if (result) {
     const signIcon = ZODIAC_SIGNS.find(z => z.name === result.zodiacSign)?.icon || "⭐";
+    const reading = normalizeZodiacReading(result);
     return (
       <div className="min-h-screen bg-gradient-calm pb-8">
         <div className="flex items-center gap-3 px-4 py-3">
@@ -308,8 +295,13 @@ const ZodiacFlow = () => {
           </div>
           <ResultAIImage imageUrl={resultImageUrl} loading={imageLoading} />
           <div className="rounded-2xl bg-card p-5 shadow-card mb-4">
-            <h3 className="font-display text-sm font-semibold text-foreground mb-3">{t("assessmentFlow.zodiac.reading")}</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">{result.description}</p>
+            <h3 className="font-display text-sm font-semibold text-foreground mb-1">{t("assessmentFlow.zodiac.reading")}</h3>
+            <p className="text-[10px] text-muted-foreground mb-4">{t("assessmentFlow.zodiac.readingHint")}</p>
+            <ZodiacReadingCards
+              reading={reading}
+              labelFn={(key) => t(`assessmentDetail.dim.${key}`)}
+              hookLabel={t("assessmentFlow.zodiac.readingHook")}
+            />
           </div>
           <div className="rounded-2xl bg-card p-5 shadow-card mb-4">
             <h3 className="font-display text-sm font-semibold text-foreground mb-1">{t("assessmentDetail.dimensions")}</h3>
@@ -397,7 +389,7 @@ const ZodiacFlow = () => {
               <Download className="h-4 w-4" /> {t("assessmentFlow.common.saveAndShare")}
             </button>
             <button onClick={() => navigate(`/chat?agent=xinggui`, {
-              state: { zodiacResult: { zodiacSign: result.zodiacSign, element: result.element, title: result.title, description: result.description, traits: result.traits, luckyItems: result.luckyItems, advice: result.advice } },
+              state: { zodiacResult: { zodiacSign: result.zodiacSign, element: result.element, title: result.title, description: zodiacReadingToPlainText(reading) || result.description, reading, traits: result.traits, luckyItems: result.luckyItems, advice: result.advice } },
             })} className="flex-1 rounded-xl bg-gradient-golden py-3 text-sm font-semibold text-primary-foreground">
               {t("assessmentFlow.zodiac.talkToXinggui")}
             </button>

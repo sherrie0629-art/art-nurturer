@@ -12,6 +12,12 @@ export interface SoulMirrorPerspective {
   totalTurns?: number;
 }
 
+export interface SoulMirrorHighlight {
+  text: string;
+  agentId?: string;
+  category?: string;
+}
+
 export interface SoulMirrorSnapshot {
   nickname: string;
   mbti: string | null;
@@ -22,6 +28,10 @@ export interface SoulMirrorSnapshot {
   primaryTurns?: number;
   singleAgentId?: string | null;
   imageUrl?: string | null;
+  edition?: number;
+  triggerTurn?: number;
+  sinceMirrorId?: string | null;
+  highlights?: SoulMirrorHighlight[];
 }
 
 export interface SoulMirror {

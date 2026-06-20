@@ -278,9 +278,11 @@
     "zodiac": {
       "title": "星座运势",
       "introTitle": "选择你的星座",
-      "introDesc": "AI 将根据你当前的状态为你解读星象",
+      "introDesc": "10 道直觉小题 + AI 帮你拆成好读的能量卡片",
       "resultsTitle": "你的运势",
       "reading": "解读",
+      "readingHint": "分块读，不用啃长文",
+      "readingHook": "✦ 本周 vibe",
       "luckyGuide": "✨ 幸运指南",
       "luckyColor": "幸运色",
       "luckyNumber": "幸运数字",
@@ -1353,9 +1355,13 @@
   },
   "soulMirror": {
     "unlockedTitle": "灵魂镜像已就绪",
-    "unlockedDesc": "你和角色聊得够久了。\n四位 AI 角色将各自写下「我眼中的你」，合成一张专属海报。",
+    "unlockedDesc": "你和角色聊得够久了。\n每深聊 15 轮可更新一次镜像，四位 AI 会写入自上次以来记得的新细节。",
     "cta": "立即生成镜像",
     "later": "稍后再说",
+    "milestoneToast": "又聊了 {{n}} 轮 · 灵魂镜像可以更新了",
+    "milestoneToastAction": "去看看",
+    "newHighlights": "本轮新看见",
+    "editionLabel": "第 {{n}} 版",
     "generatingTitle": "四个视角正在凝视你…",
     "generatingDesc": "暖暖、老王、云生、星轨 正同时落笔，约需 10-15 秒。",
     "generatingTitleSingle": "{{name}} 正在凝视你…",
@@ -1368,7 +1374,7 @@
     "proDesc": "免费用户可解锁 1 张永久镜像。升级 Pro 即可每 24 小时重新生成，记录你的成长曲线。",
     "upgradeCta": "升级 Pro",
     "throttledTitle": "稍等一下",
-    "throttledDesc": "距下次重新生成还有约 {{hours}} 小时。每 24 小时可生成一次。",
+    "throttledDesc": "距下次重新生成还有约 {{hours}} 小时。每 24 小时可生成一次，每聊满 15 轮会提醒你更新。",
     "lens": {
       "nuannuan": "看见你安静的那一面",
       "laowang": "看见你硬撑的那一面",
@@ -1380,7 +1386,7 @@
       "onlyOne": "目前只和 {{name}} 聊得多，其他三位的部分会是「远观初见」。"
     },
     "vaultTitle": "灵魂镜像",
-    "vaultEmptyHint": "和任一角色聊够 10 轮即可解锁。",
+    "vaultEmptyHint": "和任一角色聊够 15 轮即可解锁，之后每 15 轮可更新。",
     "vaultRegenerate": "重新生成",
     "vaultEntry": "查看我的灵魂镜像",
     "openLatest": "查看最新镜像"

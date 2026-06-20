@@ -45,6 +45,12 @@ import { generateSoulFragment } from "@/hooks/useSoulFragment";
 import { CHAT_FRAGMENT_TURN_INTERVAL } from "@/lib/soulFragmentRules";
 import TarotCardInline, { type InlineTarotCard } from "@/components/TarotCardInline";
 import SoulMirrorDialog from "@/components/SoulMirrorDialog";
+import {
+  MIRROR_TURN_INTERVAL,
+  getLastMirrorPromptTurn,
+  getPendingMirrorMilestone,
+  markMirrorPrompted,
+} from "@/lib/soulMirrorRules";
 
 interface Message {
   id: string;
@@ -221,27 +227,31 @@ const Chat = () => {
     load();
   }, [user, agentId]);
 
-  // Soul Mirror trigger: once any agent crosses 10 turns and the user has not been prompted before.
+  // Soul Mirror: remind every MIRROR_TURN_INTERVAL turns (15, 30, 45…) per agent.
+  const mirrorPromptFiredRef = useRef<number | null>(null);
   useEffect(() => {
-    if (!user) return;
-    if (totalTurns < 10) return;
-    const KEY = `soul_mirror_prompted_v1:${user.id}`;
-    if (localStorage.getItem(KEY)) return;
-    // Check whether user already has any mirror — skip if so
-    (async () => {
-      const { data } = await (supabase as any)
-        .from("soul_mirrors")
-        .select("id")
-        .eq("user_id", user.id)
-        .limit(1);
-      if (data && data.length > 0) {
-        localStorage.setItem(KEY, "1");
-        return;
-      }
-      localStorage.setItem(KEY, "1");
+    if (!user || !agentId) return;
+    const pending = getPendingMirrorMilestone(
+      getLastMirrorPromptTurn(user.id, agentId),
+      totalTurns,
+    );
+    if (!pending) return;
+    if (mirrorPromptFiredRef.current === pending) return;
+    mirrorPromptFiredRef.current = pending;
+    markMirrorPrompted(user.id, agentId, pending);
+
+    if (pending === MIRROR_TURN_INTERVAL) {
       setTimeout(() => setSoulMirrorOpen(true), 600);
-    })();
-  }, [user, totalTurns]);
+      return;
+    }
+    toast(t("soulMirror.milestoneToast", { n: MIRROR_TURN_INTERVAL }), {
+      action: {
+        label: t("soulMirror.milestoneToastAction"),
+        onClick: () => setSoulMirrorOpen(true),
+      },
+      duration: 8000,
+    });
+  }, [user, agentId, totalTurns, t]);
 
   const initialScrollDone = useRef(false);
 

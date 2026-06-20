@@ -143,17 +143,18 @@ const DailyTarot = () => {
   const handleShare = async () => {
     if (!result) return;
     const card = tarotCards.find((c) => c.id === result.cardId);
+    const orientation = result.isReversed ? t("dailyTarot.reversed") : t("dailyTarot.upright");
     try {
       toast.info(t("dailyTarot.posterIntro"), { duration: 3000 });
       const canvas = await generatePoster({
         title: result.cardName,
-        subtitle: result.isReversed ? t("dailyTarot.reversed") : t("dailyTarot.upright"),
-        description: result.interpretation.split("\n\n💡")[0],
+        subtitle: `${orientation} · ${t("dailyTarot.energy", { n: result.energyScore })}`,
+        description: result.interpretation,
         bars: [],
         accentColor: "#a78bfa",
         accentColorLight: "#c4b5fd",
         icon: card?.emoji || "🔮",
-        caption: result.actionTip,
+        caption: result.interpretation.split(/(?<=[。！？!?])/)[0]?.trim() || result.cardName,
         appName: `${t("home.appName")} · ${t("dailyTarot.title")}`,
         preloadedImageUrl: result.imageUrl || undefined,
       });

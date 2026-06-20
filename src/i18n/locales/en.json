@@ -278,9 +278,11 @@
     "zodiac": {
       "title": "Horoscope Reading",
       "introTitle": "Choose Your Sign",
-      "introDesc": "AI will read the stars based on your current vibe",
+      "introDesc": "10 intuition prompts → bite-sized energy cards, not an essay",
       "resultsTitle": "Your Horoscope",
       "reading": "Reading",
+      "readingHint": "Bite-sized cards — no essay wall",
+      "readingHook": "✦ This week's vibe",
       "luckyGuide": "✨ Lucky Guide",
       "luckyColor": "Lucky Color",
       "luckyNumber": "Lucky Number",
@@ -1353,9 +1355,13 @@
   },
   "soulMirror": {
     "unlockedTitle": "Your Soul Mirror is ready",
-    "unlockedDesc": "You've talked enough.\nFour AI characters will each write a portrait of you — combined into one shareable poster.",
+    "unlockedDesc": "You've talked enough.\nEvery 15 turns you can refresh your mirror — each edition weaves in new details from recent chats.",
     "cta": "Generate my mirror",
     "later": "Maybe later",
+    "milestoneToast": "{{n}} more turns deep — your Soul Mirror can be updated",
+    "milestoneToastAction": "Open",
+    "newHighlights": "Newly noticed",
+    "editionLabel": "Edition {{n}}",
     "generatingTitle": "Four perspectives gazing back…",
     "generatingDesc": "Nuannuan, Laowang, Yunsheng and Xinggui are writing in parallel — about 10-15s.",
     "generatingTitleSingle": "{{name}} is gazing back…",
@@ -1368,7 +1374,7 @@
     "proDesc": "Free accounts get 1 permanent mirror. Upgrade to Pro to regenerate every 24h and track your evolution.",
     "upgradeCta": "Upgrade to Pro",
     "throttledTitle": "Almost ready",
-    "throttledDesc": "Next regeneration available in about {{hours}}h. One refresh per 24h.",
+    "throttledDesc": "Next regeneration available in about {{hours}}h. One refresh per 24h; we'll remind you every 15 turns.",
     "lens": {
       "nuannuan": "Sees your quiet side",
       "laowang": "Sees the side of you that toughs it out",
@@ -1380,7 +1386,7 @@
       "onlyOne": "Right now you've mostly talked with {{name}}; the other three will be written as a distant first glance."
     },
     "vaultTitle": "Soul Mirror",
-    "vaultEmptyHint": "Chat 10+ turns with any character to unlock.",
+    "vaultEmptyHint": "Chat 15+ turns with any character to unlock; update every 15 turns after that.",
     "vaultRegenerate": "Regenerate",
     "vaultEntry": "View my Soul Mirror",
     "openLatest": "Open latest mirror"

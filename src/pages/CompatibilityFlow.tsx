@@ -10,11 +10,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useSharePoster } from "@/hooks/useSharePoster";
+import { buildCompatibilityPosterConfig, deriveCompatibilityRarity, RARITY_THEME } from "@/lib/compatibilityPoster";
 import { useLocale } from "@/hooks/useLocale";
 import { useTranslation } from "react-i18next";
 import ReactMarkdown from "react-markdown";
 import PosterPreviewDialog from "@/components/PosterPreviewDialog";
-import DeepReportUnlock from "@/components/DeepReportUnlock";
 import {
   Radar,
   RadarChart,
@@ -58,14 +58,7 @@ interface CompatibilityResult {
   socialCaption: string;
 }
 
-const RARITY_THEME: Record<Rarity, { from: string; to: string; ring: string; text: string; glow: string }> = {
-  SSR: { from: "from-amber-300", to: "to-rose-400", ring: "ring-amber-300", text: "text-amber-500", glow: "shadow-[0_0_40px_rgba(251,191,36,0.45)]" },
-  SR:  { from: "from-fuchsia-400", to: "to-violet-500", ring: "ring-fuchsia-400", text: "text-fuchsia-500", glow: "shadow-[0_0_30px_rgba(217,70,239,0.35)]" },
-  R:   { from: "from-sky-400", to: "to-indigo-500", ring: "ring-sky-400", text: "text-sky-500", glow: "shadow-[0_0_24px_rgba(56,189,248,0.3)]" },
-  N:   { from: "from-slate-300", to: "to-slate-500", ring: "ring-slate-400", text: "text-slate-500", glow: "" },
-};
-
-const deriveRarity = (score: number): Rarity => (score >= 88 ? "SSR" : score >= 72 ? "SR" : score >= 55 ? "R" : "N");
+const deriveRarity = deriveCompatibilityRarity;
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/assessment-compatibility`;
 
@@ -91,7 +84,6 @@ const CompatibilityFlow = () => {
 
   const [step, setStep] = useState<"input" | "loading" | "result">("input");
   const [result, setResult] = useState<CompatibilityResult | null>(null);
-  const [savedReportId, setSavedReportId] = useState<string | null>(null);
   const [loadingLineIdx, setLoadingLineIdx] = useState(0);
 
   const [myName, setMyName] = useState<string>(draft.myName || "");
@@ -152,20 +144,16 @@ const CompatibilityFlow = () => {
       if (!r.rarity) r.rarity = deriveRarity(r.overallScore);
       setResult(r);
       setStep("result");
-      const { data: inserted, error: insertError } = await (supabase as any)
+      const { error: insertError } = await (supabase as any)
         .from("compatibility_reports")
         .insert({
           user_id: user.id,
           partner_info: { name: partnerName, mbti: partnerMbti, zodiac: partnerZodiac, traits: partnerTraits, stage: stageLabel, recentVibe: vibeLabel },
           result_data: r,
-        })
-        .select("id")
-        .single();
+        });
       if (insertError) {
         console.error("[compatibility] save failed", insertError);
         toast.error(t("assessmentFlow.compatibility.saveFail", { defaultValue: "结果未能保存，请稍后在「我的测评报告」重试" }));
-      } else if (inserted?.id) {
-        setSavedReportId(inserted.id);
       }
       try { localStorage.removeItem(DRAFT_KEY); } catch {}
     } catch (e: any) {
@@ -181,20 +169,16 @@ const CompatibilityFlow = () => {
 
   const handleSharePoster = () => {
     if (!result) return;
-    sharePoster({
-      title: `${result.emoji} ${result.overallScore}%`,
-      subtitle: `${cpName} · ${t(`assessmentFlow.compatibility.rarity.${rarity}`)}`,
-      description: result.summary,
-      icon: "💕",
-      caption: result.socialCaption || t("assessmentFlow.compatibility.shareCaptionFallback", { cp: cpName }),
-      accentColor: rarity === "SSR" ? "#f59e0b" : rarity === "SR" ? "#a855f7" : rarity === "R" ? "#0ea5e9" : "#94a3b8",
-      accentColorLight: rarity === "SSR" ? "#fcd34d" : rarity === "SR" ? "#d8b4fe" : rarity === "R" ? "#7dd3fc" : "#cbd5e1",
-      bars: Object.entries(result.dimensions).map(([key, value]) => ({ label1: DIM_LABELS[key] || key, label2: `${value}%`, value })),
-      extraLines: [
-        ...(result.tags?.slice(0, 3) || []),
-        ...(result.prophecy ? [`🔮 ${result.prophecy}`] : []),
-      ],
-    });
+    sharePoster(
+      buildCompatibilityPosterConfig({
+        result,
+        cpName,
+        rarity,
+        dimLabels: DIM_LABELS,
+        t,
+        caption: result.socialCaption || t("assessmentFlow.compatibility.shareCaptionFallback", { cp: cpName }),
+      }),
+    );
   };
 
   const handleCopyInvite = async () => {
@@ -544,28 +528,28 @@ const CompatibilityFlow = () => {
               initial={{ opacity: 0, scale: 0.92, rotateY: -8 }}
               animate={{ opacity: 1, scale: 1, rotateY: 0 }}
               transition={{ type: "spring", stiffness: 120, damping: 14 }}
-              className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${theme.from} ${theme.to} p-6 text-center text-white ${theme.glow}`}
+              className={`relative overflow-hidden rounded-3xl border bg-gradient-to-br ${theme.from} ${theme.to} ${theme.border} p-7 text-center ${theme.fg} ${theme.glow}`}
             >
-              <div className="absolute inset-0 opacity-20" style={{ backgroundImage: "radial-gradient(circle at 30% 20%, rgba(255,255,255,0.6), transparent 40%), radial-gradient(circle at 70% 80%, rgba(255,255,255,0.4), transparent 40%)" }} />
+              <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: theme.overlay }} />
               <div className="relative">
                 <div className="flex justify-between items-start mb-2">
-                  <span className="text-[10px] uppercase tracking-widest opacity-80">{t("assessmentFlow.compatibility.destinyCard")}</span>
-                  <span className="rounded-full bg-white/25 backdrop-blur px-2.5 py-0.5 text-[11px] font-bold">{t(`assessmentFlow.compatibility.rarity.${rarity}`)}</span>
+                  <span className={`text-[10px] uppercase tracking-widest ${theme.muted}`}>{t("assessmentFlow.compatibility.destinyCard")}</span>
+                  <span className={`rounded-full backdrop-blur px-2.5 py-0.5 text-[11px] font-bold ${theme.badge}`}>{t(`assessmentFlow.compatibility.rarity.${rarity}`)}</span>
                 </div>
                 <p className="text-5xl mb-1">{result.emoji}</p>
                 <h3 className="font-display text-2xl font-bold leading-tight">{cpName}</h3>
-                <p className="text-xs opacity-85 mt-1">{result.title}</p>
-                <motion.p initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", delay: 0.25 }} className="font-display text-5xl font-extrabold mt-3 drop-shadow">
+                <p className={`text-xs mt-1.5 ${theme.muted}`}>{result.title}</p>
+                <motion.p initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", delay: 0.25 }} className={`font-display text-5xl font-extrabold mt-4 ${theme.score}`}>
                   {result.overallScore}%
                 </motion.p>
                 {result.tags && result.tags.length > 0 && (
-                  <div className="flex flex-wrap justify-center gap-1.5 mt-3">
+                  <div className="flex flex-wrap justify-center gap-1.5 mt-4">
                     {result.tags.slice(0, 3).map((tag, i) => (
-                      <span key={i} className="rounded-full bg-white/25 backdrop-blur px-2.5 py-1 text-[11px]">#{tag}</span>
+                      <span key={i} className={`rounded-full backdrop-blur px-2.5 py-1 text-[11px] ${theme.chip}`}>#{tag}</span>
                     ))}
                   </div>
                 )}
-                <p className="text-xs opacity-90 mt-3 leading-relaxed">{result.summary}</p>
+                <p className={`text-xs mt-4 leading-relaxed ${theme.muted}`}>{result.summary}</p>
               </div>
             </motion.div>
 
@@ -666,13 +650,13 @@ const CompatibilityFlow = () => {
 
             {/* Card 7 — Keywords + Prophecy */}
             {(result.keywords?.length || result.prophecy) && (
-              <div className="rounded-2xl bg-gradient-to-br from-violet-100 to-fuchsia-100 dark:from-violet-950/30 dark:to-fuchsia-950/30 p-5 shadow-card border border-violet-200/40">
+              <div className="rounded-2xl bg-gradient-to-br from-primary/10 to-amber-500/5 p-5 shadow-card border border-primary/20">
                 {result.keywords && result.keywords.length > 0 && (
                   <>
                     <h4 className="font-display text-sm font-semibold text-foreground mb-2">{t("assessmentFlow.compatibility.keywordsTitle")}</h4>
                     <div className="flex flex-wrap gap-2 mb-3">
                       {result.keywords.map((k, i) => (
-                        <span key={i} className="rounded-lg bg-white/60 dark:bg-white/10 px-3 py-1 text-xs font-medium text-foreground">{k}</span>
+                        <span key={i} className="rounded-lg bg-muted/50 border border-border/60 px-3 py-1 text-xs font-medium text-foreground">{k}</span>
                       ))}
                     </div>
                   </>
@@ -680,7 +664,7 @@ const CompatibilityFlow = () => {
                 {result.prophecy && (
                   <>
                     <h4 className="font-display text-sm font-semibold text-foreground mb-1">{t("assessmentFlow.compatibility.prophecyTitle")}</h4>
-                    <p className="text-sm text-foreground leading-relaxed">{result.prophecy}</p>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{result.prophecy}</p>
                   </>
                 )}
               </div>
@@ -712,13 +696,6 @@ const CompatibilityFlow = () => {
             >
               <Sparkles className="h-4 w-4" /> {t("assessmentFlow.compatibility.talkToBestie")}
             </button>
-            {savedReportId && (
-              <DeepReportUnlock
-                source="compatibility"
-                reportId={savedReportId}
-                typeLabel={t("assessmentFlow.compatibility.deepReportLabel", { defaultValue: "Compatibility" })}
-              />
-            )}
           </motion.div>
         )}
       </AnimatePresence>

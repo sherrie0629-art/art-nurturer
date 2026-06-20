@@ -163,18 +163,58 @@ You MUST call batch_questions.`;
     if (quotaError) return quotaError;
 
     const { history, zodiacSign } = body;
-    const systemPrompt = `You are a professional Western astrologer with the warm, witty voice of a mystical best friend. The user's sign is: ${zodiacSign || "unknown"}.
-Based on their sign and answers, generate a detailed horoscope reading using Western astrology terminology (Rising sign, Moon sign, Mercury Retrograde, eclipse seasons, etc.).
-Do NOT use Chinese astrology concepts. Use Element (Fire/Earth/Air/Water) instead of Chinese elements.
-The "advice" object MUST be rich, playful, specific and slightly mystical — never generic. Each item should feel like a tiny secret only this user gets.
-Respond in the language indicated by LANG below. You must call the zodiac_result tool.${langInstr}`;
+    const zhResultSystem = `你是「星轨」——像懂你的损友在群里发本周状态，不是报纸星座专栏，也不是老派算命先生。
+
+根据星座 ${zodiacSign || "未知"} 和用户的直觉题答案，生成一份**年轻化、结构化**的能量解读。
+
+【严禁出现】
+行星名（水星/火星/月亮/金星/木星/土星/Mercury/Mars…）、占星术语（逆行/宫位/相位/守护星/行运/本命/houses/aspects/retrograde）
+「事业运/爱情运/财运」老模板腔、一大段连贯长文
+
+【语气】
+像小红书/朋友圈会转发的文案：具体、有画面、略梗、温柔不爹
+可以有一点诗意，但要让人读得懂、读得下去
+
+必须调用 zodiac_result 工具。${langInstr}`;
+
+    const enResultSystem = `You are Xinggui — a cosmic bestie texting the week's vibe, NOT a newspaper horoscope column.
+
+Based on sign ${zodiacSign || "unknown"} and the user's intuition answers, generate a **youth-friendly structured reading**.
+
+BANNED: planet names, astrology jargon (retrograde, houses, aspects, ruling planet), old-fashioned "career luck / love luck" essay blocks.
+
+Tone: shareable, vivid, slightly meme-aware, warm not preachy. Call zodiac_result.${langInstr}`;
+
+    const systemPrompt = locale === "zh" ? zhResultSystem : enResultSystem;
 
     const response = await fetchAI(model, {
-      messages: [{ role: "system", content: systemPrompt }, { role: "user", content: `Q&A:\n${history.map((h: any, i: number) => `Q${i + 1}: ${h.question}\nA${i + 1}: ${h.answer}`).join("\n\n")}\n\nGenerate horoscope reading.` }],
-      tools: [{ type: "function" as const, function: { name: "zodiac_result", description: "Return horoscope reading result", parameters: { type: "object", properties: {
+      messages: [{ role: "system", content: systemPrompt }, { role: "user", content: `Q&A:\n${history.map((h: any, i: number) => `Q${i + 1}: ${h.question}\nA${i + 1}: ${h.answer}`).join("\n\n")}\n\nGenerate structured reading.` }],
+      tools: [{ type: "function" as const, function: { name: "zodiac_result", description: "Return structured horoscope reading result", parameters: { type: "object", properties: {
         zodiacSign: { type: "string" }, element: { type: "string", description: "Element: Fire/Earth/Air/Water" },
-        title: { type: "string", description: "Reading theme, e.g. 'Season of Renewal'" },
-        description: { type: "string", description: "~200 word personalized horoscope reading" },
+        title: { type: "string", description: "Theme title, e.g. 'Soft Reset Week' / '温柔重启周'" },
+        description: { type: "string", description: "Share fallback only, ≤50 chars. NOT the main reading body." },
+        reading: {
+          type: "object",
+          description: "Main structured reading — NOT a long paragraph.",
+          properties: {
+            hook: { type: "string", description: "One punchy vibe line. ≤28 zh chars / ≤12 en words. No planets." },
+            cards: {
+              type: "array",
+              minItems: 4,
+              maxItems: 4,
+              items: {
+                type: "object",
+                properties: {
+                  key: { type: "string", enum: ["overall", "love", "career", "fortune"] },
+                  tag: { type: "string", description: "2-5 char vibe badge, e.g. 温柔蓄力 / 小心上头 / Soft glow" },
+                  line: { type: "string", description: "One concrete line, 15-28 zh / 12-20 en words. Gen-Z friendly." },
+                },
+                required: ["key", "tag", "line"],
+              },
+            },
+          },
+          required: ["hook", "cards"],
+        },
         traits: { type: "object", description: "Each is an INTEGER 0-100. 让运势分布有起伏：最旺维 75-95，最弱维 35-55。严禁全部低于 20。", properties: { overall: { type: "number", description: "Integer 0-100, typically 50-92" }, love: { type: "number", description: "Integer 0-100, typically 35-92" }, career: { type: "number", description: "Integer 0-100, typically 35-92" }, fortune: { type: "number", description: "Integer 0-100, typically 35-92" } }, required: ["overall", "love", "career", "fortune"] },
         luckyItems: { type: "object", properties: { color: { type: "string" }, number: { type: "string" }, direction: { type: "string" } }, required: ["color", "number", "direction"] },
         advice: {
@@ -190,7 +230,7 @@ Respond in the language indicated by LANG below. You must call the zodiac_result
           required: ["mantra", "doThis", "avoidThis", "luckyMoment", "crystalOrRitual"],
         },
         socialCaption: { type: "string", description: "Fun shareable caption under 30 words" },
-      }, required: ["zodiacSign", "element", "title", "description", "traits", "luckyItems", "advice", "socialCaption"] } } }],
+      }, required: ["zodiacSign", "element", "title", "description", "reading", "traits", "luckyItems", "advice", "socialCaption"] } } }],
       tool_choice: { type: "function" as const, function: { name: "zodiac_result" } },
       temperature: 0.8, max_tokens: 1400,
     });

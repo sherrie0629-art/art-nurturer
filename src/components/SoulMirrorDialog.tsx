@@ -275,6 +275,23 @@ export default function SoulMirrorDialog({ open, userId, onClose, existingMirror
 
           {phase === "result" && (
             <div className="p-5">
+              {mirror?.user_snapshot?.highlights && mirror.user_snapshot.highlights.length > 0 && (
+                <div className="mb-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                  <p className="text-[11px] font-semibold text-pink-300/90 mb-2">
+                    ✨ {t("soulMirror.newHighlights")}
+                    {mirror.user_snapshot.edition && mirror.user_snapshot.edition > 1
+                      ? ` · ${t("soulMirror.editionLabel", { n: mirror.user_snapshot.edition })}`
+                      : null}
+                  </p>
+                  <ul className="space-y-1">
+                    {mirror.user_snapshot.highlights.slice(0, 4).map((h, i) => (
+                      <li key={i} className="text-[11px] text-white/70 leading-snug">
+                        · {h.text}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               {posterUrl ? (
                 <img src={posterUrl} alt="灵魂镜像" className="w-full rounded-2xl shadow-2xl" />
               ) : (
@@ -298,6 +315,17 @@ export default function SoulMirrorDialog({ open, userId, onClose, existingMirror
                   <Download className="h-4 w-4" />
                 </button>
               </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setMirror(null);
+                  setPosterUrl(null);
+                  setPhase("intro");
+                }}
+                className="mt-3 w-full rounded-2xl border border-white/15 py-2.5 text-xs font-medium text-white/75 hover:bg-white/5"
+              >
+                {t("soulMirror.vaultRegenerate")}
+              </button>
               <canvas ref={canvasRef} className="hidden" />
             </div>
           )}
@@ -364,7 +392,7 @@ async function renderPoster(mirror: SoulMirror): Promise<string> {
   // Header
   ctx.fillStyle = "#ffffff";
   ctx.textAlign = "center";
-  ctx.font = "700 56px 'DM Serif Display', serif";
+  ctx.font = "700 60px 'DM Serif Display', serif";
   ctx.fillText("灵魂镜像", POSTER_W / 2, 100);
 
   const snap = mirror.user_snapshot;
@@ -375,10 +403,10 @@ async function renderPoster(mirror: SoulMirror): Promise<string> {
   const imageUrl: string | null = (snap as any)?.imageUrl ?? null;
 
   if (snap) {
-    ctx.font = "26px 'Inter', sans-serif";
+    ctx.font = "30px 'Inter', sans-serif";
     ctx.fillStyle = "rgba(255,255,255,0.7)";
     const sub = [`@${snap.nickname}`, snap.mbti, snap.zodiac].filter(Boolean).join(" · ");
-    ctx.fillText(sub, POSTER_W / 2, 140);
+    ctx.fillText(sub, POSTER_W / 2, 142);
   }
 
   // Dynamic subtitle line
@@ -388,9 +416,9 @@ async function renderPoster(mirror: SoulMirror): Promise<string> {
     : primary
     ? `与 ${primary.displayName} 深聊 ${primaryTurns} 次后的灵魂镜像`
     : "四位 AI 对你的第一印象";
-  ctx.font = "italic 22px 'DM Serif Display', serif";
+  ctx.font = "italic 26px 'DM Serif Display', serif";
   ctx.fillStyle = "rgba(255,255,255,0.55)";
-  ctx.fillText(subtitleLine, POSTER_W / 2, 174);
+  ctx.fillText(subtitleLine, POSTER_W / 2, 178);
 
   // ===== Single-agent layout =====
   if (singleAgentId && primary) {
@@ -403,7 +431,7 @@ async function renderPoster(mirror: SoulMirror): Promise<string> {
     await drawSingleAgentCard(ctx, primary, img, locale);
     // Footer
     ctx.fillStyle = "rgba(255,255,255,0.45)";
-    ctx.font = "italic 24px 'DM Serif Display', serif";
+    ctx.font = "italic 28px 'DM Serif Display', serif";
     ctx.textAlign = "center";
     ctx.fillText("心灵密语 · 心灵镜像 · islandai.life", POSTER_W / 2, POSTER_H - 60);
     return canvas.toDataURL("image/png");
@@ -448,7 +476,7 @@ async function renderPoster(mirror: SoulMirror): Promise<string> {
 
   // Footer
   ctx.fillStyle = "rgba(255,255,255,0.45)";
-  ctx.font = "italic 24px 'DM Serif Display', serif";
+  ctx.font = "italic 28px 'DM Serif Display', serif";
   ctx.textAlign = "center";
     ctx.fillText("心灵密语 · 心灵镜像 · islandai.life", POSTER_W / 2, POSTER_H - 60);
 
@@ -533,17 +561,17 @@ async function drawSingleAgentCard(
   ctx.font = "56px sans-serif";
   ctx.fillStyle = "#ffffff";
   ctx.fillText(p.emoji, cardX + imgPad, cy);
-  ctx.font = "700 44px 'DM Serif Display', serif";
+  ctx.font = "700 48px 'DM Serif Display', serif";
   ctx.fillText(p.displayName, cardX + imgPad + 70, cy - 6);
 
   // Signature
   cy += 56;
-  ctx.font = "italic 30px 'DM Serif Display', serif";
+  ctx.font = "italic 34px 'DM Serif Display', serif";
   ctx.fillStyle = "rgba(255,255,255,0.92)";
   const sigLines = wrapText(ctx, p.signature, cardW - imgPad * 2);
   for (const line of sigLines.slice(0, 2)) {
     ctx.fillText(line, cardX + imgPad, cy);
-    cy += 38;
+    cy += 42;
   }
 
   // Divider
@@ -557,9 +585,9 @@ async function drawSingleAgentCard(
   cy += 32;
 
   // Body
-  ctx.font = "26px 'Inter', sans-serif";
+  ctx.font = "30px 'Inter', sans-serif";
   ctx.fillStyle = "rgba(255,255,255,0.9)";
-  const lineH = 38;
+  const lineH = 42;
   const reserveBottom = 90; // for chips
   const maxBodyH = (cardY + cardH - imgPad) - cy - reserveBottom;
   const maxLines = Math.max(2, Math.floor(maxBodyH / lineH));
@@ -575,7 +603,7 @@ async function drawSingleAgentCard(
 
   // Keyword chips centered
   const kwY = cardY + cardH - imgPad - 6;
-  ctx.font = "22px 'Inter', sans-serif";
+  ctx.font = "26px 'Inter', sans-serif";
   const kws = p.keywords.slice(0, 3).map((k) => `#${k}`);
   const widths = kws.map((k) => ctx.measureText(k).width + 28);
   const chipGap = 14;
@@ -618,11 +646,11 @@ function drawQuadrant(
   ctx.stroke();
 
   const padding = compact ? 18 : 28;
-  const titleFontSize = isPrimary ? 40 : compact ? 22 : 28;
-  const emojiFontSize = isPrimary ? 60 : compact ? 32 : 44;
-  const sigFontSize = isPrimary ? 28 : compact ? 16 : 22;
-  const bodyFontSize = isPrimary ? 26 : compact ? 15 : 21;
-  const bodyLineHeight = isPrimary ? 36 : compact ? 22 : 30;
+  const titleFontSize = isPrimary ? 44 : compact ? 26 : 32;
+  const emojiFontSize = isPrimary ? 64 : compact ? 38 : 50;
+  const sigFontSize = isPrimary ? 32 : compact ? 20 : 26;
+  const bodyFontSize = isPrimary ? 30 : compact ? 18 : 24;
+  const bodyLineHeight = isPrimary ? 40 : compact ? 26 : 34;
   let cy = y + padding + (isPrimary ? 50 : compact ? 30 : 36);
 
   // Header: emoji + name
@@ -637,7 +665,7 @@ function drawQuadrant(
   // Tier badge (top-right)
   if (tier === "unmet" || tier === "glimpse") {
     const badgeText = tier === "unmet" ? "远观初见" : "浅浅聊过";
-    ctx.font = `${compact ? 13 : 16}px 'Inter', sans-serif`;
+    ctx.font = `${compact ? 15 : 18}px 'Inter', sans-serif`;
     const bw = ctx.measureText(badgeText).width + 20;
     const bh = compact ? 22 : 26;
     const bx = x + w - padding - bw;
@@ -649,7 +677,7 @@ function drawQuadrant(
     ctx.fillText(badgeText, bx + 10, by + bh - (compact ? 6 : 7));
   } else if (isPrimary) {
     const badgeText = `最懂你的那一位 · ${(p as any).totalTurns ?? 0} 轮`;
-    ctx.font = "16px 'Inter', sans-serif";
+    ctx.font = "18px 'Inter', sans-serif";
     const bw = ctx.measureText(badgeText).width + 22;
     const bh = 28;
     const bx = x + w - padding - bw;
@@ -704,7 +732,7 @@ function drawQuadrant(
   // Keywords at bottom
   const kwY = y + h - padding - 18;
   let kwX = x + padding;
-  ctx.font = "18px 'Inter', sans-serif";
+  ctx.font = "22px 'Inter', sans-serif";
   for (const kw of p.keywords.slice(0, 3)) {
     const text = `#${kw}`;
     const wText = ctx.measureText(text).width;
