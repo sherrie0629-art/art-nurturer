@@ -161,7 +161,7 @@ export default function FortuneRippleScene({ shaking = false }: Props) {
 
       {/* 折扇主体（待机微摆 / 抽签淡出微合） */}
       <motion.div
-        className="absolute left-1/2 bottom-[26px] -translate-x-1/2 -ml-3"
+        className="absolute left-1/2 bottom-[26px] -translate-x-1/2 -ml-8"
         style={{ transformOrigin: "50% 100%" }}
         animate={
           shaking
