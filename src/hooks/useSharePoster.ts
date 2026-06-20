@@ -275,12 +275,12 @@ export function useSharePoster() {
 
     ctx.fillStyle = "rgba(255,255,255,0.3)";
     ctx.font = "18px 'Inter', sans-serif";
-    ctx.fillText(config.appName || "Soul Sanctuary", POSTER_WIDTH / 2, captionY + 45);
+    ctx.fillText(config.appName || "心灵密语", POSTER_WIDTH / 2, captionY + 45);
 
     // Brand CTA
     ctx.fillStyle = "rgba(255,255,255,0.2)";
     ctx.font = "15px 'Inter', sans-serif";
-    ctx.fillText("Discover yours \u2192 islandai.life", POSTER_WIDTH / 2, captionY + 75);
+    ctx.fillText("来 islandai.life 发现你自己 →", POSTER_WIDTH / 2, captionY + 75);
 
     drawGradientLine(ctx, config.accentColor, POSTER_PADDING, 675, POSTER_HEIGHT - 40);
 
@@ -289,7 +289,7 @@ export function useSharePoster() {
 
   const sharePoster = useCallback(async (config: PosterConfig) => {
     try {
-      toast.info("Generating your poster…", { duration: 3000 });
+      toast.info("正在生成海报…", { duration: 3000 });
       const canvas = await generatePoster(config);
 
       const dataUrl = canvas.toDataURL("image/png");
@@ -317,7 +317,7 @@ export function useSharePoster() {
       setShowPosterPreview(true);
     } catch (e) {
       if ((e as Error).name !== "AbortError") {
-        toast.error("Save failed, please try again");
+        toast.error("保存失败，请重试");
       }
     }
   }, [generatePoster]);
@@ -335,7 +335,7 @@ export function useSharePoster() {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    toast.success("Poster saved ✨");
+    toast.success("海报已保存 ✨");
   }, [posterDataUrl]);
 
   const uploadPosterToStorage = useCallback(async (dataUrl: string): Promise<string | null> => {

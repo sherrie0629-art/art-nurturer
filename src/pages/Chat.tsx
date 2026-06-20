@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Send, Mic, Zap, Plus, Home, BookOpen, Sparkles, User, Coffee, Flame, Moon, MessageCircleHeart } from "lucide-react";
+import { ArrowLeft, Send, Zap, Plus, Home, BookOpen, Sparkles, User, Coffee, Flame, Moon, MessageCircleHeart } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useLocale } from "@/hooks/useLocale";
 import { useQuoteCard } from "@/hooks/useQuoteCard";
@@ -22,13 +22,14 @@ import { useAchievements } from "@/hooks/useAchievements";
 import { agents as RAW_AGENTS, BOND_LABELS } from "@/data/agents";
 import { localizeAgent, getAgentWelcome, getAgentQuickReplies } from "@/lib/localizeAgent";
 import { useAuth } from "@/contexts/AuthContext";
+import { ACCOUNT_SUSPENDED_MESSAGE } from "@/lib/accountStatus";
 const ANON_MSG_LIMIT = 5;
 import { supabase } from "@/integrations/supabase/client";
 import { streamChat, type Msg } from "@/lib/streamChat";
 import SEO from "@/components/SEO";
 import { useBond } from "@/hooks/useBond";
 import { useSubscription } from "@/hooks/useSubscription";
-import { parseGameMarkers, type BranchOption, type Atmosphere } from "@/lib/parseGameMarkers";
+import { parseGameMarkers, getAssistantDisplayContent, type BranchOption, type Atmosphere } from "@/lib/parseGameMarkers";
 import {
   loadGuestDraft,
   saveGuestDraft,
@@ -49,6 +50,15 @@ interface Message {
   branchOptions?: BranchOption[] | null;
   kind?: "text" | "tarot-card";
   tarotCard?: InlineTarotCard | null; // null = loading skeleton
+}
+
+/** Keep in-flight or just-finished local messages when a stale DB reload races ahead of save. */
+function mergeRestoredWithLocal(restored: Message[], prev: Message[]): Message[] {
+  if (prev.some((m) => m.id === "streaming")) return prev;
+  const restoredIds = new Set(restored.map((m) => m.id));
+  const localExtra = prev.filter((m) => m.id !== "welcome" && !restoredIds.has(m.id));
+  if (localExtra.length === 0) return restored;
+  return [...restored, ...localExtra];
 }
 
 // Past/retrospective references — should NOT trigger a new draw
@@ -102,7 +112,7 @@ const Chat = () => {
     } catch {}
     return hookLocale;
   })();
-  const { user, session, promptLogin } = useAuth();
+  const { user, session, promptLogin, isBanned } = useAuth();
   const agentId = searchParams.get("agent") || "nuannuan";
   const rawAgent = RAW_AGENTS.find((a) => a.id === agentId) || RAW_AGENTS[0];
   const agent = localizeAgent(rawAgent, t);
@@ -157,7 +167,13 @@ const Chat = () => {
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { generateQuoteCard } = useQuoteCard();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const isStreamingRef = useRef(false);
+  const historyLoadGenRef = useRef(0);
   const [soulMirrorOpen, setSoulMirrorOpen] = useState(false);
+
+  useEffect(() => {
+    isStreamingRef.current = isStreaming;
+  }, [isStreaming]);
 
   const { bondLevel, totalTurns, easterEggsFound, pendingLevelUp, incrementTurn, recordEasterEgg, dismissLevelUp } =
     useBond(user?.id, agentId);
@@ -276,6 +292,8 @@ const Chat = () => {
   const hasAssessmentContext = !!(mbtiResult || emotionResult || enneagramResult || zodiacResult || tarotResult || compatibilityResult || fortuneStickResult);
 
   useEffect(() => {
+    const loadGen = ++historyLoadGenRef.current;
+
     if (!user) {
       // Restore any previously saved guest draft for this agent so a refresh doesn't
       // wipe the conversation. Fall back to the welcome bubble when nothing is saved.
@@ -344,6 +362,8 @@ const Chat = () => {
 
 
     const loadConversationAndMemories = async () => {
+      if (isStreamingRef.current) return;
+
       if (hasAssessmentContext) {
         // 携带测评/求签等上下文进入时，不展示默认欢迎气泡——
         // 否则会先闪一下欢迎语，再被自动发送的用户消息覆盖。
@@ -495,7 +515,9 @@ const Chat = () => {
               content: m.content,
             };
           });
-          setMessages(restored);
+          if (loadGen === historyLoadGenRef.current && !isStreamingRef.current) {
+            setMessages((prev) => mergeRestoredWithLocal(restored, prev));
+          }
 
           // Re-sign image URLs for restored tarot cards (signed URLs expire after 1h).
           const paths = Array.from(new Set(
@@ -527,19 +549,20 @@ const Chat = () => {
               })
               .catch((e) => console.error("[Chat] re-sign tarot images error", e));
           }
-        } else {
+        } else if (loadGen === historyLoadGenRef.current && !isStreamingRef.current) {
           setMessages([{ id: "welcome", role: "assistant", content: getWelcomeMessage(agent) }]);
         }
-      } else {
+      } else if (loadGen === historyLoadGenRef.current && !isStreamingRef.current) {
         setMessages([{ id: "welcome", role: "assistant", content: getWelcomeMessage(agent) }]);
       }
 
+      if (loadGen !== historyLoadGenRef.current) return;
       setMemoryContext(formatRecall(recallResult.memories, recallResult.facts, summariesResult.data || []));
 
       setHistoryLoaded(true);
     };
     loadConversationAndMemories();
-  }, [user, agentId]);
+  }, [user?.id, agentId]);
 
   useEffect(() => {
     if (mbtiResult && historyLoaded && !mbtiAutoSentRef.current && user) {
@@ -727,12 +750,13 @@ const Chat = () => {
           unlockedShards: [],
           onDelta: upsertAssistant,
           onDone: () => {
-            const { cleanContent, branchOptions: parsedOptions } = parseGameMarkers(assistantContent);
+            const displayContent = getAssistantDisplayContent(assistantContent);
+            const { branchOptions: parsedOptions } = parseGameMarkers(assistantContent);
             setIsStreaming(false);
             setMessages((prev) =>
               prev.map((m) =>
                 m.id === "streaming"
-                  ? { ...m, id: Date.now().toString(), content: cleanContent, branchOptions: parsedOptions }
+                  ? { ...m, id: Date.now().toString(), content: displayContent, branchOptions: parsedOptions }
                   : m
               )
             );
@@ -751,7 +775,9 @@ const Chat = () => {
     }
 
     if (!canChat) {
-      if (freeTrialExpired) {
+      if (isBanned) {
+        toast.error(ACCOUNT_SUSPENDED_MESSAGE);
+      } else if (freeTrialExpired) {
         toast.error(t("chat.freeEndedToast"));
       } else {
         toast.error(t("chat.limitReached", { n: chatLimit, plan: plan === "plus" ? "Plus" : "Free" }));
@@ -910,33 +936,37 @@ const Chat = () => {
         onDelta: upsertAssistant,
         onDone: async () => {
           console.log("[Chat] raw AI response:", assistantContent.slice(-200));
-          const { cleanContent, energyGain, branchOptions: parsedOptions, truthShard, atmosphere: newAtmosphere } = parseGameMarkers(assistantContent);
+          const parsed = parseGameMarkers(assistantContent);
+          const { energyGain, branchOptions: parsedOptions, truthShard, atmosphere: newAtmosphere } = parsed;
+          const displayContent = getAssistantDisplayContent(assistantContent);
 
-          // 兜底：模型只吐了 markers / 空内容，避免渲染空气泡
-          if (!cleanContent.trim()) {
-            console.warn("[Chat] empty body, only markers — dropping bubble and asking user to retry");
+          if (!displayContent) {
+            console.warn("[Chat] empty assistant body — dropping bubble and asking user to retry");
             setMessages((prev) => prev.filter((m) => m.id !== "streaming"));
             setIsStreaming(false);
             toast.error(locale === "zh" ? "她好像走神了，再发一次试试 🌙" : "She drifted off — try again 🌙");
             return;
           }
 
-          // 只信任 AI 自己输出的 Options，不再做客户端兜底强出
           const finalBranchOptions: BranchOption[] | null =
             parsedOptions && parsedOptions.length > 0 ? parsedOptions : null;
 
-          
           console.log("[Chat] parsed markers:", { branchOptions: finalBranchOptions?.length, fromAI: !!(parsedOptions && parsedOptions.length > 0), energyGain, atmosphere: newAtmosphere });
 
           if (newAtmosphere) setAtmosphere(newAtmosphere);
-          setIsStreaming(false);
           setMessages((prev) =>
             prev.map((m) =>
               m.id === "streaming"
-                ? { ...m, id: Date.now().toString(), content: cleanContent, branchOptions: finalBranchOptions }
+                ? { ...m, id: Date.now().toString(), content: displayContent, branchOptions: finalBranchOptions }
                 : m
             )
           );
+
+          if (convId) {
+            await saveMessage(convId, "assistant", displayContent);
+          }
+
+          setIsStreaming(false);
 
           if (energyGain) {
             await updateEnergy(energyGain);
@@ -959,9 +989,6 @@ const Chat = () => {
                 break;
               }
             }
-            // Fallback: AI emitted the marker but client couldn't keyword-match
-            // (e.g. user paraphrased). Record the first not-yet-unlocked egg
-            // so the Vault still reflects the unlock.
             if (!matchedTrigger) {
               const unseen = agent.easterEggs.find((e) => !easterEggsFound.includes(e.trigger));
               if (unseen) matchedTrigger = unseen.trigger;
@@ -972,11 +999,6 @@ const Chat = () => {
           await incrementTurn();
           await checkAchievements();
 
-          if (convId && assistantContent) {
-            saveMessage(convId, "assistant", assistantContent);
-          }
-
-          // Fire-and-forget: extract incremental memory + profile facts from this turn.
           if (user) {
             supabase.functions
               .invoke("extract-memory-incremental", {
@@ -985,14 +1007,12 @@ const Chat = () => {
                   locale,
                   recentMessages: [
                     { role: "user", content: userMsg.content },
-                    { role: "assistant", content: assistantContent },
+                    { role: "assistant", content: displayContent },
                   ],
                 },
               })
               .catch((err) => console.error("[Chat] extract-memory-incremental failed:", err));
           }
-
-
         },
         onError: (error) => {
           setIsStreaming(false);
@@ -1142,9 +1162,9 @@ const Chat = () => {
                 >
                   <Plus className="h-3.5 w-3.5" />
                 </button>
-                <div className="flex items-center gap-1 rounded-lg bg-secondary/10 px-2 py-1">
-                  <Zap className="h-3 w-3 text-secondary" />
-                  <span className="text-[11px] font-bold text-secondary">{energyBits}</span>
+                <div className="flex items-center gap-1 rounded-lg bg-primary/10 px-2 py-1">
+                  <Zap className="h-3 w-3 text-primary" />
+                  <span className="text-[11px] font-bold text-primary">{energyBits}</span>
                 </div>
               </div>
             </div>
@@ -1214,7 +1234,7 @@ const Chat = () => {
               className="mx-auto flex items-center gap-2 rounded-2xl bg-secondary/5 border border-secondary/15 px-3 py-2 max-w-[85%]"
             >
               <span className="text-[11px] leading-relaxed text-muted-foreground">
-                {t("chat.energyHint", { name: agent.name })}<span className="text-secondary font-medium">{t(`home.bondLabels.${(["stranger","acquaintance","trusted","close","soulbound"][bondLevel - 1]) || "stranger"}`)}</span>
+                {t("chat.energyHint", { name: agent.name })}<span className="text-foreground font-medium">{t(`home.bondLabels.${(["stranger","acquaintance","trusted","close","soulbound"][bondLevel - 1]) || "stranger"}`)}</span>
               </span>
             </motion.div>
           )}
@@ -1288,9 +1308,6 @@ const Chat = () => {
 
       <div className="border-t border-border backdrop-blur-xl px-4 py-3" style={{ backgroundColor: 'var(--chat-header-bg, hsl(0 0% 0% / 0.03))' }}>
         <div className="flex items-center gap-2">
-          <button className="shrink-0 rounded-xl bg-muted p-2.5 text-muted-foreground">
-            <Mic className="h-5 w-5" />
-          </button>
           <div className="flex flex-1 items-center rounded-2xl border border-border bg-background px-4 py-2.5">
             <input
               value={input}
@@ -1355,15 +1372,15 @@ const Chat = () => {
       </div>
       <div className="p-4 space-y-4">
         <div>
-          <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5">
-            <span>{t("chat.bondLevel")}</span>
-            <span className="text-secondary font-medium">{t(`home.bondLabels.${(["stranger","acquaintance","trusted","close","soulbound"][bondLevel - 1]) || "stranger"}`)}</span>
+          <div className="flex items-center justify-between text-xs mb-1.5">
+            <span className="text-muted-foreground">{t("chat.bondLevel")}</span>
+            <span className="text-foreground font-medium">{t(`home.bondLabels.${(["stranger","acquaintance","trusted","close","soulbound"][bondLevel - 1]) || "stranger"}`)}</span>
           </div>
           <BondIndicator level={bondLevel} totalTurns={totalTurns} energyBits={energyBits} />
         </div>
         <div className="flex items-center justify-between rounded-xl bg-muted/50 px-3 py-2">
           <span className="text-xs text-muted-foreground">{t("chat.energy")}</span>
-          <div className="flex items-center gap-1"><Zap className="h-3.5 w-3.5 text-secondary" /><span className="text-sm font-bold text-secondary">{energyBits}</span></div>
+          <div className="flex items-center gap-1"><Zap className="h-3.5 w-3.5 text-primary" /><span className="text-sm font-bold text-primary">{energyBits}</span></div>
         </div>
         <div>
           <h4 className="text-xs font-semibold text-foreground mb-2">{t("chat.storyFragments")}</h4>
@@ -1372,7 +1389,7 @@ const Chat = () => {
               const isUnlocked = index + 1 <= bondLevel;
               return (
                 <div key={loreEntry.level} className={`rounded-xl p-3 text-xs leading-relaxed ${isUnlocked ? "bg-secondary/5 text-foreground border border-secondary/10" : "bg-muted/30 text-muted-foreground/40"}`}>
-                  <span className={`text-[10px] font-medium ${isUnlocked ? "text-secondary" : "text-muted-foreground/40"}`}>Lv.{loreEntry.level}</span>
+                  <span className={`text-[10px] font-medium ${isUnlocked ? "text-primary" : "text-muted-foreground/40"}`}>等级 {loreEntry.level}</span>
                   <p className="mt-1">{isUnlocked ? `"${loreEntry.text.slice(0, 80)}…"` : "???"}</p>
                 </div>
               );

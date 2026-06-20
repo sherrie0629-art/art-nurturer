@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 // NOTE: Payments have been removed from this project (open / remix-friendly build).
 // Every signed-in user is treated as "plus" with unlimited usage.
@@ -25,6 +26,7 @@ interface SubscriptionState {
 const INF = Number.POSITIVE_INFINITY;
 
 export function useSubscription(userId: string | undefined, _createdAt?: string) {
+  const { isBanned } = useAuth();
   const [state, setState] = useState<SubscriptionState>({
     plan: "plus",
     billingPeriod: "monthly",
@@ -110,9 +112,9 @@ export function useSubscription(userId: string | undefined, _createdAt?: string)
 
   return {
     ...state,
-    canChat: true,
-    canAssess: true,
-    canDeepReport: true,
+    canChat: !isBanned,
+    canAssess: !isBanned,
+    canDeepReport: !isBanned,
     incrementChat,
     incrementAssessment,
     incrementDeepReport,

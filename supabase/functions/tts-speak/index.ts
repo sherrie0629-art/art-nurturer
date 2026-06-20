@@ -1,6 +1,7 @@
 // ElevenLabs TTS - speak agent message in character voice
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { checkBannedUserId } from "../_shared/checkUserBanned.ts";
 
 type VoiceConfig = {
   voiceId: string;
@@ -154,6 +155,10 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    const userId = claims.claims.sub as string;
+    const bannedResponse = await checkBannedUserId(userId, corsHeaders);
+    if (bannedResponse) return bannedResponse;
 
     const body = await req.json().catch(() => ({}));
     const agentId = String(body.agentId || "").trim();

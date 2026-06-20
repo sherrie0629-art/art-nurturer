@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { checkBannedUserId } from "../_shared/checkUserBanned.ts";
 
 const AI_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
@@ -31,6 +32,9 @@ serve(async (req) => {
       });
     }
     const userId = claimsData.claims.sub;
+
+    const bannedResponse = await checkBannedUserId(userId as string, corsHeaders);
+    if (bannedResponse) return bannedResponse;
 
     const { messages, agentId, locale: bodyLocale } = await req.json();
     const locale = bodyLocale === "zh" ? "zh" : "en";

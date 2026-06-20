@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import BottomNav from "@/components/BottomNav";
 import DesktopLayout from "@/components/DesktopLayout";
-import { agents as RAW_AGENTS } from "@/data/agents";
+import { agents as RAW_AGENTS, getBondStarCount } from "@/data/agents";
 import { localizeAgent } from "@/lib/localizeAgent";
 import SEO from "@/components/SEO";
 import { useAuth } from "@/contexts/AuthContext";
@@ -160,7 +160,7 @@ const Index = () => {
                   onClick={() => navigate("/assessment")}
                   className="text-[10px] tracking-[0.3em] uppercase text-[#c9a84c]/60 hover:text-[#c9a84c] border-b border-[#c9a84c]/20 pb-1 transition-colors"
                 >
-                  ASSESSMENT
+                  测评
                 </button>
               </div>
               <div className="grid grid-cols-2 gap-2 flex-grow md:gap-3">
@@ -206,7 +206,7 @@ const Index = () => {
                   onClick={() => navigate("/archive")}
                   className="text-[10px] tracking-[0.3em] uppercase text-[#c9a84c]/60 hover:text-[#c9a84c] border-b border-[#c9a84c]/20 pb-1 transition-colors"
                 >
-                  ARCHIVE
+                  档案
                 </button>
               </div>
               <div className="grid grid-cols-2 gap-2 md:gap-3">
@@ -242,7 +242,7 @@ const Index = () => {
                         </div>
                         {lv > 0 && (
                           <span className="shrink-0 text-[9px] tracking-widest text-[#c9a84c]/70">
-                            {"·".repeat(Math.min(lv, 5))}
+                            {"·".repeat(getBondStarCount(lv))}
                           </span>
                         )}
                       </div>

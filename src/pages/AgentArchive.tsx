@@ -5,7 +5,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import BottomNav from "@/components/BottomNav";
 import DesktopLayout from "@/components/DesktopLayout";
-import { agents as RAW_AGENTS, BOND_THRESHOLDS } from "@/data/agents";
+import { agents as RAW_AGENTS, BOND_THRESHOLDS, getBondStarCount } from "@/data/agents";
 import { localizeAgent } from "@/lib/localizeAgent";
 import { useAuth } from "@/contexts/AuthContext";
 import SEO from "@/components/SEO";
@@ -71,7 +71,7 @@ const AgentArchive = () => {
           <button key={a.id} onClick={() => setSelectedAgent(a.id)} className={`flex shrink-0 flex-col items-center gap-1.5 rounded-2xl p-3 transition-all ${isSelected ? "bg-primary/10 ring-1 ring-primary/30" : "bg-card shadow-card"}`}>
             <div className={`h-14 w-14 overflow-hidden rounded-xl ${a.gradient} p-0.5`}><img src={a.image} alt={a.name} className="h-full w-full rounded-[10px] object-cover bg-card" /></div>
             <span className="text-[11px] font-medium text-foreground">{a.name}</span>
-            <span className="text-[9px] text-secondary">{"⭐".repeat(Math.min(lv, 5))}</span>
+            <span className="text-[9px] text-secondary">{"⭐".repeat(getBondStarCount(lv))}</span>
           </button>);
         })}
       </div>

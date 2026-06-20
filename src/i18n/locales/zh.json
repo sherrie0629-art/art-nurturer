@@ -1243,6 +1243,8 @@
     "later": "稍后再说",
     "generatingTitle": "四个视角正在凝视你…",
     "generatingDesc": "暖暖、老王、云生、星轨 正同时落笔，约需 10-15 秒。",
+    "generatingTitleSingle": "{{name}} 正在凝视你…",
+    "generatingDescSingle": "{{name}} 正在为你落笔，写一张专属镜像，约需 10-15 秒。",
     "share": "分享镜像",
     "savedToast": "已保存到相册 ✨",
     "shareTitle": "我的灵魂镜像",

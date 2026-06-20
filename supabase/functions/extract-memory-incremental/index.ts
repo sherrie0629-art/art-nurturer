@@ -1,8 +1,6 @@
-// Incremental memory extraction — runs after each (or every few) chat turns.
-// Extracts short-term user_memories AND long-term user_profile_facts from the most recent exchange,
-// then embeds new memories so semantic recall works immediately.
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { checkBannedUserId } from "../_shared/checkUserBanned.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -32,6 +30,9 @@ serve(async (req) => {
       });
     }
     const userId = claimsData.claims.sub as string;
+
+    const bannedResponse = await checkBannedUserId(userId, corsHeaders);
+    if (bannedResponse) return bannedResponse;
 
     const { recentMessages, agentId, locale } = await req.json();
     if (!Array.isArray(recentMessages) || recentMessages.length === 0 || !agentId) {

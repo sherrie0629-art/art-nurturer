@@ -9,12 +9,14 @@ import {
   type GuestMigratedDetail,
 } from "@/lib/guestChat";
 import { migrateGuestAssessmentsToAccount } from "@/lib/guestAssessment";
+import { ACCOUNT_SUSPENDED_MESSAGE } from "@/lib/accountStatus";
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
   isAnonymous: boolean;
+  isBanned: boolean;
   signOut: () => Promise<void>;
   promptLogin: (reason: string) => void;
 }
@@ -24,6 +26,7 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   loading: true,
   isAnonymous: true,
+  isBanned: false,
   signOut: async () => {},
   promptLogin: () => {},
 });
@@ -106,7 +109,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isBanned, setIsBanned] = useState(false);
   const [loginPrompt, setLoginPrompt] = useState({ open: false, reason: "" });
+
+  const enforceAccountStatus = useCallback(async (userId: string) => {
+    const { data } = await supabase
+      .from("profiles")
+      .select("is_banned, ban_reason")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (data?.is_banned) {
+      setIsBanned(true);
+      toast.error(data.ban_reason || ACCOUNT_SUSPENDED_MESSAGE);
+      try {
+        await supabase.auth.signOut();
+      } catch { /* ignore */ }
+      try {
+        Object.keys(localStorage)
+          .filter((k) => k.startsWith("sb-") && k.endsWith("-auth-token"))
+          .forEach((k) => localStorage.removeItem(k));
+      } catch { /* ignore */ }
+      setSession(null);
+      setUser(null);
+      return false;
+    }
+
+    setIsBanned(false);
+    return true;
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -138,6 +169,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false);
       if (session?.user) {
         setLoginPrompt({ open: false, reason: "" });
+        setTimeout(() => {
+          enforceAccountStatus(session.user.id).catch((e) => {
+            console.error("[Auth] ban check failed", e);
+          });
+        }, 0);
+      } else {
+        setIsBanned(false);
       }
       if (event === "SIGNED_IN" && session?.user) {
         // Defer so the auth state update flushes first.
@@ -207,13 +245,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSession(data.session);
       setUser(data.session?.user ?? null);
       setLoading(false);
+      if (data.session?.user) {
+        await enforceAccountStatus(data.session.user.id);
+      }
     })();
 
     return () => {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [enforceAccountStatus]);
 
   const signOut = async () => {
     try {
@@ -226,6 +267,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } catch { /* ignore */ }
       setSession(null);
       setUser(null);
+      setIsBanned(false);
       setLoading(false);
     }
   };
@@ -237,7 +279,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const isAnonymous = !user;
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, isAnonymous, signOut, promptLogin }}>
+    <AuthContext.Provider value={{ user, session, loading, isAnonymous, isBanned, signOut, promptLogin }}>
       {children}
       <AuthPromptDialog
         open={loginPrompt.open}

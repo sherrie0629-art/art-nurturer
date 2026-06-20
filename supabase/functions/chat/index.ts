@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { checkBannedUserId } from "../_shared/checkUserBanned.ts";
 
 const AI_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
@@ -23,6 +24,9 @@ async function checkChatQuota(req: Request): Promise<{ allowed: boolean; userId?
     const { data: claimsData, error } = await supabase.auth.getClaims(token);
     if (!error && claimsData?.claims?.sub) {
       const userId = claimsData.claims.sub as string;
+      const bannedResponse = await checkBannedUserId(userId, corsHeaders);
+      if (bannedResponse) return { allowed: false, errorResponse: bannedResponse };
+
       const authedClient = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
         global: { headers: { Authorization: authHeader! } },
       });

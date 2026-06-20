@@ -86,7 +86,7 @@ const AssessmentDetail = () => {
         accentColor: "#8b5cf6",
         accentColorLight: "#a78bfa",
         icon: iconMap[type] || "✨",
-        caption: d.socialCaption || "Discover your inner self",
+        caption: d.socialCaption || "发现更真实的自己",
       });
       setShareImageUrl(canvas.toDataURL("image/png"));
       setShareOpen(true);
@@ -175,7 +175,7 @@ const AssessmentDetail = () => {
           >
             <img
               src={d.imageUrl}
-              alt="AI generated artwork"
+              alt="AI 生成插画"
               className="h-48 w-48 rounded-2xl object-cover shadow-card"
             />
           </motion.div>

@@ -2,16 +2,15 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Sparkles, RotateCcw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import BottomNav from "@/components/BottomNav";
 import DesktopLayout from "@/components/DesktopLayout";
 import SEO from "@/components/SEO";
+import FortuneRippleScene from "@/components/FortuneRippleScene";
 import {
   drawRandomStick,
-  findStickByNumber,
   LEVEL_COLOR,
   LEVEL_EMOJI,
   type FortuneStick,
@@ -33,7 +32,6 @@ type DrawState = "idle" | "shaking" | "result";
 
 const DailyFortuneStick = () => {
   const navigate = useNavigate();
-  const { t } = useTranslation();
   const { user, promptLogin } = useAuth();
 
   const [state, setState] = useState<DrawState>("idle");
@@ -119,7 +117,7 @@ const DailyFortuneStick = () => {
 
   if (loadingToday) {
     return (
-      <div className="min-h-screen bg-gradient-calm flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-[radial-gradient(ellipse_at_top,hsl(35_18%_11%)_0%,hsl(0_0%_5%)_60%)]">
         <div className="animate-pulse text-sm text-muted-foreground">加载中…</div>
       </div>
     );
@@ -127,7 +125,7 @@ const DailyFortuneStick = () => {
 
   return (
     <DesktopLayout>
-      <div className="min-h-screen bg-gradient-calm pb-24 md:pb-8">
+      <div className="min-h-screen pb-24 md:pb-8 bg-[radial-gradient(ellipse_at_top,hsl(200_12%_9%)_0%,hsl(0_0%_5%)_58%)]">
         <SEO title="今日求签 — 心灵密语" description="抽一支今日灵签，AI 为你做现代化解签。" />
 
         <div className="px-6 pt-14 pb-4">
@@ -140,8 +138,8 @@ const DailyFortuneStick = () => {
             </button>
             <div>
               <h1 className="font-display text-xl font-bold text-foreground">今日求签</h1>
-              <p className="text-xs text-muted-foreground">
-                诚心默念心事，再轻轻摇出今日之签
+              <p className="text-xs text-muted-foreground mt-0.5">
+                把挂念轻轻放下，等水面静下来
               </p>
             </div>
           </div>
@@ -154,34 +152,34 @@ const DailyFortuneStick = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="px-6 mt-6"
+              className="px-6 mt-4"
             >
-              <div className="flex flex-col items-center text-center">
-                <motion.div
-                  animate={{ rotate: [0, -3, 3, -2, 2, 0], y: [0, -4, 0] }}
-                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                  className="mb-6 flex h-56 w-28 items-end justify-center rounded-t-full rounded-b-md bg-gradient-to-b from-amber-200 via-amber-300 to-amber-500 shadow-xl"
-                >
-                  <div className="mb-6 w-[2px] h-32 bg-amber-900/40 rounded-full" />
-                </motion.div>
-                <p className="text-sm text-muted-foreground mb-5 max-w-[280px] leading-relaxed">
-                  把今日最挂念的事放在心上，深呼吸 3 次，再轻轻摇签。
+              <div className="mx-auto max-w-md flex flex-col items-center text-center">
+                <div className="relative w-full rounded-3xl border border-[#7A9BA8]/15 bg-[linear-gradient(180deg,rgba(122,155,168,0.06)_0%,transparent_100%)] px-4 pb-2 pt-4">
+                  <FortuneRippleScene />
+                </div>
+
+                <p className="text-sm text-foreground/80 mb-6 max-w-[300px] leading-relaxed font-light tracking-wide">
+                  把今日最挂念的事轻轻放下，
+                  <br />
+                  深呼吸 3 次，等今日的那一签浮现。
                 </p>
 
                 <textarea
                   value={focus}
                   onChange={(e) => setFocus(e.target.value.slice(0, 50))}
                   placeholder="（可选）写下今日心事，让解签更贴近你"
-                  className="mb-5 w-full max-w-md rounded-2xl border border-border bg-card p-3 text-sm text-foreground placeholder:text-muted-foreground/70 resize-none shadow-card focus:outline-none focus:ring-2 focus:ring-amber-300/60"
+                  className="mb-6 w-full rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm p-3.5 text-sm text-foreground placeholder:text-muted-foreground/60 resize-none shadow-card focus:outline-none focus:ring-1 focus:ring-primary/40"
                   rows={2}
                 />
 
                 <motion.button
-                  whileTap={{ scale: 0.95 }}
+                  whileTap={{ scale: 0.97 }}
+                  whileHover={{ scale: 1.01 }}
                   onClick={handleDraw}
-                  className="flex items-center gap-2 rounded-2xl bg-gradient-to-br from-amber-400 to-rose-500 px-8 py-3.5 text-sm font-semibold text-white shadow-lg"
+                  className="flex items-center gap-2 rounded-full border border-primary/30 bg-primary/90 px-10 py-3.5 text-sm font-medium text-primary-foreground shadow-[0_8px_24px_-8px_hsla(42,53%,54%,0.55)] transition-colors hover:bg-primary"
                 >
-                  <Sparkles className="h-4 w-4" /> 摇签
+                  <Sparkles className="h-4 w-4 opacity-90" /> 触水求签
                 </motion.button>
               </div>
             </motion.div>
@@ -193,18 +191,12 @@ const DailyFortuneStick = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="px-6 mt-6"
+              className="px-6 mt-4"
             >
               <div className="flex flex-col items-center text-center">
-                <motion.div
-                  animate={{ rotate: [-15, 15, -15], y: [0, -10, 0] }}
-                  transition={{ duration: 0.6, repeat: Infinity, ease: "easeInOut" }}
-                  className="mb-6 flex h-56 w-28 items-end justify-center rounded-t-full rounded-b-md bg-gradient-to-b from-amber-200 via-amber-300 to-amber-600 shadow-xl"
-                >
-                  <div className="mb-6 w-[2px] h-32 bg-amber-900/50 rounded-full" />
-                </motion.div>
-                <p className="text-sm text-muted-foreground animate-pulse">
-                  签筒沙沙作响…AI 正在解签
+                <FortuneRippleScene shaking />
+                <p className="text-sm text-muted-foreground animate-pulse mt-2 font-light tracking-wide">
+                  瓣已落入水中…水面渐静，正在为你解签
                 </p>
               </div>
             </motion.div>
@@ -377,7 +369,7 @@ const DailyFortuneStick = () => {
                       },
                     })
                   }
-                  className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-br from-amber-400 to-rose-500 py-3 text-sm font-semibold text-white shadow-lg"
+                  className="flex-1 flex items-center justify-center gap-2 rounded-full border border-primary/30 bg-primary/90 py-3 text-sm font-medium text-primary-foreground shadow-[0_6px_20px_-8px_hsla(42,53%,54%,0.5)]"
                 >
                   <Sparkles className="h-4 w-4" /> 找云生细聊
                 </motion.button>

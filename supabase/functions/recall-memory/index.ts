@@ -1,6 +1,6 @@
-// Semantic recall: embeds a query and returns top-K relevant memories + user profile facts.
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { checkBannedUserId } from "../_shared/checkUserBanned.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -28,6 +28,9 @@ serve(async (req) => {
       });
     }
     const userId = claimsData.claims.sub as string;
+
+    const bannedResponse = await checkBannedUserId(userId, corsHeaders);
+    if (bannedResponse) return bannedResponse;
 
     const { query, agentId, k = 8 } = await req.json();
     if (!query || !agentId) {

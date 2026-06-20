@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { getBondStarCount } from "@/data/agents";
 
 interface AgentCardProps {
   id: string;
@@ -36,7 +37,7 @@ const AgentCard = ({ id, name, title, description, image, gradient, bondLevel }:
         </div>
         {bondLevel && bondLevel > 1 && (
           <div className="absolute -top-1 -right-1 flex items-center gap-0.5 rounded-full bg-card px-1.5 py-0.5 shadow-card text-[9px]">
-            {"⭐".repeat(Math.min(bondLevel, 5))}
+            {"⭐".repeat(getBondStarCount(bondLevel))}
           </div>
         )}
       </div>

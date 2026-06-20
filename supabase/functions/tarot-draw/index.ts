@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { checkBannedUserId } from "../_shared/checkUserBanned.ts";
 
 const AI_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const BUCKET = "tarot-card-art";
@@ -33,6 +34,9 @@ serve(async (req) => {
     if (authErr || !user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+
+    const bannedResponse = await checkBannedUserId(user.id, corsHeaders);
+    if (bannedResponse) return bannedResponse;
 
     const { cardId, cardName, isReversed, keywords, locale: bodyLocale } = await req.json();
     const locale = bodyLocale === "zh" ? "zh" : "en";

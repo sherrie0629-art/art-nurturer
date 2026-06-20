@@ -1243,6 +1243,8 @@
     "later": "Maybe later",
     "generatingTitle": "Four perspectives gazing back…",
     "generatingDesc": "Nuannuan, Laowang, Yunsheng and Xinggui are writing in parallel — about 10-15s.",
+    "generatingTitleSingle": "{{name}} is gazing back…",
+    "generatingDescSingle": "{{name}} is writing your personal mirror — about 10-15s.",
     "share": "Share mirror",
     "savedToast": "Saved to your device ✨",
     "shareTitle": "My Soul Mirror",

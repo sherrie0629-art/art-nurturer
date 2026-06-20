@@ -37,7 +37,7 @@ const TarotCardInline = ({ card }: Props) => {
               <Sparkles className="h-8 w-8 text-secondary/70" />
             </motion.div>
             <p className="text-[11px] text-muted-foreground tracking-wide">
-              {isZh ? "星轨 正在洗牌…" : "Shuffling the deck…"}
+              星轨 正在洗牌…
             </p>
           </div>
           <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent animate-pulse" />

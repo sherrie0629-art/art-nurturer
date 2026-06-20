@@ -41,7 +41,7 @@ const AchievementUnlock = ({ achievement, onClose }: Props) => {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.25 }}
-            className="text-xs font-medium text-secondary"
+            className="text-xs font-medium text-foreground/80"
           >
             🏆 {t("achievements.unlocked")}
           </motion.p>

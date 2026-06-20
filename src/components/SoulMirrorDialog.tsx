@@ -256,15 +256,27 @@ export default function SoulMirrorDialog({ open, userId, onClose, existingMirror
           {phase === "generating" && (
             <div className="p-10 text-center text-white">
               <Loader2 className="h-10 w-10 animate-spin text-pink-400 mx-auto mb-4" />
-              <h2 className="font-display text-xl font-bold mb-2">{t("soulMirror.generatingTitle")}</h2>
-              <p className="text-sm text-white/70 leading-relaxed">{t("soulMirror.generatingDesc")}</p>
+              <h2 className="font-display text-xl font-bold mb-2">
+                {isSingle
+                  ? t("soulMirror.generatingTitleSingle", {
+                      name: AGENT_NAME[singleAgentId!]?.[i18n.language === "en" ? "en" : "zh"] || singleAgentId,
+                    })
+                  : t("soulMirror.generatingTitle")}
+              </h2>
+              <p className="text-sm text-white/70 leading-relaxed">
+                {isSingle
+                  ? t("soulMirror.generatingDescSingle", {
+                      name: AGENT_NAME[singleAgentId!]?.[i18n.language === "en" ? "en" : "zh"] || singleAgentId,
+                    })
+                  : t("soulMirror.generatingDesc")}
+              </p>
             </div>
           )}
 
           {phase === "result" && (
             <div className="p-5">
               {posterUrl ? (
-                <img src={posterUrl} alt="Soul Mirror" className="w-full rounded-2xl shadow-2xl" />
+                <img src={posterUrl} alt="灵魂镜像" className="w-full rounded-2xl shadow-2xl" />
               ) : (
                 <div className="aspect-[4/5] rounded-2xl bg-white/5 flex items-center justify-center">
                   <Loader2 className="h-8 w-8 animate-spin text-white/60" />
@@ -353,7 +365,7 @@ async function renderPoster(mirror: SoulMirror): Promise<string> {
   ctx.fillStyle = "#ffffff";
   ctx.textAlign = "center";
   ctx.font = "700 56px 'DM Serif Display', serif";
-  ctx.fillText("Soul Mirror · 灵魂镜像", POSTER_W / 2, 100);
+  ctx.fillText("灵魂镜像", POSTER_W / 2, 100);
 
   const snap = mirror.user_snapshot;
   const locale: "zh" | "en" = (snap?.locale === "en" ? "en" : "zh");
@@ -372,16 +384,10 @@ async function renderPoster(mirror: SoulMirror): Promise<string> {
   // Dynamic subtitle line
   const primary = primaryAgentId ? mirror.perspectives.find((p) => p.agentId === primaryAgentId) : null;
   const subtitleLine = singleAgentId && primary
-    ? (locale === "zh"
-        ? `${primary.displayName} 写给你的灵魂镜像`
-        : `A soul mirror written by ${primary.displayName}`)
+    ? `${primary.displayName} 写给你的灵魂镜像`
     : primary
-    ? (locale === "zh"
-        ? `与 ${primary.displayName} 深聊 ${primaryTurns} 次后的灵魂镜像`
-        : `Soul Mirror after ${primaryTurns} deep talks with ${primary.displayName}`)
-    : (locale === "zh"
-        ? "四位 AI 对你的第一印象"
-        : "First impressions from four AI characters");
+    ? `与 ${primary.displayName} 深聊 ${primaryTurns} 次后的灵魂镜像`
+    : "四位 AI 对你的第一印象";
   ctx.font = "italic 22px 'DM Serif Display', serif";
   ctx.fillStyle = "rgba(255,255,255,0.55)";
   ctx.fillText(subtitleLine, POSTER_W / 2, 174);
@@ -630,9 +636,7 @@ function drawQuadrant(
 
   // Tier badge (top-right)
   if (tier === "unmet" || tier === "glimpse") {
-    const badgeText = opts.locale === "zh"
-      ? (tier === "unmet" ? "远观初见" : "浅浅聊过")
-      : (tier === "unmet" ? "First glance" : "Brief talk");
+    const badgeText = tier === "unmet" ? "远观初见" : "浅浅聊过";
     ctx.font = `${compact ? 13 : 16}px 'Inter', sans-serif`;
     const bw = ctx.measureText(badgeText).width + 20;
     const bh = compact ? 22 : 26;
@@ -644,9 +648,7 @@ function drawQuadrant(
     ctx.fillStyle = "rgba(255,255,255,0.85)";
     ctx.fillText(badgeText, bx + 10, by + bh - (compact ? 6 : 7));
   } else if (isPrimary) {
-    const badgeText = opts.locale === "zh"
-      ? `最懂你的那一位 · ${(p as any).totalTurns ?? 0} 轮`
-      : `Knows you best · ${(p as any).totalTurns ?? 0} turns`;
+    const badgeText = `最懂你的那一位 · ${(p as any).totalTurns ?? 0} 轮`;
     ctx.font = "16px 'Inter', sans-serif";
     const bw = ctx.measureText(badgeText).width + 22;
     const bh = 28;

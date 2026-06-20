@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { checkBannedUserId } from "../_shared/checkUserBanned.ts";
 
 const AI_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const corsHeaders = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version" };
@@ -15,6 +16,8 @@ async function checkAssessmentQuota(req: Request): Promise<Response | null> {
   const { data: claimsData, error } = await supabase.auth.getClaims(token);
   if (error || !claimsData?.claims?.sub) return null;
   const userId = claimsData.claims.sub as string;
+  const bannedResponse = await checkBannedUserId(userId, corsHeaders);
+  if (bannedResponse) return bannedResponse;
   const authedClient = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, { global: { headers: { Authorization: authHeader! } } });
   const { data: sub } = await authedClient.from("user_subscriptions").select("plan, expires_at").eq("user_id", userId).single();
   const isPlus = true; // payments removed — all users treated as plus

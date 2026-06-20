@@ -93,3 +93,11 @@ export function parseGameMarkers(content: string): GameMarkers {
 
   return { cleanContent, energyGain, branchOptions, truthShard, atmosphere };
 }
+
+/** Display text for chat bubbles; falls back to raw body if marker parsing stripped everything. */
+export function getAssistantDisplayContent(raw: string): string {
+  const { cleanContent } = parseGameMarkers(raw);
+  const trimmed = cleanContent.trim();
+  if (trimmed) return trimmed;
+  return raw.trim();
+}

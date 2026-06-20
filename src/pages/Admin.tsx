@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useLocale } from "@/hooks/useLocale";
-import { ArrowLeft, Crown, Search, UserCheck, ShoppingBag, RefreshCw, BarChart3, Users, MessageSquare, FileText, Settings, Check, Globe } from "lucide-react";
+import { ArrowLeft, Crown, Search, UserCheck, ShoppingBag, RefreshCw, BarChart3, Users, MessageSquare, FileText, Settings, Check, Globe, Ban, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
@@ -12,6 +12,8 @@ interface UserRow {
   user_id: string;
   display_name: string | null;
   created_at: string;
+  is_banned?: boolean;
+  ban_reason?: string | null;
   subscription?: { plan: string; expires_at: string | null; billing_period?: string };
   usage?: { chat_count: number; assessment_count: number; deep_report_count: number };
 }
@@ -47,6 +49,7 @@ const Admin = () => {
   const [purchases, setPurchases] = useState<PurchaseRow[]>([]);
   const [search, setSearch] = useState("");
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [banningId, setBanningId] = useState<string | null>(null);
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -61,7 +64,7 @@ const Admin = () => {
   const loadUsers = useCallback(async () => {
     const [authRes, profilesRes, subsRes, usageRes] = await Promise.all([
       supabase.functions.invoke("admin-list-users"),
-      supabase.from("profiles").select("user_id, display_name, created_at"),
+      supabase.from("profiles").select("user_id, display_name, created_at, is_banned, ban_reason"),
       supabase.from("user_subscriptions").select("user_id, plan, expires_at, billing_period"),
       supabase.from("usage_tracking").select("user_id, chat_count, assessment_count, deep_report_count").eq("track_date", new Date().toISOString().split("T")[0]),
     ]);
@@ -82,6 +85,8 @@ const Admin = () => {
           user_id: u.user_id,
           display_name: profileMap.get(u.user_id)?.display_name || u.display_name || null,
           created_at: u.created_at,
+          is_banned: profileMap.get(u.user_id)?.is_banned ?? false,
+          ban_reason: profileMap.get(u.user_id)?.ban_reason ?? null,
           subscription: subMap.get(u.user_id) as any,
           usage: usageMap.get(u.user_id) as any,
         }))
@@ -168,6 +173,41 @@ const Admin = () => {
     await supabase.from("purchase_records").update({ status }).eq("id", id);
     toast({ title: t("admin.purchaseUpdated"), description: t("admin.purchaseStatus", { s: status === "completed" ? t("admin.completed") : status }) });
     await loadPurchases();
+  };
+
+  const toggleUserBan = async (target: UserRow) => {
+    const action = target.is_banned ? "unban" : "ban";
+    const reason = action === "ban"
+      ? window.prompt("封禁原因（可选）", "滥用 AI 额度")?.trim() || "管理员封禁"
+      : undefined;
+
+    if (action === "ban" && !window.confirm(`确认封禁用户 ${target.display_name || target.user_id.slice(0, 8)}？\n封禁后将无法继续调用 AI 功能。`)) {
+      return;
+    }
+    if (action === "unban" && !window.confirm(`确认解除封禁 ${target.display_name || target.user_id.slice(0, 8)}？`)) {
+      return;
+    }
+
+    setBanningId(target.user_id);
+    const { data, error } = await supabase.functions.invoke("admin-ban-user", {
+      body: { user_id: target.user_id, action, reason },
+    });
+    setBanningId(null);
+
+    if (error || data?.error) {
+      toast({
+        title: action === "ban" ? "封禁失败" : "解封失败",
+        description: data?.error || error?.message || "请稍后重试",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: action === "ban" ? "已封禁用户" : "已解除封禁",
+      description: action === "ban" ? "该用户将无法继续消耗 AI 额度" : "该用户已恢复使用",
+    });
+    await loadUsers();
   };
 
   const filteredUsers = users.filter(u =>
@@ -285,16 +325,21 @@ const Admin = () => {
               ];
 
               return (
-                <div key={u.user_id} className="rounded-2xl bg-card shadow-card p-3">
+                <div key={u.user_id} className={`rounded-2xl bg-card shadow-card p-3 ${u.is_banned ? "ring-1 ring-destructive/40" : ""}`}>
                   <div className="flex items-center gap-2 mb-2">
-                    <div className={`h-8 w-8 rounded-full flex items-center justify-center text-sm ${isPlus ? "bg-gradient-golden" : "bg-muted"}`}>
-                      {isPlus ? "👑" : "🌙"}
+                    <div className={`h-8 w-8 rounded-full flex items-center justify-center text-sm ${u.is_banned ? "bg-destructive/15" : isPlus ? "bg-gradient-golden" : "bg-muted"}`}>
+                      {u.is_banned ? "🚫" : isPlus ? "👑" : "🌙"}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium text-foreground truncate">{u.display_name || t("profile.traveler")}</p>
                       <p className="text-[9px] text-muted-foreground truncate">{u.user_id}</p>
                     </div>
-                    {isPlus && (
+                    {u.is_banned && (
+                      <span className="rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] font-medium text-destructive">
+                        已封禁
+                      </span>
+                    )}
+                    {isPlus && !u.is_banned && (
                       <span className="rounded-full bg-secondary/20 px-2 py-0.5 text-[10px] font-medium text-secondary">
                         {u.subscription?.billing_period === "yearly" ? t("admin.plusYear") : t("admin.plusMonth")}
                       </span>
@@ -303,6 +348,9 @@ const Admin = () => {
 
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-muted-foreground mb-2">
                     <span>{t("admin.registeredAt", { d: new Date(u.created_at).toLocaleDateString(dateLocale) })}</span>
+                    {u.is_banned && u.ban_reason && (
+                      <span className="text-destructive">原因：{u.ban_reason}</span>
+                    )}
                     {isPlus && u.subscription?.expires_at && (
                       <span>{t("admin.expiryAt", { d: new Date(u.subscription.expires_at).toLocaleDateString(dateLocale) })}</span>
                     )}
@@ -333,12 +381,31 @@ const Admin = () => {
                   </div>
 
                   {!isEditing ? (
-                    <button
-                      onClick={() => setEditingUserId(u.user_id)}
-                      className="w-full rounded-lg bg-secondary/15 py-1.5 text-[10px] font-semibold text-secondary"
-                    >
-                      <Crown className="inline h-3 w-3 mr-0.5" />{t("admin.manageSub")}
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setEditingUserId(u.user_id)}
+                        className="flex-1 rounded-lg bg-secondary/15 py-1.5 text-[10px] font-semibold text-secondary"
+                      >
+                        <Crown className="inline h-3 w-3 mr-0.5" />{t("admin.manageSub")}
+                      </button>
+                      <button
+                        disabled={banningId === u.user_id}
+                        onClick={() => toggleUserBan(u)}
+                        className={`flex-1 rounded-lg py-1.5 text-[10px] font-semibold disabled:opacity-50 ${
+                          u.is_banned
+                            ? "bg-green-500/10 text-green-600"
+                            : "bg-destructive/10 text-destructive"
+                        }`}
+                      >
+                        {banningId === u.user_id ? (
+                          "处理中…"
+                        ) : u.is_banned ? (
+                          <><ShieldCheck className="inline h-3 w-3 mr-0.5" />解除封禁</>
+                        ) : (
+                          <><Ban className="inline h-3 w-3 mr-0.5" />封禁用户</>
+                        )}
+                      </button>
+                    </div>
                   ) : (
                     <SubscriptionEditor
                       currentPlan={planKey}

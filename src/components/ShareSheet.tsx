@@ -51,8 +51,8 @@ const ShareSheet = ({ open, onClose, imageDataUrl, title, text, url, publicImage
   }, [open, imageDataUrl, publicImageUrl]);
 
   const shareUrl = url || SHARE_URL;
-  const shareTitle = title || "Soul Sanctuary";
-  const shareText = text || "Discover yours ✨";
+  const shareTitle = title || "心灵密语";
+  const shareText = text || "来看看我的结果 ✨ islandai.life";
 
   const handleNativeShare = useCallback(async () => {
     if (!imageDataUrl) return;
@@ -73,7 +73,7 @@ const ShareSheet = ({ open, onClose, imageDataUrl, title, text, url, publicImage
     } catch (e) {
       if ((e as Error).name === "AbortError") return;
     }
-    toast.info("System share not available, use options below");
+    toast.info("系统分享不可用，请使用下方按钮");
   }, [imageDataUrl, shareTitle, shareText, onClose]);
 
   const handleDownload = useCallback(() => {
@@ -84,12 +84,12 @@ const ShareSheet = ({ open, onClose, imageDataUrl, title, text, url, publicImage
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    toast.success("Image saved ✨");
+    toast.success("图片已保存 ✨");
   }, [imageDataUrl]);
 
   const handleCopyLink = useCallback(async () => {
     await navigator.clipboard.writeText(shareUrl);
-    toast.success("Link copied! ✨");
+    toast.success("链接已复制 ✨");
   }, [shareUrl]);
 
   const openPinterest = useCallback(() => {
@@ -118,8 +118,8 @@ const ShareSheet = ({ open, onClose, imageDataUrl, title, text, url, publicImage
     { label: "X", icon: "𝕏", onClick: openX },
     { label: "Facebook", icon: "📘", onClick: openFacebook },
     { label: "WhatsApp", icon: "💬", onClick: openWhatsApp },
-    { label: "Copy Link", icon: "🔗", onClick: handleCopyLink },
-    { label: "Save", icon: "💾", onClick: handleDownload, disabled: !imageDataUrl },
+    { label: "复制链接", icon: "🔗", onClick: handleCopyLink },
+    { label: "保存", icon: "💾", onClick: handleDownload, disabled: !imageDataUrl },
   ];
 
   return (
@@ -127,7 +127,7 @@ const ShareSheet = ({ open, onClose, imageDataUrl, title, text, url, publicImage
       <DrawerContent className="max-h-[60vh]">
         <DrawerHeader className="pb-2">
           <div className="flex items-center justify-between">
-            <DrawerTitle className="text-base font-semibold">Share</DrawerTitle>
+            <DrawerTitle className="text-base font-semibold">分享</DrawerTitle>
             <button onClick={onClose} className="rounded-full p-1 text-muted-foreground hover:bg-muted">
               <X className="h-4 w-4" />
             </button>
@@ -138,7 +138,7 @@ const ShareSheet = ({ open, onClose, imageDataUrl, title, text, url, publicImage
           <div className="flex justify-center px-6 pb-3">
             <img
               src={imageDataUrl}
-              alt="Preview"
+              alt="预览"
               className="max-h-36 rounded-xl shadow-card object-contain"
             />
           </div>
@@ -152,7 +152,7 @@ const ShareSheet = ({ open, onClose, imageDataUrl, title, text, url, publicImage
               className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3.5 text-primary-foreground font-medium transition-all active:scale-[0.98]"
             >
               <Share2 className="h-5 w-5" />
-              <span>Share to...</span>
+              <span>分享到…</span>
             </button>
           </div>
         )}

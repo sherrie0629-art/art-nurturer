@@ -129,7 +129,7 @@ const CompatibilityDetail = () => {
                 accentColorLight: "#fb7185",
                 icon: d?.emoji || "💕",
                 caption: t("compatibilityDetail.withPartner", { name: partnerName }),
-                appName: "Soul Sanctuary · Compatibility",
+                appName: "心灵密语 · 缘分配对",
               });
               setShareDataUrl(canvas.toDataURL("image/png"));
               setShareOpen(true);

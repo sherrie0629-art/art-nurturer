@@ -48,14 +48,19 @@ export const BOND_LABELS = [
   "灵魂共生",
 ];
 
-// 每个用户对同一个角色每天最多让 N 条消息推进羁绊；超出不再升级
-export const DAILY_BOND_TURN_CAP = 12;
-
 export function getBondLevel(totalTurns: number): number {
   for (let i = BOND_THRESHOLDS.length - 1; i >= 0; i--) {
     if (totalTurns >= BOND_THRESHOLDS[i]) return i + 1;
   }
   return 1;
+}
+
+/** Map 10 bond levels to 5 display stars: Lv 1–2 → 1★ … Lv 9–10 → 5★ */
+export const BOND_STAR_MAX = 5;
+
+export function getBondStarCount(level: number): number {
+  if (level <= 0) return 0;
+  return Math.min(BOND_STAR_MAX, Math.ceil(level / 2));
 }
 
 const STORY_REVEAL_RULES = `

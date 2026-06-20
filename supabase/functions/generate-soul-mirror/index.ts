@@ -1,6 +1,7 @@
 // Generate Soul Mirror: 4 agents each generate a perspective on the user.
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { checkBannedUserId } from "../_shared/checkUserBanned.ts";
 
 const AI_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const AI_IMAGE_URL = "https://ai.gateway.lovable.dev/v1/images/generations";
@@ -212,6 +213,9 @@ serve(async (req) => {
       });
     }
     const userId = claimsData.claims.sub as string;
+
+    const bannedResponse = await checkBannedUserId(userId, corsHeaders);
+    if (bannedResponse) return bannedResponse;
 
     // --- Parse optional body ---
     let singleAgentId: string | null = null;

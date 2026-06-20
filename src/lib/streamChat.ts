@@ -1,3 +1,5 @@
+import { messageFromApiError } from "@/lib/accountStatus";
+
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 
 export type Msg = { role: "user" | "assistant"; content: string };
@@ -43,13 +45,13 @@ export async function streamChat({
   });
 
   if (!resp.ok) {
-    const data = await resp.json().catch(() => ({ error: "Request failed" }));
-    onError(data.error || `Request failed (${resp.status})`);
+    const data = await resp.json().catch(() => ({ error: "请求失败" }));
+    onError(messageFromApiError(data, data.error || `请求失败 (${resp.status})`));
     return;
   }
 
   if (!resp.body) {
-    onError("Unable to get response stream");
+    onError("无法获取回复流");
     return;
   }
 
