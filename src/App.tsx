@@ -63,13 +63,13 @@ const CompatibilityDetail = lazyWithReload(() => import("./pages/CompatibilityDe
 const Profile = lazyWithReload(() => import("./pages/Profile.tsx"));
 const Auth = lazyWithReload(() => import("./pages/Auth.tsx"));
 const ConversationHistory = lazyWithReload(() => import("./pages/ConversationHistory.tsx"));
-const DailyTarot = lazyWithReload(() => import("./pages/DailyTarot.tsx"));
 const DailyFortuneStick = lazyWithReload(() => import("./pages/DailyFortuneStick.tsx"));
 const AgentArchive = lazyWithReload(() => import("./pages/AgentArchive.tsx"));
 const Vault = lazyWithReload(() => import("./pages/Vault.tsx"));
 const SoulMap = lazyWithReload(() => import("./pages/SoulMap.tsx"));
 const Admin = lazyWithReload(() => import("./pages/Admin.tsx"));
 const Settings = lazyWithReload(() => import("./pages/Settings.tsx"));
+const Notifications = lazyWithReload(() => import("./pages/Notifications.tsx"));
 const Welcome = lazyWithReload(() => import("./pages/Welcome.tsx"));
 const Contact = lazyWithReload(() => import("./pages/Contact.tsx"));
 const PrivacyPolicy = lazyWithReload(() => import("./pages/PrivacyPolicy.tsx"));
@@ -107,8 +107,8 @@ const App = () => (
                   <Route path="/assessment/compatibility" element={<CompatibilityFlow />} />
                   <Route path="/compatibility-reports" element={<CompatibilityReports />} />
                   <Route path="/compatibility-reports/:id" element={<CompatibilityDetail />} />
-                  <Route path="/daily-tarot" element={<DailyTarot />} />
-                  <Route path="/daily-whisper" element={<Navigate to="/daily-tarot" replace />} />
+                  <Route path="/daily-tarot" element={<Navigate to="/daily-fortune-stick" replace />} />
+                  <Route path="/daily-whisper" element={<Navigate to="/daily-fortune-stick" replace />} />
                   <Route path="/daily-fortune-stick" element={<DailyFortuneStick />} />
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/archive" element={<AgentArchive />} />
@@ -116,6 +116,7 @@ const App = () => (
                   <Route path="/soul-map" element={<SoulMap />} />
                   <Route path="/admin" element={<Admin />} />
                   <Route path="/settings" element={<Settings />} />
+                  <Route path="/notifications" element={<Notifications />} />
                   <Route path="/welcome" element={<Welcome />} />
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/privacy" element={<PrivacyPolicy />} />

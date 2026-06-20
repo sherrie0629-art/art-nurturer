@@ -11,7 +11,7 @@
 - [Zodiac Assessment](/assessment/zodiac): Uncover insights through astrological archetypes.
 - [Emotion Assessment](/assessment/emotion): Understand your emotional patterns and triggers.
 - [Compatibility](/assessment/compatibility): See how personality types connect and clash.
-- [Daily Tarot](/daily-tarot): Draw a daily card for guidance and reflection.
+- [Daily Fortune Stick](/daily-fortune-stick): Draw a daily fortune stick for guidance and reflection.
 
 ## Companions
 

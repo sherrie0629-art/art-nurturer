@@ -104,6 +104,57 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_followups: {
+        Row: {
+          agent_id: string
+          confidence: number
+          context: string
+          created_at: string
+          event_at: string | null
+          id: string
+          notify_at: string
+          reason: string
+          sent_at: string | null
+          source_memory_id: string | null
+          status: string
+          topic: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          agent_id: string
+          confidence?: number
+          context: string
+          created_at?: string
+          event_at?: string | null
+          id?: string
+          notify_at: string
+          reason?: string
+          sent_at?: string | null
+          source_memory_id?: string | null
+          status?: string
+          topic: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          agent_id?: string
+          confidence?: number
+          context?: string
+          created_at?: string
+          event_at?: string | null
+          id?: string
+          notify_at?: string
+          reason?: string
+          sent_at?: string | null
+          source_memory_id?: string | null
+          status?: string
+          topic?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       app_settings: {
         Row: {
           key: string
@@ -611,6 +662,42 @@ export type Database = {
           id?: string
           importance?: number
           last_used_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_notifications: {
+        Row: {
+          agent_id: string | null
+          body: string
+          created_at: string
+          followup_id: string | null
+          id: string
+          read_at: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          agent_id?: string | null
+          body: string
+          created_at?: string
+          followup_id?: string | null
+          id?: string
+          read_at?: string | null
+          title: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          agent_id?: string | null
+          body?: string
+          created_at?: string
+          followup_id?: string | null
+          id?: string
+          read_at?: string | null
+          title?: string
+          type?: string
           user_id?: string
         }
         Relationships: []

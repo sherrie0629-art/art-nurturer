@@ -8,7 +8,6 @@ export type ShareScene =
   | "zodiac"
   | "emotion"
   | "compatibility"
-  | "tarot"
   | "deepReport"
   | "chat"
   | "assessment"
@@ -35,7 +34,6 @@ const SCENE_HASHTAG: Record<ShareScene, string> = {
   zodiac: "星座",
   emotion: "心灵体检",
   compatibility: "缘分合盘",
-  tarot: "每日塔罗",
   deepReport: "深度心理报告",
   chat: "AI陪伴",
   assessment: "心理测评",
@@ -45,7 +43,7 @@ const SCENE_HASHTAG: Record<ShareScene, string> = {
 export function resolveShareScene(scene?: ShareScene, fallback?: string): ShareScene {
   const valid: ShareScene[] = [
     "mbti", "enneagram", "zodiac", "emotion",
-    "compatibility", "tarot", "deepReport", "chat", "assessment", "constellation",
+    "compatibility", "deepReport", "chat", "assessment", "constellation",
   ];
   if (scene && valid.includes(scene)) return scene;
   if (fallback && valid.includes(fallback as ShareScene)) return fallback as ShareScene;

@@ -13,6 +13,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "PLAYWRIGHT_BROWSERS_PATH=./.playwright-browsers playwright test",
+    "test:e2e:install": "PLAYWRIGHT_BROWSERS_PATH=./.playwright-browsers playwright install chromium",
     "prefill:mbti-posters": "node scripts/prefill-mbti-posters.mjs"
   },
   "dependencies": {

@@ -22,40 +22,15 @@ import ZodiacFortuneCards, { buildZodiacFortuneCards } from "@/components/Zodiac
 import ZodiacReadingCards from "@/components/ZodiacReadingCards";
 import { normalizeZodiacReading, zodiacReadingToPlainText, type ZodiacReading } from "@/lib/zodiacReading";
 import { buildZodiacPosterConfig } from "@/lib/assessmentPosterConfig";
+import ZodiacSignPicker from "@/components/ZodiacSignPicker";
+import {
+  ZODIAC_SIGNS,
+  localizeZodiacDate,
+  localizeZodiacElement,
+  localizeZodiacName,
+} from "@/lib/zodiacLabels";
 
 interface QA { question: string; answer: string; dimension: string; }
-
-const ZODIAC_SIGNS = [
-  { name: "Aries", icon: "♈", element: "Fire" },
-  { name: "Taurus", icon: "♉", element: "Earth" },
-  { name: "Gemini", icon: "♊", element: "Air" },
-  { name: "Cancer", icon: "♋", element: "Water" },
-  { name: "Leo", icon: "♌", element: "Fire" },
-  { name: "Virgo", icon: "♍", element: "Earth" },
-  { name: "Libra", icon: "♎", element: "Air" },
-  { name: "Scorpio", icon: "♏", element: "Water" },
-  { name: "Sagittarius", icon: "♐", element: "Fire" },
-  { name: "Capricorn", icon: "♑", element: "Earth" },
-  { name: "Aquarius", icon: "♒", element: "Air" },
-  { name: "Pisces", icon: "♓", element: "Water" },
-];
-
-const ZH_NAMES: Record<string, string> = {
-  Aries: "白羊座", Taurus: "金牛座", Gemini: "双子座", Cancer: "巨蟹座",
-  Leo: "狮子座", Virgo: "处女座", Libra: "天秤座", Scorpio: "天蝎座",
-  Sagittarius: "射手座", Capricorn: "摩羯座", Aquarius: "水瓶座", Pisces: "双鱼座",
-};
-const ZH_ELEMENTS: Record<string, string> = { Fire: "火象", Earth: "土象", Air: "风象", Water: "水象" };
-const EN_DATES: Record<string, string> = {
-  Aries: "Mar 21 – Apr 19", Taurus: "Apr 20 – May 20", Gemini: "May 21 – Jun 21", Cancer: "Jun 22 – Jul 22",
-  Leo: "Jul 23 – Aug 22", Virgo: "Aug 23 – Sep 22", Libra: "Sep 23 – Oct 23", Scorpio: "Oct 24 – Nov 22",
-  Sagittarius: "Nov 23 – Dec 21", Capricorn: "Dec 22 – Jan 19", Aquarius: "Jan 20 – Feb 18", Pisces: "Feb 19 – Mar 20",
-};
-const ZH_DATES: Record<string, string> = {
-  Aries: "3.21 – 4.19", Taurus: "4.20 – 5.20", Gemini: "5.21 – 6.21", Cancer: "6.22 – 7.22",
-  Leo: "7.23 – 8.22", Virgo: "8.23 – 9.22", Libra: "9.23 – 10.23", Scorpio: "10.24 – 11.22",
-  Sagittarius: "11.23 – 12.21", Capricorn: "12.22 – 1.19", Aquarius: "1.20 – 2.18", Pisces: "2.19 – 3.20",
-};
 
 interface ZodiacResult {
   zodiacSign: string;
@@ -136,9 +111,8 @@ const ZodiacFlow = () => {
   const imagePromiseRef = useRef<Promise<string | null> | null>(null);
 
   const isZh = locale === "zh";
-  const localizeName = (n: string) => isZh ? (ZH_NAMES[n] || n) : n;
-  const localizeElement = (e: string) => isZh ? (ZH_ELEMENTS[e] || e) : e;
-  const localizeDate = (n: string) => isZh ? ZH_DATES[n] : EN_DATES[n];
+  const localizeName = (n: string) => localizeZodiacName(n, isZh);
+  const localizeElement = (e: string) => localizeZodiacElement(e, isZh);
 
   const startImageFetch = useCallback((signName: string, element: string) => {
     setImageLoading(true);
@@ -250,30 +224,11 @@ const ZodiacFlow = () => {
 
   if (!selectedSign) {
     return (
-      <div className="min-h-screen bg-gradient-calm flex flex-col">
-        <div className="flex items-center gap-3 px-4 py-3">
-          <button onClick={() => navigate("/assessment")} className="text-muted-foreground"><ArrowLeft className="h-5 w-5" /></button>
-          <h2 className="text-sm font-semibold text-foreground">{t("assessmentFlow.zodiac.title")}</h2>
-        </div>
-        <div className="px-6 pt-4">
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-6">
-            <div className="mx-auto mb-4 h-20 w-20 rounded-full bg-gradient-mystic flex items-center justify-center"><span className="text-4xl">⭐</span></div>
-            <h1 className="font-display text-xl font-bold text-foreground">{t("assessmentFlow.zodiac.introTitle")}</h1>
-            <p className="mt-1 text-sm text-muted-foreground">{t("assessmentFlow.zodiac.introDesc")}</p>
-          </motion.div>
-          <div className="grid grid-cols-3 gap-3">
-            {ZODIAC_SIGNS.map((sign, i) => (
-              <motion.button key={sign.name} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.04 }} whileTap={{ scale: 0.95 }}
-                onClick={() => handleSelectSign(sign.name)}
-                className="flex flex-col items-center gap-1 rounded-2xl bg-card p-4 shadow-card">
-                <span className="text-2xl">{sign.icon}</span>
-                <span className="text-xs font-semibold text-foreground">{localizeName(sign.name)}</span>
-                <span className="text-[10px] text-muted-foreground">{localizeDate(sign.name)}</span>
-              </motion.button>
-            ))}
-          </div>
-        </div>
-      </div>
+      <ZodiacSignPicker
+        isZh={isZh}
+        onBack={() => navigate("/assessment")}
+        onSelect={handleSelectSign}
+      />
     );
   }
 

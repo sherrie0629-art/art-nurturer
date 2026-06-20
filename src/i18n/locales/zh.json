@@ -81,7 +81,6 @@
     "promptViewVault": "登录后查看你的收藏 ✨",
     "promptViewSoulMap": "登录后查看灵魂星图 🌟",
     "promptViewHistory": "登录后查看聊天历史 📖",
-    "promptDailyTarot": "登录后开启每日塔罗",
     "promptContinueChat": "登录后保存聊天记录，继续探索更多 ✨",
     "promptAssessmentAI": "登录后生成完整 AI 解读，并把测评报告保存到你的档案。",
     "redirecting": "正在跳转..."
@@ -129,12 +128,18 @@
       "perDay": "1 次/天"
     }
   },
+  "notifications": {
+    "title": "通知",
+    "subtitle": "来自朋友的关心与提醒",
+    "empty": "暂无通知",
+    "emptyHint": "当你在聊天里提到未来的计划，TA 们会在合适的时候主动来关心你。",
+    "markAllRead": "全部已读",
+    "signInHint": "登录后查看通知"
+  },
   "home": {
     "appName": "心灵密语",
     "appTagline": "你的 AI 疗愈空间",
     "tagline": "在喧嚣的世界里，遇见懂你的灵魂",
-    "dailyTarot": "每日塔罗",
-    "dailyTarotDesc": "抽一张牌 · 收获今日洞见 🔮",
     "dailyFortune": "今日求签",
     "dailyFortuneDesc": "诚心一签 · AI 为你现代解签 🪔",
     "chemistry": "缘分配对",
@@ -279,6 +284,16 @@
       "title": "星座运势",
       "introTitle": "选择你的星座",
       "introDesc": "10 道直觉小题 + AI 帮你拆成好读的能量卡片",
+      "pickerEyebrow": "星盘入口",
+      "pickerHint": "轻触星座，开启你的专属星语问答",
+      "filterAll": "全部",
+      "tapToBegin": "开启星语 →",
+      "elementTagline": {
+        "fire": "热情、行动力与直觉火花",
+        "earth": "稳定、务实与感官之美",
+        "air": "思维、社交与轻盈变奏",
+        "water": "情绪、直觉与深层共鸣"
+      },
       "resultsTitle": "你的运势",
       "reading": "解读",
       "readingHint": "分块读，不用啃长文",
@@ -366,8 +381,10 @@
       "traitThem4": "情绪稳定到离谱",
       "traitThem5": "像只难驯服的猫",
       "stageBlockTitle": "我们正在…",
+      "stageBlockHint": "选择当前关系阶段（可选）",
       "vibeBlockTitle": "最近最像哪一幕",
-      "analyzeBtnFancy": "🎰 摇出我们的恋爱卡面",
+      "vibeBlockHint": "最近相处的感觉（可选）",
+      "analyzeBtnFancy": "生成缘分报告",
       "stageSubs": {
         "crush": "在朋友圈点赞但不敢评论",
         "talking": "凌晨一点还在回消息",
@@ -645,26 +662,6 @@
     "chat": "对话",
     "source": "来源：{{src}}"
   },
-  "dailyTarot": {
-    "title": "每日塔罗",
-    "subtitle": "抽一张牌 · 收获今日洞见",
-    "focus": "凝心静气，让牌为你揭示今日所需。",
-    "drawBtn": "抽今日的牌",
-    "drawing": "正在解读塔罗…",
-    "reversed": "逆位",
-    "upright": "正位",
-    "energy": "能量 {{n}}/5",
-    "todayReading": "今日解读",
-    "saveShare": "保存 & 分享",
-    "generatingArt": "正在生成牌面图…",
-    "artFail": "牌面图暂不可用",
-    "drawFail": "抽牌失败，请重试",
-    "posterIntro": "正在生成你的海报…",
-    "posterFail": "海报生成失败",
-    "shareText": "发现你的每日塔罗洞见 ✨",
-    "loading": "加载中...",
-    "talkToXinggui": "找星轨抽张星之牌 ⭐"
-  },
   "conversations": {
     "title": "聊天历史",
     "subtitle": "与每位角色的对话已合并为一条主线，请从角色入口继续聊",
@@ -812,7 +809,7 @@
       "每日 20 条对话",
       "每日 5 次测评",
       "基础角色访问",
-      "每日塔罗抽牌"
+      "每日灵签"
     ],
     "free": "免费",
     "perMonth": "/月",
@@ -885,6 +882,48 @@
     ],
     "ctaQuote": "「在喧嚣的世界里，找到真正懂你的灵魂。」",
     "footer": "© {{y}} 心灵密语。保留所有权利。"
+  },
+  "onboarding": {
+    "skip": "跳过",
+    "next": "继续",
+    "step1": {
+      "headline": "四位懂你的 AI 伙伴，随时倾听",
+      "subline": "聊天、测评、收藏秘密——在这里慢慢认识自己。"
+    },
+    "step2": {
+      "title": "你想从哪里开始？",
+      "subtitle": "都可以，随时在首页切换",
+      "chatTitle": "先聊聊",
+      "chatDesc": "从暖暖开始，无需登录也能试聊",
+      "assessTitle": "先做个测评",
+      "assessDesc": "3 分钟 MBTI，认识自己的性格类型",
+      "hint": "登录后可保存进度，解锁宝库与灵魂星图"
+    },
+    "step3": {
+      "title": "聊得越多，解锁越多",
+      "subtitle": "这是你的长期旅程",
+      "start": "开始体验",
+      "items": {
+        "bond": {
+          "title": "聊出羁绊",
+          "desc": "对话越多，与角色的信任越深"
+        },
+        "secrets": {
+          "title": "解锁秘密",
+          "desc": "故事碎片与真相，藏在角色档案与宝库"
+        },
+        "map": {
+          "title": "点亮灵魂星图",
+          "desc": "测评与对话都会留下星座与碎片（与「灵魂镜像」不同，镜像需聊满 15 轮）"
+        }
+      }
+    }
+  },
+  "chatProgress": {
+    "guest": "登录后保存进度，解锁角色故事与宝库",
+    "lore": "再聊 {{n}} 轮，解锁 Lv.{{level}} 故事碎片",
+    "mirror": "再聊 {{n}} 轮，可生成灵魂镜像 ✨",
+    "fragment": "再聊 {{n}} 轮，获得灵魂碎片"
   },
   "notFound": {
     "title": "404",
@@ -1020,11 +1059,6 @@
         "wechat": "缘分合盘：{{title}}\n契合度 {{score}}% 💕\n{{desc}}\n\n测测你们的缘分 👉 {{url}}",
         "xiaohongshu": "💕 缘分合盘｜{{title}}\n契合度 {{score}}%\n\n{{desc}}\n\n#缘分合盘 #CP #恋爱 #心灵密语 #情感\n\n🔗 {{url}}",
         "weibo": "【缘分合盘】{{title}} 契合度 {{score}}% 💕 {{desc}} #缘分合盘# #心灵密语# {{url}}"
-      },
-      "tarot": {
-        "wechat": "今日塔罗：{{title}} 🔮\n{{desc}}\n\n来抽一张属于你的牌 👉 {{url}}",
-        "xiaohongshu": "🔮 每日塔罗｜{{title}}\n\n{{desc}}\n\n#塔罗 #每日塔罗 #心灵密语 #今日指引 #灵性成长\n\n🔗 {{url}}",
-        "weibo": "【每日塔罗】{{title}} 🔮 {{desc}} #塔罗# #心灵密语# {{url}}"
       },
       "deepReport": {
         "wechat": "我的深度心理报告：{{title}} 📖\n{{desc}}\n\n读懂自己的内在地图 👉 {{url}}",
@@ -1360,6 +1394,7 @@
     "later": "稍后再说",
     "milestoneToast": "又聊了 {{n}} 轮 · 灵魂镜像可以更新了",
     "milestoneToastAction": "去看看",
+    "needMoreTurns": "再聊 {{n}} 轮后可生成灵魂镜像",
     "newHighlights": "本轮新看见",
     "editionLabel": "第 {{n}} 版",
     "generatingTitle": "四个视角正在凝视你…",

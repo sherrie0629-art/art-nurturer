@@ -212,42 +212,32 @@ const CompatibilityFlow = () => {
       </div>
       <AnimatePresence mode="wait">
         {step === "input" && (
-          <motion.div key="input" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} className="relative px-4 md:px-6 mt-2 space-y-5">
-            {/* Floating ambience */}
+          <motion.div key="input" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="relative px-4 md:px-6 mt-2 space-y-6 max-w-3xl mx-auto">
+            {/* Ambient glow — no floating emoji */}
             <div className="pointer-events-none absolute inset-0 overflow-hidden -z-10">
-              {["💗", "✨", "🌙", "💫", "🎴", "💕"].map((e, i) => (
-                <motion.span
-                  key={i}
-                  className="absolute text-2xl opacity-20 select-none"
-                  style={{ left: `${(i * 17 + 8) % 90}%`, top: `${(i * 23 + 10) % 80}%` }}
-                  animate={{ y: [0, -14, 0], rotate: [0, 8, -8, 0] }}
-                  transition={{ duration: 6 + i, repeat: Infinity, ease: "easeInOut", delay: i * 0.4 }}
-                >
-                  {e}
-                </motion.span>
-              ))}
+              <div className="absolute -top-24 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-primary/8 blur-3xl" />
+              <div className="absolute top-1/2 -right-20 h-56 w-56 rounded-full bg-rose-warm/5 blur-3xl" />
             </div>
 
             {/* Intro */}
-            <div className="rounded-2xl bg-card/80 backdrop-blur p-4 shadow-card text-center">
-              <Heart className="h-8 w-8 text-rose-warm mx-auto mb-2 animate-pulse" />
-              <h3 className="font-display text-base font-bold text-foreground">{t("assessmentFlow.compatibility.introTitle")}</h3>
-              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{t("assessmentFlow.compatibility.introDesc")}</p>
+            <div className="rounded-2xl border border-border/60 bg-card/70 backdrop-blur-sm px-5 py-6 text-center">
+              <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full border border-primary/30 bg-primary/10">
+                <Heart className="h-5 w-5 text-primary" />
+              </div>
+              <h3 className="font-display text-lg font-bold text-foreground">{t("assessmentFlow.compatibility.introTitle")}</h3>
+              <p className="text-sm text-muted-foreground mt-2 leading-relaxed max-w-md mx-auto">{t("assessmentFlow.compatibility.introDesc")}</p>
             </div>
 
-            {/* Act 1 — dueling role cards */}
-            <div className="relative grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-              {/* Center heart link, only on md+ */}
-              <motion.div
+            {/* Profile pair */}
+            <div className="relative grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
+              <div
                 aria-hidden
-                className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-rose-warm to-secondary shadow-glow"
-                animate={{ scale: [1, 1.18, 1] }}
-                transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+                className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 h-9 w-9 items-center justify-center rounded-full border border-primary/40 bg-card shadow-card"
               >
-                <Heart className="h-5 w-5 text-white fill-white" />
-              </motion.div>
+                <span className="font-display text-xs text-gold-light">&</span>
+              </div>
 
-              {(["mine", "them"] as const).map((side, idx) => {
+              {(["mine", "them"] as const).map((side) => {
                 const isMine = side === "mine";
                 const name = isMine ? myName : partnerName;
                 const setName = isMine ? setMyName : setPartnerName;
@@ -260,37 +250,22 @@ const CompatibilityFlow = () => {
                 const headerKey = isMine ? "aboutMeFancy" : "aboutThemFancy";
                 const namePh = isMine ? "codenameMinePh" : "codenameThemPh";
                 const traitsPh = isMine ? "traitsMinePh" : "traitsThemPh";
-                const ribbon = isMine ? "from-indigo/80 to-lavender/80" : "from-rose-warm/80 to-gold/80";
                 return (
-                  <motion.div
+                  <div
                     key={side}
-                    initial={{ opacity: 0, x: isMine ? -40 : 40, rotate: isMine ? -2 : 2 }}
-                    animate={{ opacity: 1, x: 0, rotate: 0 }}
-                    transition={{ type: "spring", stiffness: 110, damping: 14, delay: 0.05 + idx * 0.08 }}
-                    whileHover={{ y: -3, rotate: isMine ? -0.6 : 0.6 }}
-                    className="relative rounded-3xl bg-card p-5 shadow-card border-2 border-border/40 mt-3"
+                    className="relative rounded-2xl border border-border/70 bg-card/80 p-5 shadow-card"
                   >
-                    {/* Decorative blur clipped to card */}
-                    <div className="pointer-events-none absolute inset-0 rounded-3xl overflow-hidden">
-                      <div className="absolute -top-10 -right-10 h-28 w-28 rounded-full bg-gradient-to-br from-white/40 to-transparent blur-2xl" />
-                    </div>
-                    {/* Card ribbon / level sticker */}
-                    <div className={`absolute -top-3 left-4 z-10 rounded-full bg-gradient-to-r ${ribbon} px-3 py-1 text-[10px] font-bold text-white tracking-widest shadow-md`}>
-                      LV.??
+                    <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border/50">
+                      <span className={`h-8 w-1 rounded-full ${isMine ? "bg-primary" : "bg-rose-warm"}`} />
+                      <h4 className="font-display text-sm font-semibold text-foreground">{t(`assessmentFlow.compatibility.${headerKey}`)}</h4>
                     </div>
 
-                    <div className="flex items-center justify-between mb-3 pt-1">
-                      <h4 className="font-display text-sm font-bold text-foreground">{t(`assessmentFlow.compatibility.${headerKey}`)}</h4>
-                      <span className="text-[10px] text-muted-foreground">#{isMine ? "P1" : "P2"}</span>
-                    </div>
-
-                    {/* Codename */}
                     <div className="space-y-3">
                       <input
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder={t(`assessmentFlow.compatibility.${namePh}`)}
-                        className="w-full rounded-xl border border-border bg-background/60 px-3 py-2.5 text-sm font-medium text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-rose-warm/40 transition"
+                        className="w-full rounded-xl border border-border bg-background/60 px-3 py-2.5 text-sm font-medium text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
                       />
 
                       {/* MBTI badge popover */}
@@ -303,7 +278,7 @@ const CompatibilityFlow = () => {
                             {mbti ? (
                               <span className="flex items-center gap-2"><span className="text-base">{MBTI_EMOJI[mbti]}</span><span className="font-semibold tracking-wider">{mbti}</span></span>
                             ) : (
-                              <span>🎫 {t("assessmentFlow.compatibility.mbtiBadgeEmpty")}</span>
+                              <span>{t("assessmentFlow.compatibility.mbtiBadgeEmpty")}</span>
                             )}
                             <span className="text-xs opacity-60">{mbti ? "换" : "选"}</span>
                           </button>
@@ -318,7 +293,7 @@ const CompatibilityFlow = () => {
                                   setMbti(next);
                                   if (next) setOpenMbtiSide(null);
                                 }}
-                                className={`flex flex-col items-center gap-0.5 rounded-lg border px-1 py-2 text-[11px] font-semibold transition ${mbti === m ? "border-secondary bg-secondary/20 text-secondary scale-105" : "border-border bg-background hover:bg-muted"}`}
+                                className={`flex flex-col items-center gap-0.5 rounded-lg border px-1 py-2 text-[11px] font-semibold transition ${mbti === m ? "border-primary bg-primary/15 text-gold-light" : "border-border bg-background hover:bg-muted/80"}`}
                               >
                                 <span className="text-lg">{MBTI_EMOJI[m]}</span>
                                 <span>{m}</span>
@@ -342,7 +317,7 @@ const CompatibilityFlow = () => {
                                 <span className="text-[11px] text-muted-foreground">{ZODIAC_DATES[zodiac]}</span>
                               </span>
                             ) : (
-                              <span>✨ {t("assessmentFlow.compatibility.zodiacPickerEmpty")}</span>
+                              <span>{t("assessmentFlow.compatibility.zodiacPickerEmpty")}</span>
                             )}
                             <span className="text-xs opacity-60">{zodiac ? t("assessmentFlow.compatibility.zodiacPickerChange") : "选"}</span>
                           </button>
@@ -358,11 +333,11 @@ const CompatibilityFlow = () => {
                                   setZodiac(next);
                                   if (next) setOpenZodiacSide(null);
                                 }}
-                                className={`flex flex-col items-center gap-0.5 rounded-lg border px-1 py-2 transition ${zodiac === s ? "border-transparent bg-gradient-to-br from-gold to-rose-warm text-white shadow-glow scale-105" : "border-border bg-background hover:bg-muted text-foreground"}`}
+                                className={`flex flex-col items-center gap-0.5 rounded-lg border px-1 py-2 transition ${zodiac === s ? "border-primary bg-primary/15 text-gold-light" : "border-border bg-background hover:bg-muted/80 text-foreground"}`}
                               >
                                 <span className="text-xl leading-none">{ZODIAC_EMOJI[s]}</span>
                                 <span className="text-[11px] font-medium mt-1">{t(`assessmentFlow.compatibility.zodiacName_${s}`)}</span>
-                                <span className={`text-[10px] ${zodiac === s ? "text-white/80" : "text-muted-foreground"}`}>{ZODIAC_DATES[s]}</span>
+                                <span className={`text-[10px] ${zodiac === s ? "text-gold-light/70" : "text-muted-foreground"}`}>{ZODIAC_DATES[s]}</span>
                               </button>
                             ))}
                           </div>
@@ -386,7 +361,7 @@ const CompatibilityFlow = () => {
                         onChange={(e) => setTraits(e.target.value)}
                         placeholder={t(`assessmentFlow.compatibility.${traitsPh}`)}
                         rows={2}
-                        className="w-full rounded-xl border border-border bg-background/60 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-rose-warm/40 resize-none"
+                        className="w-full rounded-xl border border-border bg-background/60 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
                       />
                       <div className="flex flex-wrap items-center gap-1.5">
                         <span className="text-[11px] text-muted-foreground/70 mr-0.5">
@@ -410,99 +385,81 @@ const CompatibilityFlow = () => {
                         })}
                       </div>
                     </div>
-                  </motion.div>
+                  </div>
                 );
               })}
             </div>
 
-            {/* Act 2 — stage story carousel */}
-            <div className="rounded-2xl bg-card/80 backdrop-blur p-4 shadow-card">
-              <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-1.5">
-                <span>🎬</span> {t("assessmentFlow.compatibility.stageBlockTitle")}
-              </h4>
-              <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 snap-x snap-mandatory">
+            {/* Relationship stage */}
+            <div className="rounded-2xl border border-border/60 bg-card/80 p-5 shadow-card">
+              <h4 className="text-sm font-semibold text-foreground mb-1">{t("assessmentFlow.compatibility.stageBlockTitle")}</h4>
+              <p className="text-[11px] text-muted-foreground mb-4">{t("assessmentFlow.compatibility.stageBlockHint", { defaultValue: "选择当前关系阶段（可选）" })}</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {STAGE_KEYS.map((k) => {
                   const active = stage === k;
                   return (
-                    <motion.button
+                    <button
                       key={k}
                       type="button"
                       onClick={() => setStage(active ? "" : k)}
-                      whileTap={{ scale: 0.95 }}
-                      animate={{ scale: active ? 1.04 : 1, opacity: stage && !active ? 0.55 : 1 }}
-                      className={`snap-start shrink-0 w-40 rounded-2xl p-3 text-left border-2 transition ${active ? "border-rose-warm bg-gradient-to-br from-rose-warm/15 to-gold/10 shadow-glow" : "border-border bg-background hover:border-rose-warm/40"}`}
+                      className={`rounded-xl border px-3 py-3 text-left transition ${
+                        active
+                          ? "border-primary/50 bg-primary/10 shadow-sm"
+                          : "border-border bg-background/60 hover:border-primary/25 opacity-90"
+                      } ${stage && !active ? "opacity-50" : ""}`}
                     >
-                      <div className="text-3xl mb-1">{STAGE_EMOJI[k]}</div>
-                      <div className="text-sm font-semibold text-foreground">{t(`assessmentFlow.compatibility.stages.${k}`).replace(/^[^\s]+\s/, "")}</div>
-                      <div className="text-[11px] text-muted-foreground leading-snug mt-0.5">{t(`assessmentFlow.compatibility.stageSubs.${k}`)}</div>
-                    </motion.button>
+                      <div className="text-lg mb-1 leading-none">{STAGE_EMOJI[k]}</div>
+                      <div className="text-xs font-medium text-foreground">{t(`assessmentFlow.compatibility.stages.${k}`).replace(/^[^\s]+\s/, "")}</div>
+                      <div className="text-[10px] text-muted-foreground leading-snug mt-1 line-clamp-2">{t(`assessmentFlow.compatibility.stageSubs.${k}`)}</div>
+                    </button>
                   );
                 })}
               </div>
             </div>
 
-            {/* Act 3 — vibe reaction grid */}
-            <div className="rounded-2xl bg-card/80 backdrop-blur p-4 shadow-card">
-              <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-1.5">
-                <span>💫</span> {t("assessmentFlow.compatibility.vibeBlockTitle")}
-              </h4>
-              <div className="grid grid-cols-3 gap-2">
+            {/* Recent vibe */}
+            <div className="rounded-2xl border border-border/60 bg-card/80 p-5 shadow-card">
+              <h4 className="text-sm font-semibold text-foreground mb-1">{t("assessmentFlow.compatibility.vibeBlockTitle")}</h4>
+              <p className="text-[11px] text-muted-foreground mb-4">{t("assessmentFlow.compatibility.vibeBlockHint", { defaultValue: "最近相处的感觉（可选）" })}</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {VIBE_KEYS.map((k) => {
                   const active = vibe === k;
                   return (
-                    <motion.button
+                    <button
                       key={k}
                       type="button"
                       onClick={() => setVibe(active ? "" : k)}
-                      whileTap={{ scale: 0.9 }}
-                      animate={active ? { rotate: [0, -6, 6, 0] } : {}}
-                      transition={{ duration: 0.4 }}
-                      className={`relative flex flex-col items-center gap-1 rounded-2xl px-2 py-3 border-2 transition ${active ? "border-secondary bg-secondary/10 shadow-glow" : "border-border bg-background hover:border-secondary/40"}`}
+                      className={`flex flex-col items-center gap-1.5 rounded-xl border px-2 py-3 transition ${
+                        active
+                          ? "border-primary/50 bg-primary/10"
+                          : "border-border bg-background/60 hover:border-primary/25"
+                      } ${vibe && !active ? "opacity-50" : ""}`}
                     >
-                      <span className="text-2xl">{VIBE_EMOJI[k]}</span>
-                      <span className="text-[11px] font-medium text-foreground">{t(`assessmentFlow.compatibility.vibes.${k}`).replace(/^[^\s]+\s/, "")}</span>
-                      {active && (
-                        <motion.span
-                          initial={{ scale: 0, opacity: 0 }}
-                          animate={{ scale: 1.4, opacity: 0 }}
-                          transition={{ duration: 0.8 }}
-                          className="absolute inset-0 rounded-2xl bg-secondary/30"
-                        />
-                      )}
-                    </motion.button>
+                      <span className="text-xl leading-none">{VIBE_EMOJI[k]}</span>
+                      <span className="text-[11px] font-medium text-foreground text-center leading-snug">
+                        {t(`assessmentFlow.compatibility.vibes.${k}`).replace(/^[^\s]+\s/, "")}
+                      </span>
+                    </button>
                   );
                 })}
               </div>
             </div>
 
             {/* Submit */}
-            <motion.button
-              whileTap={{ scale: 0.96, rotate: -1 }}
-              whileHover={{ y: -2 }}
+            <button
+              type="button"
               onClick={handleSubmit}
-              className="relative w-full overflow-hidden rounded-2xl bg-gradient-to-r from-rose-warm via-gold to-secondary py-4 text-base font-bold text-white flex items-center justify-center gap-2 shadow-glow"
+              className="w-full rounded-2xl bg-gradient-golden py-3.5 text-sm font-semibold text-primary-foreground flex items-center justify-center gap-2 shadow-glow transition active:opacity-90"
             >
-              <motion.span
-                aria-hidden
-                className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/40 to-transparent"
-                animate={{ x: ["-100%", "100%"] }}
-                transition={{ duration: 2.4, repeat: Infinity, ease: "linear" }}
-              />
-              <motion.span animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 1.2, repeat: Infinity }}>💗</motion.span>
-              <span className="relative">{t("assessmentFlow.compatibility.analyzeBtnFancy")}</span>
-            </motion.button>
+              <Sparkles className="h-4 w-4" />
+              {t("assessmentFlow.compatibility.analyzeBtnFancy")}
+            </button>
           </motion.div>
         )}
 
         {step === "loading" && (
-          <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center justify-center mt-24 gap-6 px-6">
-            <motion.div
-              animate={{ rotate: [0, 12, -12, 0], scale: [1, 1.1, 1] }}
-              transition={{ repeat: Infinity, duration: 1.6, ease: "easeInOut" }}
-              className="text-6xl"
-            >
-              🎲
-            </motion.div>
+          <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center justify-center mt-24 gap-5 px-6">
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
             <div className="h-12 overflow-hidden text-center">
               <AnimatePresence mode="wait">
                 <motion.p
@@ -525,9 +482,8 @@ const CompatibilityFlow = () => {
           <motion.div key="result" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="px-6 mt-2 space-y-4">
             {/* Card 1 — Destiny Card */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.92, rotateY: -8 }}
-              animate={{ opacity: 1, scale: 1, rotateY: 0 }}
-              transition={{ type: "spring", stiffness: 120, damping: 14 }}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
               className={`relative overflow-hidden rounded-3xl border bg-gradient-to-br ${theme.from} ${theme.to} ${theme.border} p-7 text-center ${theme.fg} ${theme.glow}`}
             >
               <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: theme.overlay }} />

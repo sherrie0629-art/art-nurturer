@@ -10,6 +10,7 @@ import { localizeAgent } from "@/lib/localizeAgent";
 import SEO from "@/components/SEO";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { isOnboardingDone } from "@/lib/onboarding";
 
 const assessments = [
   { id: "mbti", path: "/assessment/mbti" },
@@ -26,6 +27,12 @@ const Index = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const [bondLevels, setBondLevels] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    if (!isOnboardingDone()) {
+      navigate("/welcome", { replace: true });
+    }
+  }, [navigate]);
 
   useEffect(() => {
     if (!user) return;
@@ -92,7 +99,7 @@ const Index = () => {
               </div>
             </motion.div>
 
-            {/* 每日塔罗 */}
+            {/* 今日求签 */}
             <motion.button
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}

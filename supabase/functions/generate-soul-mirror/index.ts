@@ -302,6 +302,26 @@ serve(async (req) => {
     for (const b of (bondsRes.data as any[] || [])) {
       bondsMap[b.agent_id] = { bond_level: b.bond_level || 1, total_turns: b.total_turns || 0 };
     }
+
+    const MIRROR_MIN_TURNS = 15;
+    if (singleAgentId) {
+      const turns = bondsMap[singleAgentId]?.total_turns ?? 0;
+      if (turns < MIRROR_MIN_TURNS) {
+        return new Response(
+          JSON.stringify({ error: "insufficient_turns", minTurns: MIRROR_MIN_TURNS, currentTurns: turns }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+    } else {
+      const maxTurns = Math.max(0, ...Object.values(bondsMap).map((b) => b.total_turns));
+      if (maxTurns < MIRROR_MIN_TURNS) {
+        return new Response(
+          JSON.stringify({ error: "insufficient_turns", minTurns: MIRROR_MIN_TURNS, currentTurns: maxTurns }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+    }
+
     const profileFacts = (factsRes.data as any[] || []).map(
       (f) => `[${f.category}] ${f.key}: ${f.value}`,
     );

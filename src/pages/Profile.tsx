@@ -10,6 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAchievements } from "@/hooks/useAchievements";
+import { useNotifications } from "@/hooks/useNotifications";
 import SEO from "@/components/SEO";
 
 const Profile = () => {
@@ -22,6 +23,7 @@ const Profile = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const { chatCount, assessmentCount } = useSubscription(user?.id, user?.created_at);
   const { unlockedIds } = useAchievements(user?.id);
+  const { unreadCount: notificationUnread } = useNotifications(user?.id);
 
   useEffect(() => {
     if (!user) return;
@@ -45,7 +47,7 @@ const Profile = () => {
     { icon: Star, label: t("profile.menu.reports"), count: stats.assessments, action: () => navigate("/assessment-reports") },
     { icon: Gem, label: t("profile.menu.vault"), action: () => navigate("/vault") },
     { icon: Heart, label: t("profile.menu.chemistry"), action: () => navigate("/compatibility-reports") },
-    { icon: Bell, label: t("profile.menu.notifications"), action: () => {} },
+    { icon: Bell, label: t("profile.menu.notifications"), count: notificationUnread, action: () => navigate("/notifications") },
     { icon: Settings, label: t("profile.menu.settings"), action: () => navigate("/settings") },
     ...(isAdmin ? [{ icon: Shield, label: t("profile.menu.admin"), action: () => navigate("/admin") }] : []),
   ];

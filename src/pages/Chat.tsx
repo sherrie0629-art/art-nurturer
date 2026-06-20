@@ -7,6 +7,7 @@ import { useLocale } from "@/hooks/useLocale";
 import { useQuoteCard } from "@/hooks/useQuoteCard";
 import ShareSheet from "@/components/ShareSheet";
 import ReactMarkdown from "react-markdown";
+import ChatProgressBar from "@/components/ChatProgressBar";
 import BottomNav from "@/components/BottomNav";
 import DesktopLayout from "@/components/DesktopLayout";
 import BondIndicator from "@/components/BondIndicator";
@@ -48,7 +49,7 @@ import SoulMirrorDialog from "@/components/SoulMirrorDialog";
 import {
   MIRROR_TURN_INTERVAL,
   getLastMirrorPromptTurn,
-  getPendingMirrorMilestone,
+  getMirrorPromptOnTurnComplete,
   markMirrorPrompted,
 } from "@/lib/soulMirrorRules";
 
@@ -127,16 +128,22 @@ const Chat = () => {
   const emotionResult = (location.state as any)?.emotionResult as { emotionLevel: string; title: string; description: string; traits: { burnout: number; energy: number; boundaries: number; sleep: number }; suggestions: string[] } | undefined;
   const enneagramResult = (location.state as any)?.enneagramResult as { type: number; wing?: string; title: string; description: string; coreFear: string; coreDesire: string; growthPath: string; stressArrow: string; advice: string } | undefined;
   const zodiacResult = (location.state as any)?.zodiacResult as { zodiacSign: string; element: string; title: string; description: string; traits: any; luckyItems?: any; advice: any } | undefined;
-  const tarotResult = (location.state as any)?.tarotResult as { cardName: string; isReversed: boolean; energyScore: number; interpretation: string; actionTip: string } | undefined;
   const compatibilityResult = (location.state as any)?.compatibilityResult as { partnerName: string; partnerMbti?: string; partnerZodiac?: string; overallScore: number; title: string; summary: string; dimensions: any; strengths: string[]; conflicts: string[]; loveLanguage: { mine: string; partner: string; tip: string }; deepAnalysis?: string } | undefined;
   const fortuneStickResult = (location.state as any)?.fortuneStick as { stickNumber: number; level: string; title: string; poem: string; interpretation: string; actionTip?: string } | undefined;
+  const followupNotification = (location.state as any)?.followupNotification as {
+    id: string;
+    agentId: string;
+    title: string;
+    body: string;
+    topic?: string;
+  } | undefined;
   const mbtiAutoSentRef = useRef(false);
   const emotionAutoSentRef = useRef(false);
   const enneagramAutoSentRef = useRef(false);
   const zodiacAutoSentRef = useRef(false);
-  const tarotAutoSentRef = useRef(false);
   const compatibilityAutoSentRef = useRef(false);
   const fortuneStickAutoSentRef = useRef(false);
+  const followupNotifShownRef = useRef(false);
 
   const getWelcomeMessage = (a: typeof agent) => getAgentWelcome(a, t);
 
@@ -227,31 +234,29 @@ const Chat = () => {
     load();
   }, [user, agentId]);
 
-  // Soul Mirror: remind every MIRROR_TURN_INTERVAL turns (15, 30, 45…) per agent.
-  const mirrorPromptFiredRef = useRef<number | null>(null);
-  useEffect(() => {
-    if (!user || !agentId) return;
-    const pending = getPendingMirrorMilestone(
-      getLastMirrorPromptTurn(user.id, agentId),
-      totalTurns,
-    );
-    if (!pending) return;
-    if (mirrorPromptFiredRef.current === pending) return;
-    mirrorPromptFiredRef.current = pending;
-    markMirrorPrompted(user.id, agentId, pending);
-
-    if (pending === MIRROR_TURN_INTERVAL) {
-      setTimeout(() => setSoulMirrorOpen(true), 600);
-      return;
-    }
-    toast(t("soulMirror.milestoneToast", { n: MIRROR_TURN_INTERVAL }), {
-      action: {
-        label: t("soulMirror.milestoneToastAction"),
-        onClick: () => setSoulMirrorOpen(true),
-      },
-      duration: 8000,
-    });
-  }, [user, agentId, totalTurns, t]);
+  const maybePromptSoulMirror = useCallback(
+    (newTotalTurns: number) => {
+      if (!user?.id || !agentId) return;
+      const pending = getMirrorPromptOnTurnComplete(
+        getLastMirrorPromptTurn(user.id, agentId),
+        newTotalTurns,
+      );
+      if (!pending) return;
+      markMirrorPrompted(user.id, agentId, pending);
+      if (pending === MIRROR_TURN_INTERVAL) {
+        setTimeout(() => setSoulMirrorOpen(true), 600);
+        return;
+      }
+      toast(t("soulMirror.milestoneToast", { n: MIRROR_TURN_INTERVAL }), {
+        action: {
+          label: t("soulMirror.milestoneToastAction"),
+          onClick: () => setSoulMirrorOpen(true),
+        },
+        duration: 8000,
+      });
+    },
+    [user, agentId, t],
+  );
 
   const initialScrollDone = useRef(false);
 
@@ -300,7 +305,7 @@ const Chat = () => {
     return () => window.removeEventListener(GUEST_MIGRATED_EVENT, handler as EventListener);
   }, [agentId]);
 
-  const hasAssessmentContext = !!(mbtiResult || emotionResult || enneagramResult || zodiacResult || tarotResult || compatibilityResult || fortuneStickResult);
+  const hasAssessmentContext = !!(mbtiResult || emotionResult || enneagramResult || zodiacResult || compatibilityResult || fortuneStickResult);
 
   useEffect(() => {
     const loadGen = ++historyLoadGenRef.current;
@@ -425,11 +430,6 @@ const Chat = () => {
           memCtx.push(isZh
             ? `[刚刚完成测评] 用户完成了星座解读：${zodiacResult.zodiacSign}（${zodiacResult.element}）—${zodiacResult.title}。${zodiacResult.description}。特质：${JSON.stringify(zodiacResult.traits)}。建议：${adv}`
             : `[Just assessed] User completed Zodiac reading: ${zodiacResult.zodiacSign} (${zodiacResult.element}) — ${zodiacResult.title}. ${zodiacResult.description}. Traits: ${JSON.stringify(zodiacResult.traits)}. Advice: ${adv}`);
-        }
-        if (tarotResult) {
-          memCtx.push(isZh
-            ? `[刚刚完成测评] 用户刚抽了一张塔罗牌：${tarotResult.cardName}（${tarotResult.isReversed ? "逆位" : "正位"}），能量值 ${tarotResult.energyScore}。解读：${tarotResult.interpretation}。行动建议：${tarotResult.actionTip}`
-            : `[Just assessed] User just drew a tarot card: ${tarotResult.cardName} (${tarotResult.isReversed ? "Reversed" : "Upright"}), energy ${tarotResult.energyScore}. Interpretation: ${tarotResult.interpretation}. Action tip: ${tarotResult.actionTip}`);
         }
         if (fortuneStickResult) {
           const f = fortuneStickResult;
@@ -620,15 +620,6 @@ const Chat = () => {
   }, [historyLoaded, zodiacResult, user]);
 
   useEffect(() => {
-    if (tarotResult && historyLoaded && !tarotAutoSentRef.current && user) {
-      tarotAutoSentRef.current = true;
-      handleSend(locale === "zh"
-        ? `星轨，我今天抽到了 ${tarotResult.cardName}（${tarotResult.isReversed ? "逆位" : "正位"}）。这张牌对我到底意味着什么？🔮`
-        : `Xinggui, I just drew ${tarotResult.cardName} (${tarotResult.isReversed ? "reversed" : "upright"}) today. What does it really mean for me? 🔮`);
-    }
-  }, [historyLoaded, tarotResult, user]);
-
-  useEffect(() => {
     if (compatibilityResult && historyLoaded && !compatibilityAutoSentRef.current && user) {
       compatibilityAutoSentRef.current = true;
       handleSend(locale === "zh"
@@ -646,6 +637,23 @@ const Chat = () => {
         : `Xinggui, I drew fortune stick #${f.stickNumber} "${f.title}" (${f.level}) today. The poem says: ${f.poem}. What does this really mean for me? 🍃`);
     }
   }, [historyLoaded, fortuneStickResult, user]);
+
+  useEffect(() => {
+    if (!followupNotification || !historyLoaded || followupNotifShownRef.current) return;
+    followupNotifShownRef.current = true;
+    setMessages((prev) => {
+      if (prev.some((m) => m.id === `followup-${followupNotification.id}`)) return prev;
+      const withoutWelcome = prev.filter((m) => m.id !== "welcome");
+      return [
+        ...withoutWelcome,
+        {
+          id: `followup-${followupNotification.id}`,
+          role: "assistant" as const,
+          content: followupNotification.body,
+        },
+      ];
+    });
+  }, [historyLoaded, followupNotification]);
 
   const ensureConversation = useCallback(async () => {
     if (conversationId || !user) return conversationId;
@@ -999,6 +1007,7 @@ const Chat = () => {
           }
 
           await incrementTurn();
+          maybePromptSoulMirror(totalTurns + 1);
           await checkAchievements();
 
           if (user) {
@@ -1304,6 +1313,12 @@ const Chat = () => {
         }}
       />
 
+      <ChatProgressBar
+        totalTurns={totalTurns}
+        bondLevel={bondLevel}
+        isLoggedIn={!!user}
+      />
+
       <div className="border-t border-border backdrop-blur-xl px-4 py-3" style={{ backgroundColor: 'var(--chat-header-bg, hsl(0 0% 0% / 0.03))' }}>
         <div className="flex items-center gap-2">
           <div className="flex flex-1 items-center rounded-2xl border border-border bg-background px-4 py-2.5">
@@ -1360,6 +1375,7 @@ const Chat = () => {
         userId={user?.id}
         onClose={() => setSoulMirrorOpen(false)}
         singleAgentId={agentId}
+        agentTurns={totalTurns}
       />
     </div>
 

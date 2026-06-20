@@ -20,7 +20,7 @@ const entries: SitemapEntry[] = [
   { path: "/assessment/compatibility", changefreq: "monthly", priority: "0.8" },
   { path: "/assessment-reports", changefreq: "weekly", priority: "0.7" },
   { path: "/compatibility-reports", changefreq: "weekly", priority: "0.7" },
-  { path: "/daily-tarot", changefreq: "daily", priority: "0.8" },
+  { path: "/daily-fortune-stick", changefreq: "daily", priority: "0.8" },
   { path: "/archive", changefreq: "weekly", priority: "0.7" },
   { path: "/soul-map", changefreq: "weekly", priority: "0.7" },
   { path: "/welcome", changefreq: "monthly", priority: "0.6" },

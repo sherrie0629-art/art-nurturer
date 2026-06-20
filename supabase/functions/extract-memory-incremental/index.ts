@@ -65,6 +65,17 @@ Two outputs:
    - Only emit a fact if the USER said it (not the assistant). Skip if it's already obvious or trivial.
    - confidence 0.5–0.95 based on directness of statement.
 
+3) followups[] — future events worth a proactive check-in notification from THIS agent later (trip, exam, interview, move, medical, big life event):
+   - topic: short label (e.g. "挪威旅行", "final interview")
+   - context: one sentence the agent can reference later
+   - event_at: ISO8601 date if known, else null
+   - notify_at: ISO8601 when to send check-in (e.g. trip return +7–14 days, exam +1 day). Must be in the future.
+   - reason: trip_return_checkin | exam_followup | milestone | general_checkin
+   - confidence 0.5–0.95
+   - Only emit if user mentioned a concrete future plan or dated event. Skip vague wishes.
+
+4) cancel_topics[] — if user cancels/reschedules, list topic strings to cancel pending followups (e.g. "挪威旅行").
+
 If nothing new of value: return empty arrays.
 
 ${langInstr}`;
@@ -112,8 +123,30 @@ ${langInstr}`;
                     required: ["category", "key", "value"],
                   },
                 },
+                followups: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      topic: { type: "string" },
+                      context: { type: "string" },
+                      event_at: { type: "string" },
+                      notify_at: { type: "string" },
+                      reason: {
+                        type: "string",
+                        enum: ["trip_return_checkin", "exam_followup", "milestone", "general_checkin"],
+                      },
+                      confidence: { type: "number" },
+                    },
+                    required: ["topic", "context", "notify_at", "reason"],
+                  },
+                },
+                cancel_topics: {
+                  type: "array",
+                  items: { type: "string" },
+                },
               },
-              required: ["memories", "profile_facts"],
+              required: ["memories", "profile_facts", "followups", "cancel_topics"],
             },
           },
         }],
@@ -138,8 +171,30 @@ ${langInstr}`;
     const args = JSON.parse(toolCall.function.arguments || "{}");
     const memories = (args.memories || []) as any[];
     const facts = (args.profile_facts || []) as any[];
+    const followups = (args.followups || []) as any[];
+    const cancelTopics = (args.cancel_topics || []) as string[];
 
     const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+
+    const parseIso = (s: unknown): string | null => {
+      if (typeof s !== "string" || !s.trim()) return null;
+      const d = new Date(s);
+      return Number.isNaN(d.getTime()) ? null : d.toISOString();
+    };
+
+    if (cancelTopics.length > 0) {
+      for (const raw of cancelTopics) {
+        const topic = String(raw).trim().slice(0, 120);
+        if (!topic) continue;
+        await admin
+          .from("agent_followups")
+          .update({ status: "cancelled", updated_at: new Date().toISOString() })
+          .eq("user_id", userId)
+          .eq("agent_id", agentId)
+          .eq("status", "pending")
+          .ilike("topic", `%${topic.slice(0, 40)}%`);
+      }
+    }
 
     // Embed all new memory contents in a single batch
     let embeddings: number[][] = [];
@@ -197,9 +252,72 @@ ${langInstr}`;
       }
     }
 
-    return new Response(JSON.stringify({ ok: true, memories: memories.length, facts: facts.length }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    let followupsScheduled = 0;
+    const MIN_FOLLOWUP_CONFIDENCE = 0.75;
+    const now = Date.now();
+    for (const f of followups) {
+      const topic = String(f.topic || "").trim().slice(0, 120);
+      const context = String(f.context || "").trim().slice(0, 500);
+      const confidence = Math.max(0, Math.min(1, Number(f.confidence) || 0.8));
+      if (!topic || !context || confidence < MIN_FOLLOWUP_CONFIDENCE) continue;
+
+      let notifyAt = parseIso(f.notify_at);
+      if (!notifyAt) {
+        notifyAt = new Date(now + 14 * 86400000).toISOString();
+      }
+      if (new Date(notifyAt).getTime() <= now + 86400000) continue;
+
+      const eventAt = parseIso(f.event_at);
+      const reason = ["trip_return_checkin", "exam_followup", "milestone", "general_checkin"].includes(f.reason)
+        ? f.reason
+        : "general_checkin";
+
+      const { data: existing } = await admin
+        .from("agent_followups")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("agent_id", agentId)
+        .eq("status", "pending")
+        .eq("topic", topic)
+        .maybeSingle();
+
+      if (existing?.id) {
+        await admin
+          .from("agent_followups")
+          .update({
+            context,
+            event_at: eventAt,
+            notify_at: notifyAt,
+            reason,
+            confidence,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", existing.id);
+      } else {
+        const { error: fuErr } = await admin.from("agent_followups").insert({
+          user_id: userId,
+          agent_id: agentId,
+          topic,
+          context,
+          event_at: eventAt,
+          notify_at: notifyAt,
+          reason,
+          confidence,
+          status: "pending",
+        });
+        if (!fuErr) followupsScheduled++;
+      }
+    }
+
+    return new Response(
+      JSON.stringify({
+        ok: true,
+        memories: memories.length,
+        facts: facts.length,
+        followups: followupsScheduled,
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
   } catch (e) {
     console.error("extract-memory error:", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {

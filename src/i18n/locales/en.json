@@ -81,7 +81,6 @@
     "promptViewVault": "Sign in to view your collection ✨",
     "promptViewSoulMap": "Sign in to view your soul map 🌟",
     "promptViewHistory": "Sign in to view chat history 📖",
-    "promptDailyTarot": "Sign in to draw your daily tarot card",
     "promptContinueChat": "Sign in to save your chat and continue exploring ✨",
     "promptAssessmentAI": "Sign in to generate the full AI interpretation and save this report to your archive.",
     "redirecting": "Redirecting..."
@@ -129,12 +128,18 @@
       "perDay": "1/day"
     }
   },
+  "notifications": {
+    "title": "Notifications",
+    "subtitle": "Care and check-ins from your circle",
+    "empty": "No notifications yet",
+    "emptyHint": "When you mention future plans in chat, your friends will check in at the right time.",
+    "markAllRead": "Mark all read",
+    "signInHint": "Sign in to view notifications"
+  },
   "home": {
     "appName": "Island AI",
     "appTagline": "Your AI Healing Space",
     "tagline": "In a noisy world, find the soul that gets you",
-    "dailyTarot": "Daily Tarot",
-    "dailyTarotDesc": "Draw a card · Get your insight 🔮",
     "dailyFortune": "Daily Fortune Stick",
     "dailyFortuneDesc": "Shake a stick · Modern AI reading 🪔",
     "chemistry": "Relationship Chemistry",
@@ -279,6 +284,16 @@
       "title": "Horoscope Reading",
       "introTitle": "Choose Your Sign",
       "introDesc": "10 intuition prompts → bite-sized energy cards, not an essay",
+      "pickerEyebrow": "Star map",
+      "pickerHint": "Tap a sign to begin your personal reading",
+      "filterAll": "All",
+      "tapToBegin": "Begin →",
+      "elementTagline": {
+        "fire": "Passion, drive & spark",
+        "earth": "Grounded, sensual & steady",
+        "air": "Mind, social flow & change",
+        "water": "Feeling, intuition & depth"
+      },
       "resultsTitle": "Your Horoscope",
       "reading": "Reading",
       "readingHint": "Bite-sized cards — no essay wall",
@@ -366,8 +381,10 @@
       "traitThem4": "unreasonably calm",
       "traitThem5": "like an untamable cat",
       "stageBlockTitle": "We're currently…",
+      "stageBlockHint": "Relationship stage (optional)",
       "vibeBlockTitle": "Most recent scene",
-      "analyzeBtnFancy": "🎰 Pull our love card",
+      "vibeBlockHint": "How it's been lately (optional)",
+      "analyzeBtnFancy": "Generate report",
       "stageSubs": {
         "crush": "liking posts, never commenting",
         "talking": "still texting at 1 a.m.",
@@ -645,26 +662,6 @@
     "chat": "Chat",
     "source": "Source: {{src}}"
   },
-  "dailyTarot": {
-    "title": "Daily Tarot",
-    "subtitle": "Draw a card · Discover today's insight",
-    "focus": "Focus your mind, and let the cards reveal what you need to hear today.",
-    "drawBtn": "Draw Today's Card",
-    "drawing": "Reading the cards...",
-    "reversed": "Reversed",
-    "upright": "Upright",
-    "energy": "Energy {{n}}/5",
-    "todayReading": "Today's Reading",
-    "saveShare": "Save & Share",
-    "generatingArt": "Generating card art...",
-    "artFail": "Card art unavailable",
-    "drawFail": "Failed to draw. Please try again.",
-    "posterIntro": "Generating your poster…",
-    "posterFail": "Failed to generate poster",
-    "shareText": "Discover your daily tarot insight ✨",
-    "loading": "Loading...",
-    "talkToXinggui": "Ask Xinggui for a star card 🔮"
-  },
   "conversations": {
     "title": "Chat History",
     "subtitle": "Each character has one ongoing thread — continue from their chat",
@@ -812,7 +809,7 @@
       "20 chats per day",
       "5 assessments per day",
       "Basic agent access",
-      "Daily tarot draw"
+      "Daily fortune stick"
     ],
     "free": "Free",
     "perMonth": "/mo",
@@ -885,6 +882,48 @@
     ],
     "ctaQuote": "\"In a noisy world, find the soul that truly gets you.\"",
     "footer": "© {{y}} Soul Sanctuary. All rights reserved."
+  },
+  "onboarding": {
+    "skip": "Skip",
+    "next": "Continue",
+    "step1": {
+      "headline": "Four AI companions who truly listen",
+      "subline": "Chat, discover yourself, collect secrets—at your own pace."
+    },
+    "step2": {
+      "title": "Where would you like to start?",
+      "subtitle": "Either way works—you can switch anytime from home",
+      "chatTitle": "Start with chat",
+      "chatDesc": "Try Nuannuan first—no sign-in required",
+      "assessTitle": "Take a quiz first",
+      "assessDesc": "3-minute MBTI to learn your personality type",
+      "hint": "Sign in to save progress and unlock the Vault & Soul Map"
+    },
+    "step3": {
+      "title": "The more you talk, the more you unlock",
+      "subtitle": "This is a journey, not a one-off",
+      "start": "Let's go",
+      "items": {
+        "bond": {
+          "title": "Build bond",
+          "desc": "More conversations deepen trust with each companion"
+        },
+        "secrets": {
+          "title": "Unlock secrets",
+          "desc": "Story lore and truth shards live in Archive & Vault"
+        },
+        "map": {
+          "title": "Light up your Soul Map",
+          "desc": "Assessments and chats leave stars and fragments behind"
+        }
+      }
+    }
+  },
+  "chatProgress": {
+    "guest": "Sign in to save progress and unlock stories & Vault",
+    "lore": "{{n}} more turns until Lv.{{level}} story unlock",
+    "mirror": "{{n}} more turns until Soul Mirror ✨",
+    "fragment": "{{n}} more turns until a soul fragment"
   },
   "notFound": {
     "title": "404",
@@ -1020,11 +1059,6 @@
         "wechat": "Compatibility: {{title}}\nScore {{score}}% 💕\n{{desc}}\n\n👉 {{url}}",
         "xiaohongshu": "💕 Compatibility｜{{title}}\n{{score}}%\n\n{{desc}}\n\n#MindGarden #Compatibility\n\n🔗 {{url}}",
         "weibo": "Compatibility {{title}} {{score}}% 💕 {{desc}} {{url}}"
-      },
-      "tarot": {
-        "wechat": "Daily Tarot: {{title}} 🔮\n{{desc}}\n\n👉 {{url}}",
-        "xiaohongshu": "🔮 Tarot｜{{title}}\n\n{{desc}}\n\n#Tarot #MindGarden\n\n🔗 {{url}}",
-        "weibo": "Tarot {{title}} 🔮 {{desc}} {{url}}"
       },
       "deepReport": {
         "wechat": "Deep report: {{title}} 📖\n{{desc}}\n\n👉 {{url}}",
@@ -1360,6 +1394,7 @@
     "later": "Maybe later",
     "milestoneToast": "{{n}} more turns deep — your Soul Mirror can be updated",
     "milestoneToastAction": "Open",
+    "needMoreTurns": "{{n}} more turns until Soul Mirror",
     "newHighlights": "Newly noticed",
     "editionLabel": "Edition {{n}}",
     "generatingTitle": "Four perspectives gazing back…",

@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useSoulMirror, type SoulMirror, type SoulMirrorPerspective } from "@/hooks/useSoulMirror";
 import { useNavigate } from "react-router-dom";
+import { isMirrorUnlocked, MIRROR_TURN_INTERVAL } from "@/lib/soulMirrorRules";
 
 interface Props {
   open: boolean;
@@ -15,6 +16,8 @@ interface Props {
   existingMirror?: SoulMirror | null;
   /** When set, only generate the mirror from this single agent (chat-page mode). */
   singleAgentId?: string;
+  /** Chat turns with singleAgentId — required before generation in chat mode. */
+  agentTurns?: number;
 }
 
 type Phase = "intro" | "generating" | "result" | "pro_required" | "throttled" | "error";
@@ -36,7 +39,7 @@ const AGENT_NAME: Record<string, { zh: string; en: string }> = {
   xinggui:  { zh: "星轨", en: "Xinggui" },
 };
 
-export default function SoulMirrorDialog({ open, userId, onClose, existingMirror, singleAgentId }: Props) {
+export default function SoulMirrorDialog({ open, userId, onClose, existingMirror, singleAgentId, agentTurns }: Props) {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { generate, attachPosterUrl } = useSoulMirror(userId);
@@ -80,6 +83,10 @@ export default function SoulMirrorDialog({ open, userId, onClose, existingMirror
   }, [open, userId, phase]);
 
   const handleGenerate = useCallback(async () => {
+    if (isSingle && agentTurns != null && !isMirrorUnlocked(agentTurns)) {
+      toast.info(t("soulMirror.needMoreTurns", { n: MIRROR_TURN_INTERVAL - agentTurns }));
+      return;
+    }
     setPhase("generating");
     const res: any = await generate(singleAgentId);
     if (!res.ok) {
@@ -95,7 +102,10 @@ export default function SoulMirrorDialog({ open, userId, onClose, existingMirror
     }
     setMirror(res.mirror);
     setPhase("result");
-  }, [generate, singleAgentId]);
+  }, [generate, singleAgentId, isSingle, agentTurns, t]);
+
+  const mirrorLockedInChat =
+    isSingle && agentTurns != null && !isMirrorUnlocked(agentTurns);
 
   // Render poster onto canvas once mirror appears
   useEffect(() => {
@@ -243,9 +253,15 @@ export default function SoulMirrorDialog({ open, userId, onClose, existingMirror
                   </>
                 );
               })()}
+              {mirrorLockedInChat && (
+                <p className="text-[11px] text-white/50 mb-3 leading-snug">
+                  {t("soulMirror.needMoreTurns", { n: MIRROR_TURN_INTERVAL - (agentTurns ?? 0) })}
+                </p>
+              )}
               <button
                 onClick={handleGenerate}
-                className="w-full rounded-2xl bg-gradient-to-r from-pink-500 to-purple-500 py-3 font-semibold text-white shadow-lg active:scale-[0.98] transition"
+                disabled={mirrorLockedInChat}
+                className="w-full rounded-2xl bg-gradient-to-r from-pink-500 to-purple-500 py-3 font-semibold text-white shadow-lg active:scale-[0.98] transition disabled:opacity-40 disabled:pointer-events-none"
               >
                 {t("soulMirror.cta")}
               </button>

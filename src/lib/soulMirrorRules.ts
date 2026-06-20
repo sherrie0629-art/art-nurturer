@@ -27,3 +27,18 @@ export function getPendingMirrorMilestone(lastPromptTurn: number, currentTurns: 
 export function isMirrorUnlocked(totalTurns: number): boolean {
   return totalTurns >= MIRROR_TURN_INTERVAL;
 }
+
+/**
+ * Returns the milestone turn count if the user just completed a round that
+ * crosses a mirror prompt boundary (15, 30, 45…). Used after incrementTurn —
+ * never on page load (avoids popping for historical turn counts).
+ */
+export function getMirrorPromptOnTurnComplete(
+  lastPromptTurn: number,
+  newTotalTurns: number,
+): number | null {
+  if (newTotalTurns < MIRROR_TURN_INTERVAL) return null;
+  if (newTotalTurns % MIRROR_TURN_INTERVAL !== 0) return null;
+  if (lastPromptTurn >= newTotalTurns) return null;
+  return newTotalTurns;
+}
