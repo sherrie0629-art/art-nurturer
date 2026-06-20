@@ -1,4 +1,4 @@
-import { Copy, Download, Share2, X } from "lucide-react";
+import { X } from "lucide-react";
 import { toast } from "sonner";
 import {
   Drawer,
@@ -6,9 +6,18 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  buildShareCopies,
+  buildWeiboShareUrl,
+  copyText,
+  downloadImageDataUrl,
+  resolveShareScene,
+  type ShareCopyParams,
+  type ShareScene,
+} from "@/lib/shareChannels";
 
 interface ShareSheetProps {
   open: boolean;
@@ -18,18 +27,43 @@ interface ShareSheetProps {
   text?: string;
   url?: string;
   publicImageUrl?: string;
+  scene?: ShareScene;
+  sceneParams?: Omit<ShareCopyParams, "title" | "desc">;
 }
 
-const SHARE_URL = "https://islandai.life";
+type ChannelId = "save" | "wechat" | "xiaohongshu" | "weibo" | "copyText" | "copyLink";
 
-const ShareSheet = ({ open, onClose, imageDataUrl, title, text, url, publicImageUrl }: ShareSheetProps) => {
-  const isMobile = useIsMobile();
+const ShareSheet = ({
+  open,
+  onClose,
+  imageDataUrl,
+  title,
+  text,
+  publicImageUrl,
+  scene,
+  sceneParams,
+}: ShareSheetProps) => {
+  const { t } = useTranslation();
   const [uploadedUrl, setUploadedUrl] = useState<string | null>(publicImageUrl || null);
+  const [uploading, setUploading] = useState(false);
 
-  // Auto-upload poster for social sharing URLs
+  const resolvedScene = resolveShareScene(scene);
+  const shareTitle = title || t("shareSheet.defaultTitle", { defaultValue: "心灵密语" });
+
+  const copies = useMemo(
+    () =>
+      buildShareCopies(t, resolvedScene, {
+        title: shareTitle,
+        desc: text,
+        ...sceneParams,
+      }),
+    [t, resolvedScene, shareTitle, text, sceneParams],
+  );
+
   useEffect(() => {
     if (!open || !imageDataUrl || publicImageUrl) return;
     let cancelled = false;
+    setUploading(true);
     (async () => {
       try {
         const { data: auth } = await supabase.auth.getUser();
@@ -45,89 +79,144 @@ const ShareSheet = ({ open, onClose, imageDataUrl, title, text, url, publicImage
           const { data } = supabase.storage.from("shared-posters").getPublicUrl(fileName);
           setUploadedUrl(data?.publicUrl || null);
         }
-      } catch { /* silent */ }
+      } catch {
+        /* silent */
+      } finally {
+        if (!cancelled) setUploading(false);
+      }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [open, imageDataUrl, publicImageUrl]);
 
-  const shareUrl = url || SHARE_URL;
-  const shareTitle = title || "心灵密语";
-  const shareText = text || "来看看我的结果 ✨ islandai.life";
-
-  const handleNativeShare = useCallback(async () => {
-    if (!imageDataUrl) return;
-    try {
-      const res = await fetch(imageDataUrl);
-      const blob = await res.blob();
-      const file = new File([blob], "soul-sanctuary.png", { type: "image/png" });
-
-      if (navigator.share && navigator.canShare?.({ files: [file] })) {
-        await navigator.share({
-          title: shareTitle,
-          text: shareText,
-          files: [file],
-        });
-        onClose();
-        return;
-      }
-    } catch (e) {
-      if ((e as Error).name === "AbortError") return;
+  useEffect(() => {
+    if (!open) {
+      setUploadedUrl(publicImageUrl || null);
+      setUploading(false);
     }
-    toast.info("系统分享不可用，请使用下方按钮");
-  }, [imageDataUrl, shareTitle, shareText, onClose]);
+  }, [open, publicImageUrl]);
 
-  const handleDownload = useCallback(() => {
-    if (!imageDataUrl) return;
-    const a = document.createElement("a");
-    a.href = imageDataUrl;
-    a.download = "soul-sanctuary.png";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    toast.success("图片已保存 ✨");
-  }, [imageDataUrl]);
+  const handleSave = useCallback(async (silent = false) => {
+    if (!imageDataUrl) return false;
+    await downloadImageDataUrl(imageDataUrl);
+    if (!silent) toast.success(t("shareSheet.savedToast"));
+    return true;
+  }, [imageDataUrl, t]);
 
   const handleCopyLink = useCallback(async () => {
-    await navigator.clipboard.writeText(shareUrl);
-    toast.success("链接已复制 ✨");
-  }, [shareUrl]);
+    const ok = await copyText(copies.link);
+    if (ok) toast.success(t("shareSheet.linkCopied"));
+    else toast.error(t("shareSheet.copyFail", { defaultValue: "复制失败，请重试" }));
+  }, [copies.link, t]);
 
-  const openPinterest = useCallback(() => {
-    const media = uploadedUrl || "";
-    const pinUrl = `https://pinterest.com/pin/create/button/?url=${encodeURIComponent(shareUrl)}&media=${encodeURIComponent(media)}&description=${encodeURIComponent(shareText)}`;
-    window.open(pinUrl, "_blank", "noopener");
-  }, [shareUrl, shareText, uploadedUrl]);
+  const handleCopyText = useCallback(async () => {
+    const ok = await copyText(copies.wechat);
+    if (ok) toast.success(t("shareSheet.textCopied"));
+    else toast.error(t("shareSheet.copyFail", { defaultValue: "复制失败，请重试" }));
+  }, [copies.wechat, t]);
 
-  const openX = useCallback(() => {
-    const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
-    window.open(tweetUrl, "_blank", "noopener");
-  }, [shareUrl, shareText]);
+  const handleWeChat = useCallback(async () => {
+    if (!imageDataUrl) {
+      const ok = await copyText(copies.wechat);
+      if (ok) toast.success(t("shareSheet.wechatGuideTextOnly"), { duration: 4500 });
+      return;
+    }
+    await handleSave(true);
+    const ok = await copyText(copies.wechat);
+    if (ok) toast.success(t("shareSheet.wechatGuide"), { duration: 4500 });
+    else toast.error(t("shareSheet.copyFail", { defaultValue: "复制失败，请重试" }));
+  }, [imageDataUrl, copies.wechat, handleSave, t]);
 
-  const openFacebook = useCallback(() => {
-    const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
-    window.open(fbUrl, "_blank", "noopener");
-  }, [shareUrl]);
+  const handleXiaohongshu = useCallback(async () => {
+    if (!imageDataUrl) {
+      const ok = await copyText(copies.xiaohongshu);
+      if (ok) toast.success(t("shareSheet.xhsGuideTextOnly"), { duration: 4500 });
+      return;
+    }
+    await handleSave(true);
+    const ok = await copyText(copies.xiaohongshu);
+    if (ok) toast.success(t("shareSheet.xhsGuide"), { duration: 4500 });
+    else toast.error(t("shareSheet.copyFail", { defaultValue: "复制失败，请重试" }));
+  }, [imageDataUrl, copies.xiaohongshu, handleSave, t]);
 
-  const openWhatsApp = useCallback(() => {
-    const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareText} ${shareUrl}`)}`;
-    window.open(waUrl, "_blank", "noopener");
-  }, [shareUrl, shareText]);
+  const handleWeibo = useCallback(() => {
+    if (uploading) {
+      toast.info(t("shareSheet.uploading"));
+      return;
+    }
+    const weiboUrl = buildWeiboShareUrl(copies.weibo, uploadedUrl);
+    window.open(weiboUrl, "_blank", "noopener,noreferrer");
+  }, [copies.weibo, uploadedUrl, uploading, t]);
 
-  const socialChannels = [
-    { label: "Pinterest", icon: "📌", onClick: openPinterest },
-    { label: "X", icon: "𝕏", onClick: openX },
-    { label: "Facebook", icon: "📘", onClick: openFacebook },
-    { label: "WhatsApp", icon: "💬", onClick: openWhatsApp },
-    { label: "复制链接", icon: "🔗", onClick: handleCopyLink },
-    { label: "保存", icon: "💾", onClick: handleDownload, disabled: !imageDataUrl },
+  const channels: {
+    id: ChannelId;
+    label: string;
+    hint?: string;
+    icon: ReactNode;
+    onClick: () => void;
+    disabled?: boolean;
+  }[] = [
+    {
+      id: "save",
+      label: t("shareSheet.channels.save"),
+      icon: <span className="text-lg">💾</span>,
+      onClick: () => handleSave(false),
+      disabled: !imageDataUrl,
+    },
+    {
+      id: "wechat",
+      label: t("shareSheet.channels.wechat"),
+      hint: t("shareSheet.hints.manual"),
+      icon: (
+        <span className="flex h-6 w-6 items-center justify-center rounded-md bg-[#07C160] text-[11px] font-bold text-white">
+          微
+        </span>
+      ),
+      onClick: handleWeChat,
+    },
+    {
+      id: "xiaohongshu",
+      label: t("shareSheet.channels.xiaohongshu"),
+      hint: t("shareSheet.hints.manual"),
+      icon: (
+        <span className="flex h-6 w-6 items-center justify-center rounded-md bg-[#FF2442] text-[11px] font-bold text-white">
+          红
+        </span>
+      ),
+      onClick: handleXiaohongshu,
+    },
+    {
+      id: "weibo",
+      label: t("shareSheet.channels.weibo"),
+      icon: (
+        <span className="flex h-6 w-6 items-center justify-center rounded-md bg-[#FF8200] text-[11px] font-bold text-white">
+          博
+        </span>
+      ),
+      onClick: handleWeibo,
+      disabled: uploading,
+    },
+    {
+      id: "copyText",
+      label: t("shareSheet.channels.copyText"),
+      icon: <span className="text-lg">📋</span>,
+      onClick: handleCopyText,
+    },
+    {
+      id: "copyLink",
+      label: t("shareSheet.channels.copyLink"),
+      icon: <span className="text-lg">🔗</span>,
+      onClick: handleCopyLink,
+    },
   ];
 
   return (
     <Drawer open={open} onOpenChange={(o) => !o && onClose()}>
-      <DrawerContent className="max-h-[60vh]">
+      <DrawerContent className="max-h-[70vh]">
         <DrawerHeader className="pb-2">
           <div className="flex items-center justify-between">
-            <DrawerTitle className="text-base font-semibold">分享</DrawerTitle>
+            <DrawerTitle className="text-base font-semibold">{t("shareSheet.title")}</DrawerTitle>
             <button onClick={onClose} className="rounded-full p-1 text-muted-foreground hover:bg-muted">
               <X className="h-4 w-4" />
             </button>
@@ -135,41 +224,36 @@ const ShareSheet = ({ open, onClose, imageDataUrl, title, text, url, publicImage
         </DrawerHeader>
 
         {imageDataUrl && (
-          <div className="flex justify-center px-6 pb-3">
-            <img
-              src={imageDataUrl}
-              alt="预览"
-              className="max-h-36 rounded-xl shadow-card object-contain"
-            />
-          </div>
-        )}
-
-        {/* Mobile: prominent system share button */}
-        {isMobile && imageDataUrl && (
           <div className="px-6 pb-3">
-            <button
-              onClick={handleNativeShare}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3.5 text-primary-foreground font-medium transition-all active:scale-[0.98]"
-            >
-              <Share2 className="h-5 w-5" />
-              <span>分享到…</span>
-            </button>
+            <p className="mb-2 text-center text-[10px] text-muted-foreground">
+              {t("shareSheet.previewHint", { defaultValue: "保存的图片与下方预览一致" })}
+            </p>
+            <div className="flex justify-center">
+              <img
+                src={imageDataUrl}
+                alt={t("shareSheet.preview")}
+                className="max-h-52 w-auto rounded-xl shadow-card object-contain"
+              />
+            </div>
           </div>
         )}
 
-        {/* Social channel quick actions */}
-        <div className="flex flex-wrap justify-center gap-4 px-6 pb-6 pt-1">
-          {socialChannels.map(({ icon, label, onClick, disabled }) => (
+        <div className="flex flex-wrap justify-center gap-x-5 gap-y-4 px-6 pb-6 pt-1">
+          {channels.map(({ id, icon, label, hint, onClick, disabled }) => (
             <button
-              key={label}
+              key={id}
+              type="button"
               onClick={onClick}
               disabled={disabled}
-              className="flex flex-col items-center gap-1.5 text-foreground disabled:opacity-40 min-w-[52px]"
+              className="flex flex-col items-center gap-1 text-foreground disabled:opacity-40 min-w-[56px]"
             >
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-muted transition-colors hover:bg-muted/80 active:scale-95 text-lg">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-muted transition-colors hover:bg-muted/80 active:scale-95">
                 {icon}
               </div>
-              <span className="text-[10px] text-muted-foreground leading-tight">{label}</span>
+              <span className="text-[10px] text-muted-foreground leading-tight text-center">{label}</span>
+              {hint && (
+                <span className="text-[9px] text-muted-foreground/70 leading-none">{hint}</span>
+              )}
             </button>
           ))}
         </div>

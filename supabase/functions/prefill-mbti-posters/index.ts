@@ -54,8 +54,8 @@ async function generateOne(type: string, admin: any, force: boolean, apiKey: str
   const objectPath = `mbti-${type}.png`;
 
   if (!force) {
-    const { data: existing } = await admin.storage.from(CACHE_BUCKET).list("", { search: objectPath, limit: 1 });
-    if (existing?.some((f: any) => f.name === objectPath)) return { type, status: "skipped" };
+    const { error: dlErr } = await admin.storage.from(CACHE_BUCKET).download(objectPath);
+    if (!dlErr) return { type, status: "skipped" };
   }
 
   const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {

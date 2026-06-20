@@ -321,6 +321,8 @@ const CompatibilityDetail = () => {
         imageDataUrl={shareDataUrl}
         title={d?.title || t("compatibilityDetail.compatibilityFallback")}
         text={t("compatibilityDetail.scoreMatch", { n: overallScore })}
+        scene="compatibility"
+        sceneParams={{ score: overallScore }}
       />
     </div>
     </DesktopLayout>

@@ -470,7 +470,7 @@
     "wellnessTips": "Wellness Tips",
     "advice": "Advice",
     "deepTitle": "Deep Psychological Analysis",
-    "deepIntroLine": "Includes 3,000–5,000 word in-depth report:",
+    "deepIntroLine": "Includes 2,000–3,000 word in-depth report:",
     "deepBullets": [
       "Attachment style analysis",
       "Relationship red flags guide",
@@ -926,18 +926,76 @@
   "shareSheet": {
     "title": "Share",
     "preview": "Preview",
-    "shareTo": "Share to...",
+    "previewHint": "Saved image matches the preview below",
+    "defaultTitle": "Mind Garden",
+    "defaultDesc": "Discover your inner map ✨",
     "savedToast": "Image saved ✨",
-    "linkCopied": "Link copied! ✨",
-    "channels": {
-      "pinterest": "Pinterest",
-      "x": "X",
-      "facebook": "Facebook",
-      "whatsapp": "WhatsApp",
-      "copy": "Copy Link",
-      "save": "Save"
+    "textCopied": "Caption copied ✨",
+    "linkCopied": "Link copied ✨",
+    "copyFail": "Copy failed, please retry",
+    "uploading": "Preparing image, please wait…",
+    "wechatGuide": "Image saved & caption copied. Open WeChat and paste to share ✨",
+    "wechatGuideTextOnly": "Caption copied. Open WeChat and paste to share ✨",
+    "xhsGuide": "Image saved & Xiaohongshu caption copied. Open RED → New Note → paste ✨",
+    "xhsGuideTextOnly": "Xiaohongshu caption copied. Open RED and paste ✨",
+    "hints": {
+      "manual": "Save+Copy"
     },
-    "nativeUnavailable": "System share not available, use options below"
+    "channels": {
+      "save": "Save",
+      "wechat": "WeChat",
+      "xiaohongshu": "RED",
+      "weibo": "Weibo",
+      "copyText": "Copy text",
+      "copyLink": "Copy link"
+    },
+    "scenes": {
+      "assessment": {
+        "wechat": "Just finished: {{title}}\n{{desc}}\n\n👉 {{url}}",
+        "xiaohongshu": "✨ {{title}}\n\n{{desc}}\n\n#MindGarden #SelfDiscovery\n\n🔗 {{url}}",
+        "weibo": "{{title}} ✨ {{desc}} {{url}}"
+      },
+      "mbti": {
+        "wechat": "MBTI result: {{title}} 🧠\n{{desc}}\n\nTry it 👉 {{url}}",
+        "xiaohongshu": "🧠 MBTI｜{{title}}\n\n{{desc}}\n\n#MBTI #MindGarden\n\n🔗 {{url}}",
+        "weibo": "MBTI {{title}} 🧠 {{desc}} {{url}}"
+      },
+      "enneagram": {
+        "wechat": "Enneagram: {{title}} 🎯\n{{desc}}\n\n👉 {{url}}",
+        "xiaohongshu": "🎯 Enneagram｜{{title}}\n\n{{desc}}\n\n#Enneagram #MindGarden\n\n🔗 {{url}}",
+        "weibo": "Enneagram {{title}} 🎯 {{desc}} {{url}}"
+      },
+      "zodiac": {
+        "wechat": "Zodiac: {{title}} ⭐\n{{desc}}\n\n👉 {{url}}",
+        "xiaohongshu": "⭐ Zodiac｜{{title}}\n\n{{desc}}\n\n#Zodiac #MindGarden\n\n🔗 {{url}}",
+        "weibo": "Zodiac {{title}} ⭐ {{desc}} {{url}}"
+      },
+      "emotion": {
+        "wechat": "Wellness check: {{title}} 🎭\n{{desc}}\n\n👉 {{url}}",
+        "xiaohongshu": "🎭 Wellness｜{{title}}\n\n{{desc}}\n\n#MindGarden #Wellness\n\n🔗 {{url}}",
+        "weibo": "Wellness {{title}} 🎭 {{desc}} {{url}}"
+      },
+      "compatibility": {
+        "wechat": "Compatibility: {{title}}\nScore {{score}}% 💕\n{{desc}}\n\n👉 {{url}}",
+        "xiaohongshu": "💕 Compatibility｜{{title}}\n{{score}}%\n\n{{desc}}\n\n#MindGarden #Compatibility\n\n🔗 {{url}}",
+        "weibo": "Compatibility {{title}} {{score}}% 💕 {{desc}} {{url}}"
+      },
+      "tarot": {
+        "wechat": "Daily Tarot: {{title}} 🔮\n{{desc}}\n\n👉 {{url}}",
+        "xiaohongshu": "🔮 Tarot｜{{title}}\n\n{{desc}}\n\n#Tarot #MindGarden\n\n🔗 {{url}}",
+        "weibo": "Tarot {{title}} 🔮 {{desc}} {{url}}"
+      },
+      "deepReport": {
+        "wechat": "Deep report: {{title}} 📖\n{{desc}}\n\n👉 {{url}}",
+        "xiaohongshu": "📖 Deep Report｜{{title}}\n\n{{desc}}\n\n#MindGarden #DeepReport\n\n🔗 {{url}}",
+        "weibo": "Deep report {{title}} 📖 {{desc}} {{url}}"
+      },
+      "chat": {
+        "wechat": "Chat with {{agentName}} 💬\n「{{title}}」\n\n{{desc}}\n\n👉 {{url}}",
+        "xiaohongshu": "💬 With {{agentName}}\n\n「{{title}}」\n\n{{desc}}\n\n#MindGarden #AIChat\n\n🔗 {{url}}",
+        "weibo": "Chat with {{agentName}} 💬 {{title}} {{desc}} {{url}}"
+      }
+    }
   },
   "paymentTestBanner": {
     "text": "All payments in the preview are in test mode.",

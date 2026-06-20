@@ -14,6 +14,7 @@ import { useLocale } from "@/hooks/useLocale";
 import AssessmentQuestionLayout from "@/components/AssessmentQuestionLayout";
 import ResultAIImage from "@/components/ResultAIImage";
 import PosterPreviewDialog from "@/components/PosterPreviewDialog";
+import AssessmentProfileCard from "@/components/AssessmentProfileCard";
 import DeepReportUnlock from "@/components/DeepReportUnlock";
 import { isDailyLimitError } from "@/lib/assessmentErrors";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -21,6 +22,7 @@ import { pickQuestionSet } from "@/data/mbtiQuestionPool";
 import { getNextVariant } from "@/lib/assessmentVariant";
 import { persistAssessmentResult } from "@/lib/guestAssessment";
 import { getFallbackParallelUniverse } from "@/lib/fallbackParallelUniverse";
+import { probeMbtiPosterCached } from "@/lib/mbtiPosterCache";
 
 interface QA { question: string; answer: string; dimension: string; }
 interface MBTIResult { mbtiType: string; title: string; description: string; traits: { E_I: number; S_N: number; T_F: number; J_P: number }; socialCaption: string; }
@@ -176,12 +178,35 @@ const AssessmentFlow = () => {
 
   const fetchResultImage = useCallback(async (r: MBTIResult) => {
     setImageLoading(true);
-    // Safety timeout: never block the result UI on the image
     const timeoutId = setTimeout(() => setImageLoading(false), 30000);
+    const persistImageUrl = async (url: string) => {
+      setResultImageUrl(url);
+      if (!resultIdRef.current) return;
+      const { data: existing } = await supabase
+        .from("assessment_results")
+        .select("result_data")
+        .eq("id", resultIdRef.current)
+        .single();
+      if (existing) {
+        await supabase
+          .from("assessment_results")
+          .update({ result_data: { ...(existing.result_data as any), imageUrl: url } })
+          .eq("id", resultIdRef.current);
+      }
+    };
     try {
+      // Fast path: pre-generated poster in public storage (see scripts/prefill-mbti-posters.mjs)
+      const cachedUrl = await probeMbtiPosterCached(r.mbtiType);
+      if (cachedUrl) {
+        await persistImageUrl(cachedUrl);
+        return;
+      }
       const img = await fetchAIImage(getImagePrompt(r), { cacheKey: `mbti-${r.mbtiType}`, returnUrlOnly: true });
-      if (img) { setResultImageUrl(img.src); if (resultIdRef.current) { const { data: existing } = await supabase.from("assessment_results").select("result_data").eq("id", resultIdRef.current).single(); if (existing) { await supabase.from("assessment_results").update({ result_data: { ...existing.result_data as any, imageUrl: img.src } }).eq("id", resultIdRef.current); } } }
-    } finally { clearTimeout(timeoutId); setImageLoading(false); }
+      if (img) await persistImageUrl(img.src);
+    } finally {
+      clearTimeout(timeoutId);
+      setImageLoading(false);
+    }
   }, [fetchAIImage]);
 
   const fetchParallelUniverse = useCallback(async (mbtiType: string) => {
@@ -301,7 +326,10 @@ const AssessmentFlow = () => {
     if (!result) return;
     sharePoster({
       title: result.mbtiType, subtitle: result.title, description: result.description, icon: "🧠", caption: result.socialCaption,
+      profileHook: result.profileHook,
+      profileBullets: result.profileBullets,
       accentColor: "#6366f1", accentColorLight: "#818cf8",
+      barsSectionTitle: t("assessmentDetail.dimensions"),
       bars: [
         { label1: dimEI[0], label2: dimEI[1], value: result.traits.E_I },
         { label1: dimSN[0], label2: dimSN[1], value: result.traits.S_N },
@@ -349,7 +377,10 @@ const AssessmentFlow = () => {
             <p className="mt-1 text-xs text-muted-foreground">"{result.socialCaption}"</p>
           </div>
           <ResultAIImage imageUrl={resultImageUrl} loading={imageLoading} />
-          <div className="rounded-2xl bg-card p-5 shadow-card mb-4"><h3 className="font-display text-sm font-semibold text-foreground mb-3">{t("assessmentFlow.mbti.personalityAnalysis")}</h3><p className="text-sm text-muted-foreground leading-relaxed">{result.description}</p></div>
+          <div className="rounded-2xl bg-card p-5 shadow-card mb-4">
+            <h3 className="font-display text-sm font-semibold text-foreground mb-3">{t("assessmentFlow.mbti.personalityAnalysis")}</h3>
+            <AssessmentProfileCard data={result} />
+          </div>
           <div className="rounded-2xl bg-card p-5 shadow-card mb-4">
             <h3 className="font-display text-sm font-semibold text-foreground mb-4">{t("assessmentFlow.mbti.dimensionAnalysis")}</h3>
             {[

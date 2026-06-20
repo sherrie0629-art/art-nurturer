@@ -405,7 +405,7 @@ async function renderPoster(mirror: SoulMirror): Promise<string> {
     ctx.fillStyle = "rgba(255,255,255,0.45)";
     ctx.font = "italic 24px 'DM Serif Display', serif";
     ctx.textAlign = "center";
-    ctx.fillText("islandai.life · 心灵镜像", POSTER_W / 2, POSTER_H - 60);
+    ctx.fillText("心灵密语 · 心灵镜像 · islandai.life", POSTER_W / 2, POSTER_H - 60);
     return canvas.toDataURL("image/png");
   }
 
@@ -450,7 +450,7 @@ async function renderPoster(mirror: SoulMirror): Promise<string> {
   ctx.fillStyle = "rgba(255,255,255,0.45)";
   ctx.font = "italic 24px 'DM Serif Display', serif";
   ctx.textAlign = "center";
-  ctx.fillText("islandai.life · 心灵镜像", POSTER_W / 2, POSTER_H - 60);
+    ctx.fillText("心灵密语 · 心灵镜像 · islandai.life", POSTER_W / 2, POSTER_H - 60);
 
   return canvas.toDataURL("image/png");
 }

@@ -246,30 +246,30 @@ export default function DeepReportRenderer({ markdown, typeLabel, generatedAt }:
 
   return (
     <div ref={rootRef} data-pdf-root className="space-y-4">
-      {/* Cover */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-mystic p-6 text-primary-foreground shadow-card">
-        <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-gold/30 blur-2xl" />
-        <div className="absolute -bottom-12 -left-8 h-28 w-28 rounded-full bg-rose-warm/30 blur-2xl" />
+      {/* Cover — light gold text on dark mystic gradient (not primary-foreground) */}
+      <div className="relative overflow-hidden rounded-2xl border border-gold/25 bg-gradient-mystic p-6 text-foreground shadow-card">
+        <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-gold/25 blur-2xl" />
+        <div className="absolute -bottom-12 -left-8 h-28 w-28 rounded-full bg-rose-warm/20 blur-2xl" />
         <div className="relative">
-          <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] opacity-80">
-            <Sparkles className="h-3 w-3" />
+          <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-gold-light/80">
+            <Sparkles className="h-3 w-3 text-gold-light" />
             <span>{t("assessmentDetail.deepCoverTag", { defaultValue: t("assessmentDetail.deepTitle") })}</span>
           </div>
-          <h2 className="font-display text-2xl font-bold mt-2 leading-tight">
+          <h2 className="font-display text-2xl font-bold mt-2 leading-tight text-foreground">
             {typeLabel || t("assessmentDetail.deepTitle")}
           </h2>
-          <p className="mt-1.5 text-[12.5px] opacity-85 leading-relaxed">
+          <p className="mt-1.5 text-[12.5px] text-foreground/75 leading-relaxed">
             {t("assessmentDetail.deepCoverSub", { defaultValue: "为你专属生成的深度内在地图" })}
           </p>
           <div className="mt-4 flex flex-wrap gap-2 text-[11px]">
-            <span className="inline-flex items-center gap-1 rounded-full bg-white/15 backdrop-blur px-2.5 py-1">
-              <BookOpen className="h-3 w-3" /> {wordCount.toLocaleString()} {t("assessmentDetail.deepWords", { defaultValue: "字" })}
+            <span className="inline-flex items-center gap-1 rounded-full border border-gold/30 bg-black/35 px-2.5 py-1 text-foreground/90">
+              <BookOpen className="h-3 w-3 text-gold-light" /> {wordCount.toLocaleString()} {t("assessmentDetail.deepWords", { defaultValue: "字" })}
             </span>
-            <span className="inline-flex items-center gap-1 rounded-full bg-white/15 backdrop-blur px-2.5 py-1">
-              <Clock className="h-3 w-3" /> {readMin} {t("assessmentDetail.deepMinRead", { defaultValue: "分钟" })}
+            <span className="inline-flex items-center gap-1 rounded-full border border-gold/30 bg-black/35 px-2.5 py-1 text-foreground/90">
+              <Clock className="h-3 w-3 text-gold-light" /> {readMin} {t("assessmentDetail.deepMinRead", { defaultValue: "分钟" })}
             </span>
             {generatedAt && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-white/15 backdrop-blur px-2.5 py-1">
+              <span className="inline-flex items-center gap-1 rounded-full border border-gold/30 bg-black/35 px-2.5 py-1 text-foreground/90">
                 {fmtDate(generatedAt)}
               </span>
             )}
@@ -355,7 +355,7 @@ export default function DeepReportRenderer({ markdown, typeLabel, generatedAt }:
         data-exclude="true"
         onClick={handleSharePoster}
         disabled={posterLoading}
-        className="w-full rounded-2xl bg-gradient-mystic py-4 text-sm font-semibold text-primary-foreground flex items-center justify-center gap-2 shadow-card hover:shadow-glow transition-shadow disabled:opacity-60"
+        className="w-full rounded-2xl border border-gold/25 bg-gradient-mystic py-4 text-sm font-semibold text-foreground flex items-center justify-center gap-2 shadow-card hover:border-gold/40 hover:shadow-glow transition-all disabled:opacity-60"
       >
         {posterLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
         {posterLoading
@@ -376,6 +376,7 @@ export default function DeepReportRenderer({ markdown, typeLabel, generatedAt }:
         imageDataUrl={shareImageUrl}
         title={shareTitle}
         text={t("assessmentDetail.deepShareCaption")}
+        scene="deepReport"
       />
     </div>
   );

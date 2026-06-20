@@ -308,6 +308,7 @@ const DailyTarot = () => {
         imageDataUrl={shareDataUrl}
         title={result?.cardName || t("dailyTarot.title")}
         text={t("dailyTarot.shareText")}
+        scene="tarot"
       />
       <BottomNav />
     </div>

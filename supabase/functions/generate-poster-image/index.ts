@@ -46,14 +46,12 @@ serve(async (req) => {
       ? createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!)
       : null;
 
-    // 1) Cache hit fast-path
+    // 1) Cache hit fast-path — direct object check (more reliable than list+search)
     if (cacheKey && adminClient) {
       const safeKey = String(cacheKey).replace(/[^a-zA-Z0-9_-]/g, "");
       const objectPath = `${safeKey}.png`;
-      const { data: existing } = await adminClient.storage
-        .from(CACHE_BUCKET)
-        .list("", { search: objectPath, limit: 1 });
-      if (existing && existing.some((f) => f.name === objectPath)) {
+      const { error: dlErr } = await adminClient.storage.from(CACHE_BUCKET).download(objectPath);
+      if (!dlErr) {
         const { data: urlData } = adminClient.storage.from(CACHE_BUCKET).getPublicUrl(objectPath);
         return new Response(JSON.stringify({ imageUrl: urlData.publicUrl, cached: true }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },

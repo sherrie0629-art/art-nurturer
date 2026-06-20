@@ -278,8 +278,15 @@ You MUST call the batch_questions tool to return all 10 questions.`;
     if (quotaError) return quotaError;
 
     const { history } = body;
-    const systemPrompt = `You are a professional MBTI personality assessment expert. Based on the user's answers, determine their MBTI type.
-You must call the mbti_result tool to return the result. Respond in the language indicated by LANG below.${langInstr}`;
+    const systemPrompt = `You are a witty MBTI analyst who writes like a sharp, warm best friend — never like an academic paper.
+Based on the user's answers, determine their MBTI type.
+You must call the mbti_result tool to return the result. Respond in the language indicated by LANG below.${langInstr}
+
+Writing rules:
+- profileHook: ONE punchy opening line (metaphor, question, or vivid image). ≤40 Chinese chars. Make people want to read on.
+- profileBullets: EXACTLY 4 short lines. Each starts with one emoji, then 16-28 Chinese chars. Cover: ①核心特质 ②人际/感情 ③工作/做事风格 ④隐藏优势或反差萌. Tone: lively, specific, a little teasing — not generic horoscope fluff.
+- description: A brief plain-text fallback (≤90 chars) summarizing the hook — NOT a long paragraph.
+- socialCaption: Shareable one-liner, ≤28 chars, with personality.`;
     const userContent = `Here is the user's Q&A history:\n${history.map((h: any, i: number) => `Q${i + 1}: ${h.question}\nA${i + 1}: ${h.answer}`).join("\n\n")}\n\nPlease analyze the user's MBTI type based on these answers.`;
 
     const tools = [{
@@ -292,7 +299,13 @@ You must call the mbti_result tool to return the result. Respond in the language
           properties: {
             mbtiType: { type: "string", description: "MBTI type, e.g. INFP, ENTJ" },
             title: { type: "string", description: "Type nickname, e.g. 'The Mediator', 'The Commander'" },
-            description: { type: "string", description: "~200 word personalized analysis based on user's specific answers" },
+            profileHook: { type: "string", description: "One vivid opening hook line, ≤40 chars, metaphorical or playful" },
+            profileBullets: {
+              type: "array",
+              items: { type: "string" },
+              description: "Exactly 4 bullet lines. Each: emoji + 16-28 chars. Topics: core trait, relationships, work style, hidden strength.",
+            },
+            description: { type: "string", description: "Brief fallback summary ≤90 chars, NOT a long essay" },
             traits: {
               type: "object",
               properties: {
@@ -305,7 +318,7 @@ You must call the mbti_result tool to return the result. Respond in the language
             },
             socialCaption: { type: "string", description: "Fun shareable caption under 30 words" },
           },
-          required: ["mbtiType", "title", "description", "traits", "socialCaption"],
+          required: ["mbtiType", "title", "profileHook", "profileBullets", "description", "traits", "socialCaption"],
         },
       },
     }];

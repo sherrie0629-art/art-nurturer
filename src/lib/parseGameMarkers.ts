@@ -1,5 +1,7 @@
 // Parse RPG-Therapy game markers from AI responses
 
+import { dedupeEasterEggContent } from "@/lib/easterEggContent";
+
 export interface BranchOption {
   text: string;
   emotion: string;
@@ -98,6 +100,6 @@ export function parseGameMarkers(content: string): GameMarkers {
 export function getAssistantDisplayContent(raw: string): string {
   const { cleanContent } = parseGameMarkers(raw);
   const trimmed = cleanContent.trim();
-  if (trimmed) return trimmed;
-  return raw.trim();
+  const base = trimmed || raw.trim();
+  return dedupeEasterEggContent(base);
 }

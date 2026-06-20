@@ -108,28 +108,28 @@ serve(async (req) => {
       ? `每个章节必须遵循以下结构（用 markdown）：
 1) 章节标题（## 开头，已给出）
 2) 第一段：用一个**诊断式 hook 开场**——比如比喻、反问、画面感的一句话，避免"你的核心特质是…"这种说教开场
-3) 2-3 段正文：每段 80-150 字，行文流畅，关键名词用 **加粗**，必要时用 *斜体* 强调心理学术语
-4) 必要时使用 \`- 列表\` 列举可识别的模式（每点 1 句话）
-5) **每章必须有一句金句**，单独一行，格式：\`> 💎 这里是金句（≤30 字，可被截图分享）\`
-6) 章节末尾追加一行：\`**🎬 行动小任务**：……\`（一句 ≤40 字的可执行动作）
+3) 1-2 段正文：每段 60-100 字，行文流畅，关键名词用 **加粗**，必要时用 *斜体* 强调心理学术语
+4) 必要时使用 \`- 列表\` 列举可识别的模式（最多 3 点，每点 1 句话）
+5) **每章必须有一句金句**，单独一行，格式：\`> 💎 这里是金句（≤25 字，可被截图分享）\`
+6) 章节末尾追加一行：\`**🎬 行动小任务**：……\`（一句 ≤30 字的可执行动作）
 7) 章节之间用 \`---\` 分隔
 
 特别说明：
-- 最后一章 \`${sectionTitles.outlook}\` 改写为"给三年后的你的一封信"，第二人称、150-220 字、有情绪张力，不需要 🎬 行动小任务
-- 全文 3000-4500 字，每章 400-600 字
+- 最后一章 \`${sectionTitles.outlook}\` 改写为"给三年后的你的一封信"，第二人称、100-150 字、有情绪张力，不需要 🎬 行动小任务
+- 全文 2000-3000 字，每章 250-400 字；宁可精炼也不要堆砌
 - 避免万能模板话术，要紧贴用户的具体测评结果`
       : `Each section MUST follow this structure (markdown):
 1) ## heading (provided)
 2) Opening paragraph: a **diagnostic hook**—a metaphor, vivid image, or rhetorical question. Never start with "Your core trait is…"
-3) 2-3 body paragraphs (60-110 words each), flowing prose. **Bold** key terms, *italicize* psychological concepts
-4) Use \`- bullet lists\` when patterns are enumerable (one sentence each)
-5) **Every section MUST contain one signature quote** on its own line, formatted: \`> 💎 the quote here (≤25 words, screenshot-worthy)\`
-6) End each section with: \`**🎬 Action Step**: …\` (one ≤25-word actionable micro-task)
+3) 1-2 body paragraphs (40-75 words each), flowing prose. **Bold** key terms, *italicize* psychological concepts
+4) Use \`- bullet lists\` when patterns are enumerable (max 3 bullets, one sentence each)
+5) **Every section MUST contain one signature quote** on its own line, formatted: \`> 💎 the quote here (≤20 words, screenshot-worthy)\`
+6) End each section with: \`**🎬 Action Step**: …\` (one ≤20-word actionable micro-task)
 7) Separate sections with \`---\`
 
 Special:
-- The last section \`${sectionTitles.outlook}\` is a letter "to you, three years from now"—second person, 120-180 words, emotionally resonant. No 🎬 Action Step
-- Total 3000-4500 words, each section 400-600 words
+- The last section \`${sectionTitles.outlook}\` is a letter "to you, three years from now"—second person, 80-120 words, emotionally resonant. No 🎬 Action Step
+- Total 2000-3000 words, each section 250-400 words; prefer concise insight over padding
 - Stay tightly grounded in the user's specific assessment data; avoid generic horoscope-style platitudes`;
 
     const systemPrompt = `You are a senior psychologist and personality analysis expert with 20 years of clinical experience, also gifted at writing in a warm, literary voice. Generate a deeply personalized analysis report based on the user's ${typeLabel} assessment results.
@@ -170,7 +170,7 @@ ${langLine}`;
       headers: { Authorization: `Bearer ${Deno.env.get("LOVABLE_API_KEY")!}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "google/gemini-2.5-pro",
-        max_tokens: 8000,
+        max_tokens: 5000,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: locale === "zh"

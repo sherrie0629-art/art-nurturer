@@ -470,7 +470,7 @@
     "wellnessTips": "心灵建议",
     "advice": "建议",
     "deepTitle": "深度心理分析",
-    "deepIntroLine": "包含 3000–5000 字的深度报告：",
+    "deepIntroLine": "包含 2000–3000 字的深度报告：",
     "deepBullets": [
       "依恋模式分析",
       "亲密关系红旗指南",
@@ -926,18 +926,76 @@
   "shareSheet": {
     "title": "分享",
     "preview": "预览",
-    "shareTo": "分享到…",
+    "previewHint": "保存的图片与下方预览一致",
+    "defaultTitle": "心灵密语",
+    "defaultDesc": "来测测你的内在地图 ✨",
     "savedToast": "图片已保存 ✨",
+    "textCopied": "文案已复制 ✨",
     "linkCopied": "链接已复制 ✨",
-    "channels": {
-      "pinterest": "Pinterest",
-      "x": "X",
-      "facebook": "Facebook",
-      "whatsapp": "WhatsApp",
-      "copy": "复制链接",
-      "save": "保存"
+    "copyFail": "复制失败，请重试",
+    "uploading": "图片准备中，请稍后再试…",
+    "wechatGuide": "图片已保存，文案已复制。打开微信，粘贴发送给朋友或朋友圈即可 ✨",
+    "wechatGuideTextOnly": "文案已复制。打开微信粘贴发送即可 ✨",
+    "xhsGuide": "图片已保存，小红书文案已复制。打开小红书 → 发布笔记 → 选图粘贴即可 ✨",
+    "xhsGuideTextOnly": "小红书文案已复制。打开小红书发布笔记粘贴即可 ✨",
+    "hints": {
+      "manual": "保存+复制"
     },
-    "nativeUnavailable": "系统分享不可用，请使用下方按钮"
+    "channels": {
+      "save": "保存相册",
+      "wechat": "微信",
+      "xiaohongshu": "小红书",
+      "weibo": "微博",
+      "copyText": "复制文案",
+      "copyLink": "复制链接"
+    },
+    "scenes": {
+      "assessment": {
+        "wechat": "刚做完心理测评：{{title}}\n{{desc}}\n\n👉 {{url}}",
+        "xiaohongshu": "✨ 心理测评结果｜{{title}}\n\n{{desc}}\n\n#心灵密语 #心理测评 #自我探索 #内在成长\n\n🔗 {{url}}",
+        "weibo": "【心理测评】{{title}} ✨ {{desc}} #心灵密语# #心理测评# {{url}}"
+      },
+      "mbti": {
+        "wechat": "刚测完 MBTI：{{title}} 🧠\n{{desc}}\n\n太准了，推荐你也来测 👉 {{url}}",
+        "xiaohongshu": "🧠 MBTI 结果｜{{title}}\n\n{{desc}}\n\n#MBTI #16人格 #性格测试 #心灵密语 #自我成长\n\n🔗 {{url}}",
+        "weibo": "【MBTI】我是 {{title}} 🧠 {{desc}} #MBTI# #心灵密语# #16人格# {{url}}"
+      },
+      "enneagram": {
+        "wechat": "九型人格测评结果：{{title}} 🎯\n{{desc}}\n\n想了解你的核心动机？👉 {{url}}",
+        "xiaohongshu": "🎯 九型人格｜{{title}}\n\n{{desc}}\n\n#九型人格 #Enneagram #心灵密语 #性格分析 #自我觉察\n\n🔗 {{url}}",
+        "weibo": "【九型人格】{{title}} 🎯 {{desc}} #九型人格# #心灵密语# {{url}}"
+      },
+      "zodiac": {
+        "wechat": "星座解读：{{title}} ⭐\n{{desc}}\n\n星轨说你今天也值得被看见 👉 {{url}}",
+        "xiaohongshu": "⭐ 星座解读｜{{title}}\n\n{{desc}}\n\n#星座 #星盘 #心灵密语 #今日运势 #自我探索\n\n🔗 {{url}}",
+        "weibo": "【星座】{{title}} ⭐ {{desc}} #星座# #心灵密语# {{url}}"
+      },
+      "emotion": {
+        "wechat": "心灵体检结果：{{title}} 🎭\n{{desc}}\n\n照顾情绪，从看见自己开始 👉 {{url}}",
+        "xiaohongshu": "🎭 心灵体检｜{{title}}\n\n{{desc}}\n\n#情绪管理 #心灵体检 #心灵密语 #自我关怀 #心理健康\n\n🔗 {{url}}",
+        "weibo": "【心灵体检】{{title}} 🎭 {{desc}} #心灵密语# #情绪管理# {{url}}"
+      },
+      "compatibility": {
+        "wechat": "缘分合盘：{{title}}\n契合度 {{score}}% 💕\n{{desc}}\n\n测测你们的缘分 👉 {{url}}",
+        "xiaohongshu": "💕 缘分合盘｜{{title}}\n契合度 {{score}}%\n\n{{desc}}\n\n#缘分合盘 #CP #恋爱 #心灵密语 #情感\n\n🔗 {{url}}",
+        "weibo": "【缘分合盘】{{title}} 契合度 {{score}}% 💕 {{desc}} #缘分合盘# #心灵密语# {{url}}"
+      },
+      "tarot": {
+        "wechat": "今日塔罗：{{title}} 🔮\n{{desc}}\n\n来抽一张属于你的牌 👉 {{url}}",
+        "xiaohongshu": "🔮 每日塔罗｜{{title}}\n\n{{desc}}\n\n#塔罗 #每日塔罗 #心灵密语 #今日指引 #灵性成长\n\n🔗 {{url}}",
+        "weibo": "【每日塔罗】{{title}} 🔮 {{desc}} #塔罗# #心灵密语# {{url}}"
+      },
+      "deepReport": {
+        "wechat": "我的深度心理报告：{{title}} 📖\n{{desc}}\n\n读懂自己的内在地图 👉 {{url}}",
+        "xiaohongshu": "📖 深度心理报告｜{{title}}\n\n{{desc}}\n\n#深度报告 #心理分析 #心灵密语 #自我成长 #内在探索\n\n🔗 {{url}}",
+        "weibo": "【深度心理报告】{{title}} 📖 {{desc}} #心灵密语# #心理分析# {{url}}"
+      },
+      "chat": {
+        "wechat": "和 {{agentName}} 的对话太戳我了 💬\n「{{title}}」\n\n{{desc}}\n\n来心灵密语找你的 AI 伙伴 👉 {{url}}",
+        "xiaohongshu": "💬 和 {{agentName}} 聊完，被治愈了\n\n「{{title}}」\n\n{{desc}}\n\n#AI陪伴 #心灵密语 #情感治愈 #聊天记录 #自我对话\n\n🔗 {{url}}",
+        "weibo": "和 {{agentName}} 的对话 💬「{{title}}」 {{desc}} #心灵密语# #AI陪伴# {{url}}"
+      }
+    }
   },
   "paymentTestBanner": {
     "text": "预览环境的支付均为测试模式。",

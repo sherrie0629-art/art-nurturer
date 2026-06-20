@@ -109,7 +109,7 @@ export function useQuoteCard() {
     ctx.fillStyle = "rgba(255,255,255,0.3)";
     ctx.font = "16px 'Inter', sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText("心灵密语 · islandai.life", CARD_WIDTH / 2, CARD_HEIGHT - 50);
+    ctx.fillText("心灵密语 · islandai.life · 探索内心", CARD_WIDTH / 2, CARD_HEIGHT - 50);
 
     return canvas.toDataURL("image/png");
   }, []);

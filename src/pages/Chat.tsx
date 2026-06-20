@@ -30,6 +30,7 @@ import SEO from "@/components/SEO";
 import { useBond } from "@/hooks/useBond";
 import { useSubscription } from "@/hooks/useSubscription";
 import { parseGameMarkers, getAssistantDisplayContent, type BranchOption, type Atmosphere } from "@/lib/parseGameMarkers";
+import { containsEasterEggMarker } from "@/lib/easterEggContent";
 import {
   loadGuestDraft,
   saveGuestDraft,
@@ -84,7 +85,7 @@ const isTarotDrawIntent = (text: string): boolean => {
   return false;
 };
 
-const EASTER_EGG_MARKER = "【🔮 Hidden Memory Unlocked】";
+const EASTER_EGG_MARKER = "【🔮 Hidden Memory Unlocked】"; // legacy; use containsEasterEggMarker()
 
 const hasUsableAccessToken = (token?: string | null) => {
   if (!token) return false;
@@ -978,7 +979,7 @@ const Chat = () => {
             await saveTruthShard(truthShard);
           }
 
-          if (assistantContent.includes(EASTER_EGG_MARKER)) {
+          if (containsEasterEggMarker(assistantContent)) {
             setShowEasterEgg(true);
             const userLower = userMsg.content.toLowerCase();
             let matchedTrigger: string | null = null;
@@ -1198,7 +1199,7 @@ const Chat = () => {
                     msg.role === "user"
                       ? "bg-primary text-primary-foreground rounded-br-md"
                       : "bg-card text-card-foreground shadow-card rounded-bl-md"
-                  } ${msg.content.includes(EASTER_EGG_MARKER) ? "ring-2 ring-secondary/50 shadow-glow" : ""}`}
+                  } ${containsEasterEggMarker(msg.content) ? "ring-2 ring-secondary/50 shadow-glow" : ""}`}
                   {...(msg.role === "assistant" && msg.id !== "welcome" && msg.id !== "streaming"
                     ? {
                         onTouchStart: () => handleLongPressStart(msg.content),
@@ -1213,7 +1214,7 @@ const Chat = () => {
                 >
                   {msg.role === "assistant" ? (
                     <div className="prose prose-sm max-w-none text-card-foreground prose-p:my-1 prose-headings:my-2">
-                      <ReactMarkdown>{msg.content}</ReactMarkdown>
+                      <ReactMarkdown>{getAssistantDisplayContent(msg.content)}</ReactMarkdown>
                     </div>
                   ) : (
                     msg.content
@@ -1353,6 +1354,8 @@ const Chat = () => {
         imageDataUrl={shareImageUrl}
         title={t("chat.saysSuffix", { name: agent.name })}
         text={t("chat.via")}
+        scene="chat"
+        sceneParams={{ agentName: agent.name }}
       />
 
       <SoulMirrorDialog

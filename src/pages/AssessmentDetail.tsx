@@ -10,9 +10,13 @@ import { useSharePoster } from "@/hooks/useSharePoster";
 import ShareSheet from "@/components/ShareSheet";
 import { toast } from "sonner";
 import DeepReportUnlock from "@/components/DeepReportUnlock";
+import AssessmentProfileCard from "@/components/AssessmentProfileCard";
+import type { ShareScene } from "@/lib/shareChannels";
 import { useTranslation } from "react-i18next";
 import i18n from "@/i18n";
 import { normalizeTraitScores } from "@/lib/scoreNormalize";
+import { buildAssessmentPosterBars } from "@/lib/posterBars";
+import { probeMbtiPosterCached } from "@/lib/mbtiPosterCache";
 
 const typeIcons: Record<string, typeof Brain> = {
   mbti: Brain, enneagram: Compass, zodiac: Stars, emotion: Flame,
@@ -74,19 +78,26 @@ const AssessmentDetail = () => {
 
   const handleShare = async () => {
     const iconMap: Record<string, string> = { mbti: "🧠", enneagram: "🧭", zodiac: "⭐", emotion: "🔥" };
-    const bars = d.traits
-      ? Object.entries(d.traits).map(([k, v]) => ({ label1: k, label2: "", value: v as number }))
-      : [];
+    const bars = buildAssessmentPosterBars(type, d.traits as Record<string, number> | undefined, t);
+    let preloadedImageUrl: string | undefined;
+    if (type === "mbti" && d.mbtiType) {
+      preloadedImageUrl = (await probeMbtiPosterCached(d.mbtiType)) || undefined;
+    }
     try {
       const canvas = await generatePoster({
         title: getTitle(),
         subtitle: typeLabel,
         description: d.description || "",
+        profileHook: d.profileHook,
+        profileBullets: d.profileBullets,
         bars,
-        accentColor: "#8b5cf6",
-        accentColorLight: "#a78bfa",
+        accentColor: type === "mbti" ? "#6366f1" : "#8b5cf6",
+        accentColorLight: type === "mbti" ? "#818cf8" : "#a78bfa",
         icon: iconMap[type] || "✨",
-        caption: d.socialCaption || "发现更真实的自己",
+        caption: d.socialCaption || t("assessmentDetail.shareDescAI"),
+        barsSectionTitle: t("assessmentDetail.dimensions"),
+        preloadedImageUrl,
+        imageCacheKey: type === "mbti" && d.mbtiType ? `mbti-${d.mbtiType}` : undefined,
       });
       setShareImageUrl(canvas.toDataURL("image/png"));
       setShareOpen(true);
@@ -209,7 +220,7 @@ const AssessmentDetail = () => {
             <p className="mb-4 text-xs text-secondary italic">"{d.socialCaption}"</p>
           )}
 
-          <p className="text-sm text-foreground leading-relaxed">{d.description}</p>
+          <AssessmentProfileCard data={d} />
         </motion.div>
 
         {/* Dimensions */}
@@ -314,6 +325,7 @@ const AssessmentDetail = () => {
         imageDataUrl={shareImageUrl}
         title={getTitle()}
         text={t("assessmentDetail.shareDescAI")}
+        scene={type as ShareScene}
       />
     </div>
     </DesktopLayout>

@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { dedupeEasterEggContent, matchEasterEggTrigger } from "../_shared/easterEggContent.ts";
 import { checkBannedUserId } from "../_shared/checkUserBanned.ts";
 
 const AI_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
@@ -509,6 +510,21 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
     const MODEL = "google/gemini-2.5-flash";
 
+    const lastUserText = Array.isArray(messages)
+      ? String([...messages].reverse().find((m: any) => m?.role === "user")?.content || "")
+      : "";
+    const personaEggs = persona && Array.isArray(persona.easterEggs) ? persona.easterEggs : [];
+    const unlockedList = Array.isArray(unlockedShards) ? unlockedShards : [];
+    const matchedEgg = personaEggs.length
+      ? matchEasterEggTrigger(lastUserText, personaEggs, unlockedList)
+      : null;
+    if (matchedEgg?.response) {
+      const eggBody = dedupeEasterEggContent(matchedEgg.response);
+      return new Response(makeSseResponse(eggBody), {
+        headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
+      });
+    }
+
     const basePrompt: string =
       (persona && typeof persona.systemPrompt === "string" && persona.systemPrompt.trim())
         ? persona.systemPrompt
@@ -542,7 +558,7 @@ serve(async (req) => {
     // Easter eggs: prefer client-provided persona.easterEggs (full response text),
     // fall back to server-side `easterEggs` (instruction outlines).
     if (persona && Array.isArray(persona.easterEggs) && persona.easterEggs.length > 0) {
-      fullSystemPrompt += `\n\n【Hidden Easter Eggs】Each entry below has a list of trigger keywords AND a ready-made response written in the character's voice. If the user's most recent message contains ANY of the keywords (case-insensitive substring match — paraphrases and obvious synonyms count too), you MUST output the provided response **verbatim** as your entire reply body (you may translate it into ${isZh ? "简体中文" : "English"} if the user's language differs, preserving line breaks, emojis, *italics*, and the marker 【🔮 隐藏记忆解锁】 / 【🔮 Hidden Memory Unlocked】).`;
+      fullSystemPrompt += `\n\n【Hidden Easter Eggs】Each entry below has a list of trigger keywords AND a ready-made response written in the character's voice. If the user's most recent message contains ANY of the keywords (case-insensitive substring match — paraphrases and obvious synonyms count too), you MUST output ONLY the provided Response text as your entire reply — no preamble, no recap, no second copy of the same story before or after the marker. Do not paraphrase the story outside the Response block.${isZh ? "" : " Preserve the marker 【🔮 Hidden Memory Unlocked】."}`;
       persona.easterEggs.forEach((egg: any) => {
         const aliases = Array.isArray(egg.aliases) ? egg.aliases : [];
         const keywords = [egg.trigger, ...aliases].filter(Boolean).map((k: string) => `"${k}"`).join(" / ");
@@ -674,8 +690,9 @@ ${memoryContext.join("\n")}`;
       content: aiContent,
       isZh,
     });
-    if (enforced.rewritten) {
-      return new Response(makeSseResponse(enforced.content), {
+    const finalContent = dedupeEasterEggContent(enforced.content);
+    if (enforced.rewritten || finalContent !== aiContent) {
+      return new Response(makeSseResponse(finalContent), {
         headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
       });
     }

@@ -1,6 +1,8 @@
 import { useRef, useCallback, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { probeMbtiPosterCached } from "@/lib/mbtiPosterCache";
+import { normalizeAssessmentProfile, type AssessmentProfile } from "@/lib/assessmentProfile";
 
 const POSTER_WIDTH = 750;
 const POSTER_PADDING = 75;
@@ -20,6 +22,10 @@ interface PosterConfig {
   imagePrompt?: string;
   imageCacheKey?: string;
   preloadedImageUrl?: string;
+  barsSectionTitle?: string;
+  brandCta?: string;
+  profileHook?: string;
+  profileBullets?: string[];
 }
 
 const imageCache = new Map<string, string>();
@@ -46,6 +52,16 @@ export function useSharePoster() {
         });
       }
 
+      if (options?.cacheKey?.startsWith("mbti-")) {
+        const mbtiType = options.cacheKey.slice("mbti-".length);
+        const storageUrl = await probeMbtiPosterCached(mbtiType);
+        if (storageUrl) {
+          imageCache.set(cacheLookupKey, storageUrl);
+          if (options?.returnUrlOnly) return { src: storageUrl };
+          return loadImageViaBlobUrl(storageUrl);
+        }
+      }
+
       const { data, error } = await supabase.functions.invoke("generate-poster-image", {
         body: { prompt, cacheKey: options?.cacheKey },
       });
@@ -61,6 +77,8 @@ export function useSharePoster() {
   }, []);
 
   const generatePoster = useCallback(async (config: PosterConfig) => {
+    await ensurePosterFonts();
+
     const aiImagePromise = config.preloadedImageUrl
       ? loadImageViaBlobUrl(config.preloadedImageUrl)
       : config.imagePrompt ? fetchAIImage(config.imagePrompt, { cacheKey: config.imageCacheKey }) : Promise.resolve(null);
@@ -71,12 +89,13 @@ export function useSharePoster() {
     const mCtx = measureCanvas.getContext("2d")!;
 
     mCtx.font = "24px sans-serif";
-    const descLineHeight = 38;
     const descMaxWidth = CONTENT_WIDTH - 60;
-    const descLines = getWrappedLines(mCtx, config.description, descMaxWidth);
-    const descTextHeight = descLines.length * descLineHeight;
-    const descCardPadding = 50;
-    const descCardHeight = descTextHeight + descCardPadding;
+    const profile = normalizeAssessmentProfile({
+      description: config.description,
+      profileHook: config.profileHook,
+      profileBullets: config.profileBullets,
+    });
+    const descCardHeight = measureProfileCardHeight(mCtx, profile, descMaxWidth, config.accentColor);
 
     const barItemHeight = 70;
     const barSectionHeight = 40 + config.bars.length * barItemHeight;
@@ -133,13 +152,9 @@ export function useSharePoster() {
     ctx.fillText(config.icon, POSTER_WIDTH / 2, y + 60);
     y += 90;
 
-    // Title
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 48px 'DM Serif Display', serif";
-    ctx.textAlign = "center";
-    const titleText = config.title.length > 12 ? config.title.slice(0, 12) + "…" : config.title;
-    ctx.fillText(titleText, POSTER_WIDTH / 2, y + 50);
-    y += 70;
+    // Title — wrap instead of hard truncate
+    y = drawCenteredTitle(ctx, config.title, POSTER_WIDTH / 2, y + 20, CONTENT_WIDTH);
+    y += 20;
 
     // Subtitle
     ctx.fillStyle = config.accentColor;
@@ -185,21 +200,14 @@ export function useSharePoster() {
     roundRect(ctx, cardX, y, cardWidth, descCardHeight, 18);
     ctx.stroke();
 
-    ctx.fillStyle = "rgba(255,255,255,0.85)";
-    ctx.font = "24px 'Inter', sans-serif";
-    ctx.textAlign = "left";
-    let textY = y + 35;
-    for (const line of descLines) {
-      ctx.fillText(line, cardX + 30, textY);
-      textY += descLineHeight;
-    }
+    drawProfileInCard(ctx, profile, cardX, y, cardWidth, descMaxWidth, config.accentColor);
     y += descCardHeight + sectionGap;
 
     // Bars Section
     ctx.fillStyle = "#ffffff";
     ctx.font = "bold 26px 'DM Serif Display', serif";
     ctx.textAlign = "left";
-    ctx.fillText("Dimensions", POSTER_PADDING, y + 20);
+    ctx.fillText(config.barsSectionTitle || "维度分析", POSTER_PADDING, y + 20);
     y += 40;
 
     for (const bar of config.bars) {
@@ -210,11 +218,12 @@ export function useSharePoster() {
       if (bar.label2) {
         ctx.textAlign = "right";
         ctx.fillText(bar.label2, POSTER_WIDTH - POSTER_PADDING, y + 16);
+      } else {
+        ctx.textAlign = "right";
+        ctx.fillStyle = "rgba(255,255,255,0.5)";
+        ctx.font = "18px 'Inter', sans-serif";
+        ctx.fillText(`${bar.value}%`, POSTER_WIDTH - POSTER_PADDING, y + 16);
       }
-      ctx.textAlign = "right";
-      ctx.fillStyle = "rgba(255,255,255,0.5)";
-      ctx.font = "18px 'Inter', sans-serif";
-      ctx.fillText(`${bar.value}%`, POSTER_WIDTH - POSTER_PADDING, y + 16);
       y += 26;
 
       const barWidth = CONTENT_WIDTH;
@@ -230,6 +239,13 @@ export function useSharePoster() {
         ctx.fillStyle = barGrad;
         roundRect(ctx, POSTER_PADDING, y, fillWidth, 14, 7);
         ctx.fill();
+      }
+
+      if (bar.label2) {
+        ctx.textAlign = "right";
+        ctx.fillStyle = "rgba(255,255,255,0.5)";
+        ctx.font = "18px 'Inter', sans-serif";
+        ctx.fillText(`${bar.value}%`, POSTER_WIDTH - POSTER_PADDING, y + 28);
       }
       y += 14 + 30;
     }
@@ -280,7 +296,7 @@ export function useSharePoster() {
     // Brand CTA
     ctx.fillStyle = "rgba(255,255,255,0.2)";
     ctx.font = "15px 'Inter', sans-serif";
-    ctx.fillText("来 islandai.life 发现你自己 →", POSTER_WIDTH / 2, captionY + 75);
+    ctx.fillText(config.brandCta || "访问 islandai.life · 探索你的内心地图", POSTER_WIDTH / 2, captionY + 75);
 
     drawGradientLine(ctx, config.accentColor, POSTER_PADDING, 675, POSTER_HEIGHT - 40);
 
@@ -367,6 +383,119 @@ export function useSharePoster() {
 }
 
 // Helpers
+
+async function ensurePosterFonts() {
+  try {
+    await Promise.all([
+      document.fonts.load('48px "DM Serif Display"'),
+      document.fonts.load('26px Inter'),
+      document.fonts.load('24px Inter'),
+      document.fonts.load('20px Inter'),
+    ]);
+    await document.fonts.ready;
+  } catch {
+    /* fall back to system fonts */
+  }
+}
+
+function drawCenteredTitle(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  centerX: number,
+  startY: number,
+  maxWidth: number,
+): number {
+  let fontSize = 48;
+  let lines: string[] = [];
+  while (fontSize >= 34) {
+    ctx.font = `bold ${fontSize}px 'DM Serif Display', serif`;
+    lines = getWrappedLines(ctx, text, maxWidth);
+    if (lines.length <= 2) break;
+    fontSize -= 4;
+  }
+  if (lines.length > 2) {
+    lines = lines.slice(0, 2);
+    const last = lines[1];
+    lines[1] = last.length > 1 ? `${last.slice(0, -1)}…` : `${last}…`;
+  }
+  ctx.fillStyle = "#ffffff";
+  ctx.textAlign = "center";
+  let y = startY + fontSize;
+  for (const line of lines) {
+    ctx.fillText(line, centerX, y);
+    y += fontSize * 1.12;
+  }
+  return y;
+}
+
+function measureProfileCardHeight(
+  ctx: CanvasRenderingContext2D,
+  profile: AssessmentProfile,
+  maxWidth: number,
+  _accentColor: string,
+): number {
+  const padding = 50;
+  let height = padding;
+
+  if (profile.hook) {
+    ctx.font = "bold 26px 'Inter', sans-serif";
+    height += getWrappedLines(ctx, profile.hook, maxWidth).length * 34 + 12;
+  }
+
+  if (profile.bullets.length) {
+    ctx.font = "22px 'Inter', sans-serif";
+    for (const bullet of profile.bullets) {
+      height += getWrappedLines(ctx, bullet, maxWidth - 28).length * 36 + 8;
+    }
+  }
+
+  if (!profile.hook && !profile.bullets.length) {
+    ctx.font = "24px 'Inter', sans-serif";
+    height += 38;
+  }
+
+  return height + 10;
+}
+
+function drawProfileInCard(
+  ctx: CanvasRenderingContext2D,
+  profile: AssessmentProfile,
+  cardX: number,
+  cardY: number,
+  _cardWidth: number,
+  maxWidth: number,
+  accentColor: string,
+) {
+  const textX = cardX + 30;
+  let textY = cardY + 38;
+
+  if (profile.hook) {
+    ctx.fillStyle = accentColor;
+    ctx.font = "bold 26px 'Inter', sans-serif";
+    ctx.textAlign = "left";
+    for (const line of getWrappedLines(ctx, profile.hook, maxWidth)) {
+      ctx.fillText(line, textX, textY);
+      textY += 34;
+    }
+    textY += 10;
+  }
+
+  if (profile.bullets.length) {
+    for (const bullet of profile.bullets) {
+      ctx.fillStyle = accentColor;
+      ctx.font = "18px 'Inter', sans-serif";
+      ctx.fillText("✦", textX, textY);
+
+      ctx.fillStyle = "rgba(255,255,255,0.88)";
+      ctx.font = "22px 'Inter', sans-serif";
+      const lines = getWrappedLines(ctx, bullet, maxWidth - 28);
+      for (let i = 0; i < lines.length; i++) {
+        ctx.fillText(lines[i], textX + 24, textY + i * 32);
+      }
+      textY += lines.length * 32 + 10;
+    }
+  }
+}
 
 function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
   ctx.beginPath();
