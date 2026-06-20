@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { agents as RAW_AGENTS, BOND_THRESHOLDS } from "@/data/agents";
 import { localizeAgent } from "@/lib/localizeAgent";
+import { getBondLabel } from "@/lib/bondLabels";
 import BottomNav from "@/components/BottomNav";
 import DesktopLayout from "@/components/DesktopLayout";
 import SEO from "@/components/SEO";
@@ -29,14 +30,6 @@ const Vault = () => {
   const mirrorUnlockedByTurns = Object.values(bonds).some((b) => (b.turns || 0) >= 10);
 
   const agents = RAW_AGENTS.map((a) => localizeAgent(a, t));
-
-  const bondLabels = [
-    t("home.bondLabels.stranger"),
-    t("home.bondLabels.acquaintance"),
-    t("home.bondLabels.trusted"),
-    t("home.bondLabels.close"),
-    t("home.bondLabels.soulbound"),
-  ];
 
   useEffect(() => {
     if (!user) return;
@@ -131,7 +124,7 @@ const Vault = () => {
                   <h3 className="text-sm font-semibold text-foreground truncate">{agent.name}</h3>
                   <p className="text-[11px] text-muted-foreground truncate">{agent.title}</p>
                 </div>
-                <span className="shrink-0 text-xs font-semibold text-secondary">
+                <span className="shrink-0 text-xs font-semibold text-gold-light">
                   {unlockedCount}/{agent.lore.length}
                 </span>
               </div>
@@ -145,9 +138,9 @@ const Vault = () => {
                       className={`rounded-xl border p-3 ${isUnlocked ? "border-secondary/20 bg-card" : "border-border bg-muted/30"}`}
                     >
                       <div className="flex items-center gap-2 mb-1.5">
-                        <div className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${isUnlocked ? "bg-secondary/10 text-secondary" : "bg-muted text-muted-foreground"}`}>
+                        <div className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${isUnlocked ? "bg-gold/10 text-gold-light" : "bg-muted text-muted-foreground"}`}>
                           {isUnlocked ? <Unlock className="h-2.5 w-2.5" /> : <Lock className="h-2.5 w-2.5" />}
-                          {t("archive.lvLabel", { lv: entry.level, label: bondLabels[entry.level - 1] })}
+                          {t("archive.lvLabel", { lv: entry.level, label: getBondLabel(t, entry.level) })}
                         </div>
                         {!isUnlocked && (
                           <span className="text-[10px] text-muted-foreground">

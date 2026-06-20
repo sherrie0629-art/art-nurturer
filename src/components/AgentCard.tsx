@@ -42,7 +42,7 @@ const AgentCard = ({ id, name, title, description, image, gradient, bondLevel }:
         )}
       </div>
       <h3 className="font-display text-sm font-semibold text-foreground">{name}</h3>
-      <p className="text-[11px] font-medium text-secondary">{title}</p>
+      <p className="text-[11px] font-medium text-gold-light/90">{title}</p>
       <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground line-clamp-2 text-center">
         {description}
       </p>

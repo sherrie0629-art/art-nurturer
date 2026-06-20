@@ -1,8 +1,10 @@
-import { Lock, Gem, Sparkles, ArrowRight, Zap, Briefcase, MapPin, Heart } from "lucide-react";
+import { Lock, Gem, Sparkles, ArrowRight, Zap, Briefcase, MapPin, Heart, ScrollText } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { Agent, BOND_LABELS, BOND_THRESHOLDS } from "@/data/agents";
+import { Agent, BOND_THRESHOLDS, PROFILE_FIELD_UNLOCK_LEVELS, getBondProgressInLevel, getBondTurnsToNextLevel } from "@/data/agents";
+import { getBondLabel } from "@/lib/bondLabels";
 import { localizeAgent } from "@/lib/localizeAgent";
+import AgentWelcomeIntro from "@/components/AgentWelcomeIntro";
 import {
   Drawer,
   DrawerContent,
@@ -34,12 +36,8 @@ const AgentProfileDrawer = ({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const agent = localizeAgent(rawAgent, t);
-  const nextThreshold = BOND_THRESHOLDS[bondLevel] ?? BOND_THRESHOLDS[BOND_THRESHOLDS.length - 1];
-  const prevThreshold = BOND_THRESHOLDS[bondLevel - 1] ?? 0;
-  const progressPct =
-    bondLevel >= BOND_LABELS.length
-      ? 100
-      : Math.min(100, ((totalTurns - prevThreshold) / (nextThreshold - prevThreshold)) * 100);
+  const progressPct = getBondProgressInLevel(bondLevel, totalTurns);
+  const turnsToNext = getBondTurnsToNextLevel(bondLevel, totalTurns);
 
   const info = (t(`agentDrawer.info.${agent.id}`, { returnObjects: true }) as Record<string, string>) || {};
   const shardHintsRaw = t(`agentDrawer.shardHints.${agent.id}`, { returnObjects: true, defaultValue: [] });
@@ -99,19 +97,59 @@ const AgentProfileDrawer = ({
           {/* Quote */}
           <p className="text-center text-sm italic text-muted-foreground mt-4 leading-relaxed">"{agent.quote}"</p>
 
-          {/* Identity badges */}
+          {/* First meeting intro — always available */}
+          <div className="rounded-xl border border-border/60 bg-muted/30 p-3.5">
+            <h3 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-foreground">
+              <ScrollText className="h-3.5 w-3.5 text-secondary" />
+              {t("agentDrawer.meetIntro")}
+            </h3>
+            <AgentWelcomeIntro agent={agent} className="text-xs text-foreground/85" />
+          </div>
+
+          {/* Identity badges — unlock with bond (identity Lv1, location Lv2, token Lv4) */}
           <div className="grid grid-cols-3 gap-2">
-            {[
-              { icon: Briefcase, label: t("agentDrawer.identity"), value: info.identity },
-              { icon: MapPin, label: t("agentDrawer.location"), value: info.location },
-              { icon: Heart, label: t("agentDrawer.token"), value: info.token },
-            ].map((b, i) => (
-              <div key={i} className="rounded-xl border border-border bg-card/50 p-2.5 text-center">
-                <b.icon className="mx-auto h-3.5 w-3.5 text-secondary mb-1" />
-                <p className="text-[9px] uppercase tracking-wider text-muted-foreground/70">{b.label}</p>
-                <p className="mt-0.5 text-[11px] font-medium text-foreground leading-tight">{b.value}</p>
-              </div>
-            ))}
+            {(
+              [
+                { key: "identity" as const, icon: Briefcase, label: t("agentDrawer.identity"), unlockLevel: PROFILE_FIELD_UNLOCK_LEVELS.identity },
+                { key: "location" as const, icon: MapPin, label: t("agentDrawer.location"), unlockLevel: PROFILE_FIELD_UNLOCK_LEVELS.location },
+                { key: "token" as const, icon: Heart, label: t("agentDrawer.token"), unlockLevel: PROFILE_FIELD_UNLOCK_LEVELS.token },
+              ] as const
+            ).map((field) => {
+              const unlocked = bondLevel >= field.unlockLevel;
+              const threshold = BOND_THRESHOLDS[field.unlockLevel - 1] ?? 0;
+              const value = info[field.key];
+              return (
+                <div
+                  key={field.key}
+                  className={`rounded-xl border p-2.5 text-center ${
+                    unlocked
+                      ? "border-gold/25 bg-muted/50"
+                      : "border-border/60 bg-muted/30"
+                  }`}
+                >
+                  <field.icon
+                    className={`mx-auto h-3.5 w-3.5 mb-1 ${unlocked ? "text-gold-light" : "text-muted-foreground/45"}`}
+                    strokeWidth={2}
+                  />
+                  <p className="text-[9px] uppercase tracking-wider text-muted-foreground">{field.label}</p>
+                  {unlocked && value ? (
+                    <p className="mt-0.5 text-[11px] font-medium text-foreground leading-tight">{value}</p>
+                  ) : (
+                    <div className="mt-0.5 space-y-0.5">
+                      <p className="text-[11px] font-medium text-muted-foreground/70 tracking-widest">
+                        {t("agentDrawer.profileLocked")}
+                      </p>
+                      {!unlocked && (
+                        <p className="flex items-center justify-center gap-0.5 text-[8px] text-muted-foreground/55 leading-tight">
+                          <Lock className="h-2 w-2 shrink-0" />
+                          {t("agentDrawer.lvUnlocksAt", { n: threshold })}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
 
           {/* Bond level */}
@@ -119,13 +157,18 @@ const AgentProfileDrawer = ({
             <div className="flex items-center justify-between text-xs">
               <span className="font-medium text-foreground">
                 {t("agentDrawer.bondPrefix")}
-                <span className="text-secondary">
-                  {t(`home.bondLabels.${(["stranger","acquaintance","trusted","close","soulbound"][bondLevel - 1]) || "stranger"}`)}
-                </span>
+                <span className="text-gold-light font-semibold">{getBondLabel(t, bondLevel)}</span>
               </span>
               <span className="text-muted-foreground">{t("agentDrawer.lvTurns", { lv: bondLevel, n: totalTurns })}</span>
             </div>
             <Progress value={progressPct} className="h-1.5" />
+            {turnsToNext !== null && (
+              <p className="text-[10px] text-muted-foreground text-right">
+                {turnsToNext === 0
+                  ? t("agentDrawer.bondLevelUpSoon", { next: bondLevel + 1 })
+                  : t("agentDrawer.bondProgressHint", { next: bondLevel + 1, n: turnsToNext })}
+              </p>
+            )}
           </div>
 
           {/* Lore timeline */}
@@ -241,7 +284,7 @@ const AgentProfileDrawer = ({
                 {t("agentDrawer.universeKnows")}{" "}
                 {related.map((n, i) => (
                   <span key={n}>
-                    <span className="font-medium text-secondary">{n}</span>
+                    <span className="font-medium text-gold-light">{n}</span>
                     {i < related.length - 1 ? "、" : ""}
                   </span>
                 ))}

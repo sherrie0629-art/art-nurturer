@@ -1,5 +1,19 @@
 const EASTER_EGG_MARKER_RE = /【🔮\s*(?:隐藏记忆解锁|Hidden Memory Unlocked)】/gi;
 
+export function containsEasterEggMarker(content: string): boolean {
+  EASTER_EGG_MARKER_RE.lastIndex = 0;
+  return EASTER_EGG_MARKER_RE.test(content);
+}
+
+function normalizeForKeywordMatch(s: string): string {
+  return s.toLowerCase().replace(/[\s,，。！？、；：""''「」!?;:'"]/g, "");
+}
+
+function messageContainsKeyword(message: string, keyword: string): boolean {
+  if (!keyword.trim()) return false;
+  return normalizeForKeywordMatch(message).includes(normalizeForKeywordMatch(keyword));
+}
+
 function normalizeForCompare(s: string): string {
   return s.replace(/[\s*「」""''\n]/g, "").toLowerCase();
 }
@@ -30,6 +44,14 @@ function dedupeParagraphs(text: string): string {
     out.push(p);
   }
   return out.join("\n\n");
+}
+
+export function stripEasterEggBlock(raw: string): string {
+  EASTER_EGG_MARKER_RE.lastIndex = 0;
+  const match = EASTER_EGG_MARKER_RE.exec(raw);
+  if (!match || match.index == null) return raw.trim();
+  const before = raw.slice(0, match.index).trim();
+  return before ? dedupeParagraphs(before) : "";
 }
 
 export function dedupeEasterEggContent(raw: string): string {
@@ -65,13 +87,28 @@ export function matchEasterEggTrigger(
   eggs: { trigger: string; aliases?: string[]; response: string }[],
   unlockedTriggers: string[],
 ): { trigger: string; response: string } | null {
-  const lower = userText.toLowerCase();
   for (const egg of eggs) {
     if (unlockedTriggers.includes(egg.trigger)) continue;
     const keywords = [egg.trigger, ...(egg.aliases || [])];
-    if (keywords.some((k) => k && lower.includes(k.toLowerCase()))) {
+    if (keywords.some((k) => messageContainsKeyword(userText, k))) {
       return egg;
     }
   }
   return null;
+}
+
+export function sanitizeEasterEggReply(
+  userText: string,
+  assistantContent: string,
+  eggs: { trigger: string; aliases?: string[]; response: string }[],
+  unlockedTriggers: string[],
+): { content: string; matched: { trigger: string; response: string } | null } {
+  if (!containsEasterEggMarker(assistantContent)) {
+    return { content: assistantContent, matched: null };
+  }
+  const matched = matchEasterEggTrigger(userText, eggs, unlockedTriggers);
+  if (matched) {
+    return { content: dedupeEasterEggContent(assistantContent), matched };
+  }
+  return { content: stripEasterEggBlock(assistantContent), matched: null };
 }

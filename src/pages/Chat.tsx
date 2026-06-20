@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Send, Zap, Plus, Home, BookOpen, Sparkles, User, Coffee, Flame, Moon, MessageCircleHeart } from "lucide-react";
+import { ArrowLeft, Send, Zap, Home, BookOpen, Sparkles, User, Coffee, Flame, Moon, MessageCircleHeart } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useLocale } from "@/hooks/useLocale";
 import { useQuoteCard } from "@/hooks/useQuoteCard";
@@ -19,7 +19,8 @@ import BranchSelector from "@/components/BranchSelector";
 import ChatParticles from "@/components/ChatParticles";
 import AgentProfileDrawer from "@/components/AgentProfileDrawer";
 import { useAchievements } from "@/hooks/useAchievements";
-import { agents as RAW_AGENTS, BOND_LABELS } from "@/data/agents";
+import { agents as RAW_AGENTS } from "@/data/agents";
+import { getBondLabel } from "@/lib/bondLabels";
 import { localizeAgent, getAgentWelcome, getAgentQuickReplies } from "@/lib/localizeAgent";
 import { useAuth } from "@/contexts/AuthContext";
 import { ACCOUNT_SUSPENDED_MESSAGE } from "@/lib/accountStatus";
@@ -30,7 +31,7 @@ import SEO from "@/components/SEO";
 import { useBond } from "@/hooks/useBond";
 import { useSubscription } from "@/hooks/useSubscription";
 import { parseGameMarkers, getAssistantDisplayContent, type BranchOption, type Atmosphere } from "@/lib/parseGameMarkers";
-import { containsEasterEggMarker } from "@/lib/easterEggContent";
+import { containsEasterEggMarker, sanitizeEasterEggReply } from "@/lib/easterEggContent";
 import {
   loadGuestDraft,
   saveGuestDraft,
@@ -41,6 +42,7 @@ import {
 
 import { toast } from "sonner";
 import { generateSoulFragment } from "@/hooks/useSoulFragment";
+import { CHAT_FRAGMENT_TURN_INTERVAL } from "@/lib/soulFragmentRules";
 import TarotCardInline, { type InlineTarotCard } from "@/components/TarotCardInline";
 import SoulMirrorDialog from "@/components/SoulMirrorDialog";
 
@@ -84,8 +86,6 @@ const isTarotDrawIntent = (text: string): boolean => {
   if (/\b(new|another)\s+(tarot|card)\b/.test(t)) return true;
   return false;
 };
-
-const EASTER_EGG_MARKER = "【🔮 Hidden Memory Unlocked】"; // legacy; use containsEasterEggMarker()
 
 const hasUsableAccessToken = (token?: string | null) => {
   if (!token) return false;
@@ -459,7 +459,6 @@ const Chat = () => {
         return;
       }
 
-
       const [convResult, recallResult, summariesResult] = await Promise.all([
         supabase
           .from("conversations")
@@ -551,6 +550,7 @@ const Chat = () => {
               .catch((e) => console.error("[Chat] re-sign tarot images error", e));
           }
         } else if (loadGen === historyLoadGenRef.current && !isStreamingRef.current) {
+          setConversationId(convData.id);
           setMessages([{ id: "welcome", role: "assistant", content: getWelcomeMessage(agent) }]);
         }
       } else if (loadGen === historyLoadGenRef.current && !isStreamingRef.current) {
@@ -568,7 +568,6 @@ const Chat = () => {
   useEffect(() => {
     if (mbtiResult && historyLoaded && !mbtiAutoSentRef.current && user) {
       mbtiAutoSentRef.current = true;
-      setConversationId(null);
       if (locale === "zh") {
         const puText = mbtiResult.parallelUniverse
           ? `，听说在奇幻世界我会是${mbtiResult.parallelUniverse.magic?.role}，赛博朋克里则是${mbtiResult.parallelUniverse.cyberpunk?.role}`
@@ -586,7 +585,6 @@ const Chat = () => {
   useEffect(() => {
     if (emotionResult && historyLoaded && !emotionAutoSentRef.current && user) {
       emotionAutoSentRef.current = true;
-      setConversationId(null);
       handleSend(locale === "zh"
         ? `我刚做完心灵体验测评，结果是「${emotionResult.emotionLevel}」——${emotionResult.title}。倦怠 ${emotionResult.traits.burnout}%、能量 ${emotionResult.traits.energy}%。能聊聊我现在的状态吗？🌈`
         : `I just did a Wellness Check and scored "${emotionResult.emotionLevel}" — ${emotionResult.title}. Burnout at ${emotionResult.traits.burnout}%, energy at ${emotionResult.traits.energy}%. Can we talk about how I'm doing? 🌈`);
@@ -596,7 +594,6 @@ const Chat = () => {
   useEffect(() => {
     if (enneagramResult && historyLoaded && !enneagramAutoSentRef.current && user) {
       enneagramAutoSentRef.current = true;
-      setConversationId(null);
       handleSend(locale === "zh"
         ? `我刚做完九型人格测评——我是 ${enneagramResult.type} 号（${enneagramResult.title}）。核心恐惧：${enneagramResult.coreFear}；核心渴望：${enneagramResult.coreDesire}。陪我一起聊聊吧 💭`
         : `I just did the Enneagram quiz — I'm Type ${enneagramResult.type} (${enneagramResult.title}). Core fear: ${enneagramResult.coreFear}; core desire: ${enneagramResult.coreDesire}. Wanna unpack this with me? 💭`);
@@ -606,7 +603,6 @@ const Chat = () => {
   useEffect(() => {
     if (zodiacResult && historyLoaded && !zodiacAutoSentRef.current && user) {
       zodiacAutoSentRef.current = true;
-      setConversationId(null);
       handleSend(locale === "zh"
         ? `星轨，我刚拿到 ${zodiacResult.zodiacSign} 的解读——「${zodiacResult.title}」。能帮我看看这对我现在意味着什么吗？✨🌙`
         : `Xinggui, I just got my ${zodiacResult.zodiacSign} reading — "${zodiacResult.title}". Can you read into what this means for me right now? ✨🌙`);
@@ -616,7 +612,6 @@ const Chat = () => {
   useEffect(() => {
     if (tarotResult && historyLoaded && !tarotAutoSentRef.current && user) {
       tarotAutoSentRef.current = true;
-      setConversationId(null);
       handleSend(locale === "zh"
         ? `星轨，我今天抽到了 ${tarotResult.cardName}（${tarotResult.isReversed ? "逆位" : "正位"}）。这张牌对我到底意味着什么？🔮`
         : `Xinggui, I just drew ${tarotResult.cardName} (${tarotResult.isReversed ? "reversed" : "upright"}) today. What does it really mean for me? 🔮`);
@@ -626,7 +621,6 @@ const Chat = () => {
   useEffect(() => {
     if (compatibilityResult && historyLoaded && !compatibilityAutoSentRef.current && user) {
       compatibilityAutoSentRef.current = true;
-      setConversationId(null);
       handleSend(locale === "zh"
         ? `我刚做了和 ${compatibilityResult.partnerName} 的缘分配对——我们匹配度 ${compatibilityResult.overallScore}%（${compatibilityResult.title}）。说点实话，我接下来到底该怎么办？💕`
         : `I just ran a compatibility report with ${compatibilityResult.partnerName} — we matched ${compatibilityResult.overallScore}% (${compatibilityResult.title}). Tell me real talk, what should I actually do with this? 💕`);
@@ -636,7 +630,6 @@ const Chat = () => {
   useEffect(() => {
     if (fortuneStickResult && historyLoaded && !fortuneStickAutoSentRef.current && user) {
       fortuneStickAutoSentRef.current = true;
-      setConversationId(null);
       const f = fortuneStickResult;
       handleSend(locale === "zh"
         ? `星轨，我今天求到第 ${f.stickNumber} 签「${f.title}」（${f.level}）。签诗是：${f.poem}。这签到底在跟我说啥呀？🍃`
@@ -644,19 +637,23 @@ const Chat = () => {
     }
   }, [historyLoaded, fortuneStickResult, user]);
 
-  const startNewConversation = useCallback(() => {
-    if (conversationId && messages.length > 4 && user) {
-      const msgs = messages.filter((m) => m.id !== "welcome");
-      supabase.functions.invoke("summarize-conversation", {
-        body: { messages: msgs, agentId, userId: user.id, locale },
-      });
-    }
-    setConversationId(null);
-    setMessages([{ id: "welcome", role: "assistant", content: getWelcomeMessage(agent) }]);
-  }, [conversationId, messages, user, agentId, agent, locale]);
-
   const ensureConversation = useCallback(async () => {
     if (conversationId || !user) return conversationId;
+
+    const { data: existing } = await supabase
+      .from("conversations")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("agent_id", agentId)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (existing) {
+      setConversationId(existing.id);
+      return existing.id;
+    }
+
     const { data, error } = await supabase
       .from("conversations")
       .insert({ user_id: user.id, agent_id: agentId, title: `Chat with ${agent.name}` })
@@ -937,9 +934,16 @@ const Chat = () => {
         onDelta: upsertAssistant,
         onDone: async () => {
           console.log("[Chat] raw AI response:", assistantContent.slice(-200));
-          const parsed = parseGameMarkers(assistantContent);
+          const eggResult = sanitizeEasterEggReply(
+            userMsg.content,
+            assistantContent,
+            rawAgent.easterEggs,
+            easterEggsFound,
+          );
+          const cleanedContent = eggResult.content;
+          const parsed = parseGameMarkers(cleanedContent);
           const { energyGain, branchOptions: parsedOptions, truthShard, atmosphere: newAtmosphere } = parsed;
-          const displayContent = getAssistantDisplayContent(assistantContent);
+          const displayContent = getAssistantDisplayContent(cleanedContent);
 
           if (!displayContent) {
             console.warn("[Chat] empty assistant body — dropping bubble and asking user to retry");
@@ -979,22 +983,9 @@ const Chat = () => {
             await saveTruthShard(truthShard);
           }
 
-          if (containsEasterEggMarker(assistantContent)) {
+          if (eggResult.matched) {
             setShowEasterEgg(true);
-            const userLower = userMsg.content.toLowerCase();
-            let matchedTrigger: string | null = null;
-            for (const egg of agent.easterEggs) {
-              const candidates = [egg.trigger, ...(egg.aliases || [])];
-              if (candidates.some((c) => userLower.includes(c.toLowerCase()))) {
-                matchedTrigger = egg.trigger;
-                break;
-              }
-            }
-            if (!matchedTrigger) {
-              const unseen = agent.easterEggs.find((e) => !easterEggsFound.includes(e.trigger));
-              if (unseen) matchedTrigger = unseen.trigger;
-            }
-            if (matchedTrigger) recordEasterEgg(matchedTrigger);
+            recordEasterEgg(eggResult.matched.trigger);
           }
 
           await incrementTurn();
@@ -1030,9 +1021,11 @@ const Chat = () => {
   const conversationIdRef = useRef(conversationId);
   const messagesRef = useRef(messages);
   const userRef = useRef(user);
+  const totalTurnsRef = useRef(totalTurns);
   useEffect(() => { conversationIdRef.current = conversationId; }, [conversationId]);
   useEffect(() => { messagesRef.current = messages; }, [messages]);
   useEffect(() => { userRef.current = user; }, [user]);
+  useEffect(() => { totalTurnsRef.current = totalTurns; }, [totalTurns]);
 
   useEffect(() => {
     return () => {
@@ -1041,7 +1034,6 @@ const Chat = () => {
       const u = userRef.current;
       if (cid && msgs.length > 4 && u) {
         const filtered = msgs.filter((m) => m.id !== "welcome");
-        const turnCount = filtered.filter(m => m.role === "user").length;
         supabase.functions.invoke("summarize-conversation", {
           body: { messages: filtered, agentId, userId: u.id, locale },
         }).then(({ data }) => {
@@ -1053,8 +1045,10 @@ const Chat = () => {
               summary: data.summary,
               key_topics: data.key_topics,
             });
-            if (turnCount >= 6) {
-              generateSoulFragment(u.id, "chat", agentId, `Chat summary with ${agent.name}: ${data.summary}`);
+            if (totalTurnsRef.current >= CHAT_FRAGMENT_TURN_INTERVAL) {
+              generateSoulFragment(u.id, "chat", agentId, `Chat summary with ${agent.name}: ${data.summary}`, {
+                totalTurns: totalTurnsRef.current,
+              });
             }
           }
         });
@@ -1156,13 +1150,6 @@ const Chat = () => {
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold text-foreground truncate">{agent.name}</h2>
               <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                <button
-                  onClick={startNewConversation}
-                  className="rounded-lg bg-muted/50 p-1.5 text-muted-foreground transition-colors hover:bg-muted active:scale-95"
-                  title={t("chat.newConv")}
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                </button>
                 <div className="flex items-center gap-1 rounded-lg bg-primary/10 px-2 py-1">
                   <Zap className="h-3 w-3 text-primary" />
                   <span className="text-[11px] font-bold text-primary">{energyBits}</span>
@@ -1235,7 +1222,7 @@ const Chat = () => {
               className="mx-auto flex items-center gap-2 rounded-2xl bg-secondary/5 border border-secondary/15 px-3 py-2 max-w-[85%]"
             >
               <span className="text-[11px] leading-relaxed text-muted-foreground">
-                {t("chat.energyHint", { name: agent.name })}<span className="text-foreground font-medium">{t(`home.bondLabels.${(["stranger","acquaintance","trusted","close","soulbound"][bondLevel - 1]) || "stranger"}`)}</span>
+                {t("chat.energyHint", { name: agent.name })}<span className="text-gold-light font-medium">{getBondLabel(t, bondLevel)}</span>
               </span>
             </motion.div>
           )}
@@ -1377,7 +1364,7 @@ const Chat = () => {
         <div>
           <div className="flex items-center justify-between text-xs mb-1.5">
             <span className="text-muted-foreground">{t("chat.bondLevel")}</span>
-            <span className="text-foreground font-medium">{t(`home.bondLabels.${(["stranger","acquaintance","trusted","close","soulbound"][bondLevel - 1]) || "stranger"}`)}</span>
+            <span className="text-gold-light font-medium">{getBondLabel(t, bondLevel)}</span>
           </div>
           <BondIndicator level={bondLevel} totalTurns={totalTurns} energyBits={energyBits} />
         </div>

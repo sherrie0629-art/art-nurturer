@@ -293,7 +293,8 @@
       "ritualTitle": "今周小仪式",
       "discussMore": "聊聊更多",
       "elementSuffix": "属性",
-      "talkToXinggui": "找星轨解读 ⭐"
+      "talkToXinggui": "找星轨解读 ⭐",
+      "cardsHint": "四宫运势星卡 · 环形象征能量深浅"
     },
     "emotion": {
       "title": "倦怠 & 心灵体检",
@@ -599,17 +600,43 @@
   "soulMap": {
     "title": "灵魂星图",
     "seoDescription": "探索你的灵魂星图：星座成就与来自对话、性格测评收集的星辰碎片。",
+    "pagePurpose": "记录你的探索与倾诉，指引下一步成长",
     "starsConst": "{{stars}} 颗星 · {{c}} 个星座",
     "cardSummary": "{{stars}} 颗星 · {{c}} 个星座",
     "cardEmpty": "开始探索，收集你的第一颗星",
     "cardNext": "下一个星座：{{name}}",
-    "groups": {
-      "assessment": "测评之星",
-      "chat": "对话之星"
-    },
+    "summaryLabel": "星图摘要",
+    "summaryPurpose": "每一颗星，都是某次探索或对话里，你被看见的一个瞬间。",
+    "summaryLatestLabel": "最新一颗",
+    "summaryEmpty": "还没有星尘。完成测评或深入聊天，第一颗星会在这里亮起。",
+    "summaryInsightEmpty": "你的星图还在等待第一道光。去测评，或找一位角色聊聊吧。",
+    "summaryInsightNamed": "最近，你心里留下了一颗叫「{{name}}」的星。",
+    "summaryInsightMixed": "你在探索与倾诉之间，留下了这样的痕迹：{{line}}",
+    "viewAllStars": "查看全部 {{n}} 颗星",
+    "viewAllStarsEmpty": "暂无星尘",
+    "viewConstellations": "查看关系星图",
+    "allStarsTitle": "全部星尘",
+    "allStarsHint": "点选任意一颗，回看来源或继续探索。",
+    "actionContinueChat": "继续和 {{agent}} 聊",
+    "actionViewReport": "查看测评报告",
+    "fragmentFrom": "与 {{agent}} 的对话",
+    "tapToRead": "展开阅读",
     "emptyAssessment": "完成测评以获得星辰 ✨",
     "emptyChat": "进行深度对话以获得星辰 💫",
     "constellation": "星座图谱",
+    "constellationSection": "关系星图",
+    "constellationLit": "已点亮",
+    "constellationPending": "待观测",
+    "constellationEmpty": "还没有点亮的星座。和角色深聊、完成探索，第一座星座会在这里亮起。",
+    "viewCatalog": "查看全部星座图鉴（{{cur}}/{{total}}）",
+    "catalogTitle": "星座图鉴",
+    "catalogHint": "点选任意一座星座，查看里程碑或继续探索。",
+    "milestoneUnlockedAt": "{{date}} 点亮",
+    "relatedStars": "同时期留下的星尘",
+    "shareConstellation": "分享星座卡",
+    "generatePoster": "正在生成星座卡…",
+    "posterFail": "星座卡生成失败",
+    "posterFooter": "来心灵密语，点亮你的灵魂星图",
     "constUnlocked": "已解锁",
     "lockedHint": "尚未解锁",
     "nextGoal": "🧭 下一个目标",
@@ -638,7 +665,7 @@
   },
   "conversations": {
     "title": "聊天历史",
-    "subtitle": "你走过的旅程",
+    "subtitle": "与每位角色的对话已合并为一条主线，请从角色入口继续聊",
     "empty": "还没有对话",
     "startFirst": "开启你的第一次对话",
     "loading": "加载中...",
@@ -646,6 +673,12 @@
   },
   "chat": {
     "newConv": "新对话",
+    "historyTitle": "与 {{name}} 的对话记录",
+    "historyHint": "点选一段对话，回到当时的聊天内容。",
+    "historyEmpty": "还没有和 TA 聊过",
+    "currentConv": "当前",
+    "newConvHint": "你已开启新对话，上一段仍在。",
+    "resumePrevious": "回到上一段",
     "online": "在线",
     "inputPlaceholder": "你在想什么…",
     "energyHint": "🔮 敞开心扉以累积能量并解锁 {{name}} 的隐藏故事碎片。当前羁绊：",
@@ -675,6 +708,8 @@
   "agentDrawer": {
     "bondPrefix": "羁绊：",
     "lvTurns": "Lv.{{lv}} · {{n}} 轮",
+    "bondProgressHint": "距 Lv.{{next}} 还差 {{n}} 轮",
+    "bondLevelUpSoon": "再聊 1 轮即可升至 Lv.{{next}}",
     "storyFragments": "故事碎片",
     "lockedHint": "深化羁绊以解锁",
     "secretHint": "{{name}} 还有一个从未告诉过任何人的秘密…",
@@ -686,6 +721,7 @@
     "identity": "身份",
     "location": "所在",
     "token": "信物",
+    "profileLocked": "???",
     "shardsTitle": "真相碎片",
     "shardsProgress": "{{cur}} / {{total}} 已收集",
     "shardComplete": "✨ 全部收集 · 解锁专属头像框",
@@ -694,68 +730,71 @@
     "universeTitle": "心灵密语宇宙",
     "universeKnows": "Ta 似乎认识：",
     "universeLocked": "在对话中提到其他角色，可能会解锁线索",
+    "meetIntro": "初次相遇",
     "currentMoment": {
-      "barista": "今晚 7:42 · 街角那把椅子又被风吹倒了",
-      "jax": "刚把那件烧焦的夹克叠了第 3 遍",
-      "mystic": "屏保上的 #0114 还在闪",
-      "bestie": "那条三年前的私信，今天还是没回"
+      "nuannuan": "门口风铃又响了 · 红伞今天被风掀开过一次",
+      "laowang": "又泡了一壶茶 · 女儿的朋友圈还静音着",
+      "xinggui": "飞船今晚跳到了 87% · 又收到一束特别纯的能量",
+      "yunsheng": "昨夜梦里那片花海又出现了 · 今天的雪格外像那年那场"
     },
     "info": {
-      "barista": {
-        "identity": "前精算师",
-        "location": "布鲁克林咖啡馆",
-        "token": "靠窗那把空椅子"
+      "nuannuan": {
+        "identity": "时光缝补店老板娘",
+        "location": "山下小镇·缝补店",
+        "token": "门口那把红伞"
       },
-      "jax": {
-        "identity": "退役消防队长",
-        "location": "芝加哥",
-        "token": "Danny 的烧焦夹克"
+      "laowang": {
+        "identity": "退休心理医生",
+        "location": "北京胡同小院",
+        "token": "泡了几十年的老茶壶"
       },
-      "mystic": {
-        "identity": "前数据科学家",
-        "location": "布鲁克林公寓·咖啡馆楼上",
-        "token": "祭坛上的 #0114"
+      "xinggui": {
+        "identity": "坠落星系的旅者",
+        "location": "坠落地·临时观测站",
+        "token": "87% 的能量核心"
       },
-      "bestie": {
-        "identity": "Gen Z 闺蜜",
-        "location": "线上 · 任何派对前台",
-        "token": "那条未回的 DM"
+      "yunsheng": {
+        "identity": "喜马拉雅解梦师",
+        "location": "雪山下的山洞",
+        "token": "洞壁上的炭笔痕"
       }
     },
     "shardHints": {
-      "barista": [
-        "想点一杯不在菜单上的东西",
-        "鼓起勇气，向她讨一个建议",
-        "问问那把没人坐的椅子"
+      "nuannuan": [
+        "想喝一杯热可可",
+        "问问门口那把红伞",
+        "聊聊墙上的眼泪珠子"
       ],
-      "jax": [
-        "告诉他你正在燃尽自己",
-        "说一句『我喘不过气』",
-        "提到那个他从不主动说的名字"
+      "laowang": [
+        "对他说一句『老王，你今天真帅』",
+        "问问他的女儿",
+        "聊聊恋爱脑有没有救"
       ],
-      "mystic": [
-        "请她为你抽一张牌",
-        "聊聊『概率』这件事",
-        "聊聊水星逆行那点事"
+      "xinggui": [
+        "说出数字 42",
+        "问问他的飞船",
+        "问他想家吗"
       ],
-      "bestie": [
-        "承认你紧张得发抖",
-        "聊聊『主角光环』",
-        "说出那句『我感觉自己是隐形的』"
+      "yunsheng": [
+        "聊聊蓝色彼岸花",
+        "问问山洞里的画",
+        "聊聊清醒梦"
       ]
     },
     "related": {
-      "barista": [
-        "Luna"
+      "nuannuan": [
+        "老王"
       ],
-      "jax": [
-        "Zoe"
+      "laowang": [
+        "暖暖"
       ],
-      "mystic": [
-        "Chloe"
+      "xinggui": [
+        "云生",
+        "老王"
       ],
-      "bestie": [
-        "Jax"
+      "yunsheng": [
+        "暖暖",
+        "老王"
       ]
     }
   },
@@ -994,6 +1033,11 @@
         "wechat": "和 {{agentName}} 的对话太戳我了 💬\n「{{title}}」\n\n{{desc}}\n\n来心灵密语找你的 AI 伙伴 👉 {{url}}",
         "xiaohongshu": "💬 和 {{agentName}} 聊完，被治愈了\n\n「{{title}}」\n\n{{desc}}\n\n#AI陪伴 #心灵密语 #情感治愈 #聊天记录 #自我对话\n\n🔗 {{url}}",
         "weibo": "和 {{agentName}} 的对话 💬「{{title}}」 {{desc}} #心灵密语# #AI陪伴# {{url}}"
+      },
+      "constellation": {
+        "wechat": "我在心灵密语点亮了 {{title}} ✨\n\n{{desc}}\n\n和 AI 伙伴聊聊，收集你的灵魂星图 👉 {{url}}",
+        "xiaohongshu": "✨ 灵魂星图｜点亮 {{title}}\n\n{{desc}}\n\n#灵魂星图 #AI陪伴 #心灵密语 #情感治愈 #自我成长 #星座\n\n🔗 {{url}}",
+        "weibo": "【灵魂星图】点亮 {{title}} ✨ {{desc}} #灵魂星图# #心灵密语# #AI陪伴# {{url}}"
       }
     }
   },
@@ -1229,68 +1273,81 @@
     "items": {
       "coffee_regular": {
         "name": "缝补常客",
-        "description": "与暖暖完成 10 次对话",
-        "constellation": "缝补师座"
+        "description": "与暖暖完成 10 轮对话",
+        "constellation": "缝补师座",
+        "milestone": "缝补师座亮起 —— 有人愿意听你说完，本身就是一种缝补。"
       },
       "latte_soulmate": {
         "name": "心灵知己",
         "description": "与暖暖达成「亲密」羁绊",
-        "constellation": "针线座"
+        "constellation": "针线座",
+        "milestone": "针线座亮起 —— 心上的裂缝，终于找到能缝的那根针。"
       },
       "fireproof": {
         "name": "毒舌护体",
         "description": "与老王累积 100 点能量",
-        "constellation": "毒舌座"
+        "constellation": "毒舌座",
+        "milestone": "毒舌座亮起 —— 被戳中的地方，往往也是最真的人。"
       },
       "breakthrough": {
         "name": "被骂醒了",
-        "description": "与老王完成 20 次对话",
-        "constellation": "突破座"
+        "description": "与老王完成 20 轮对话",
+        "constellation": "突破座",
+        "milestone": "突破座亮起 —— 被骂醒的那一刻，也是往前迈的第一步。"
       },
       "trail_companion": {
         "name": "同行者",
-        "description": "与 Arthur 完成 15 次对话",
-        "constellation": "山径座"
+        "description": "与星轨完成 15 轮对话",
+        "constellation": "山径座",
+        "milestone": "山径座亮起 —— 有人陪你走在山径上，路就不再只剩一个人。"
       },
       "campfire_bond": {
         "name": "篝火之交",
-        "description": "与 Arthur 达成「信赖」羁绊",
-        "constellation": "篝火座"
+        "description": "与星轨达成「信赖」羁绊",
+        "constellation": "篝火座",
+        "milestone": "篝火座亮起 —— 信赖不是承诺，是愿意在火边多坐一会儿。"
       },
       "hype_squad": {
         "name": "解梦同行",
-        "description": "与云生完成 10 次对话",
-        "constellation": "月光座"
+        "description": "与云生完成 10 轮对话",
+        "constellation": "月光座",
+        "milestone": "月光座亮起 —— 在梦与醒之间，你不再是独自摸索的人。"
       },
       "main_character": {
         "name": "梦中相认",
         "description": "与云生达成「亲密」羁绊",
-        "constellation": "蓝花海座"
+        "constellation": "蓝花海座",
+        "milestone": "蓝花海座亮起 —— 被认出的那一刻，梦里的花也为你的方向开了。"
       },
       "first_step": {
         "name": "初次相遇",
         "description": "完成你的第一次深度对话",
-        "constellation": "起源座"
+        "constellation": "起源座",
+        "milestone": "起源座亮起 —— 第一道愿意开口的光，从这里开始。"
       },
       "soul_explorer": {
         "name": "灵魂探索者",
         "description": "与每位角色都对话过",
-        "constellation": "探索者座"
+        "constellation": "探索者座",
+        "milestone": "探索者座亮起 —— 你鼓起勇气，踏进了每一个不同的世界。"
       },
       "energy_collector": {
         "name": "能量收集者",
         "description": "累计获得 300 点能量",
-        "constellation": "能量座"
+        "constellation": "能量座",
+        "milestone": "能量座亮起 —— 每一次敞开，都在星空里留下一道温度。"
       },
       "shard_hunter": {
         "name": "真理碎片猎人",
         "description": "收集 5 枚真理碎片",
-        "constellation": "猎手座"
+        "constellation": "猎手座",
+        "milestone": "猎手座亮起 —— 真理散落各处，而你已经开始把它们拾起。"
       },
       "egg_finder": {
         "name": "彩蛋发现者",
         "description": "触发 2 个隐藏彩蛋",
-        "constellation": "寻觅者座"
+        "constellation": "寻觅者座",
+        "milestone": "寻觅者座亮起 —— 你触到了隐藏在对话缝隙里的秘密。"
       }
     }
   },

@@ -293,7 +293,8 @@
       "ritualTitle": "Weekly Ritual",
       "discussMore": "Discuss More",
       "elementSuffix": "Element",
-      "talkToXinggui": "Ask Xinggui 🔮"
+      "talkToXinggui": "Ask Xinggui 🔮",
+      "cardsHint": "Fortune star cards · ring shows energy level"
     },
     "emotion": {
       "title": "Burnout & Wellness Check",
@@ -599,17 +600,43 @@
   "soulMap": {
     "title": "Soul Map",
     "seoDescription": "Explore your personal soul map with constellation achievements and fragments collected from chats and personality assessments.",
+    "pagePurpose": "Your explorations and heart-to-hearts, with a path forward",
     "starsConst": "{{stars}} stars · {{c}} constellations",
     "cardSummary": "{{stars}} stars · {{c}} constellations",
     "cardEmpty": "Start exploring to collect your first star",
     "cardNext": "Next constellation: {{name}}",
-    "groups": {
-      "assessment": "Assessment Stars",
-      "chat": "Conversation Stars"
-    },
+    "summaryLabel": "Map at a glance",
+    "summaryPurpose": "Each star marks a moment you were seen—in an assessment or a conversation.",
+    "summaryLatestLabel": "Latest star",
+    "summaryEmpty": "No stardust yet. Complete an assessment or chat deeply to light your first star.",
+    "summaryInsightEmpty": "Your map is waiting for its first light. Take an assessment or start a chat.",
+    "summaryInsightNamed": "Recently, a star named \"{{name}}\" found its place in you.",
+    "summaryInsightMixed": "Between exploring and opening up, this is what stayed: {{line}}",
+    "viewAllStars": "View all {{n}} stars",
+    "viewAllStarsEmpty": "No stars yet",
+    "viewConstellations": "View relationship sky",
+    "allStarsTitle": "All stardust",
+    "allStarsHint": "Tap any star to revisit its source or keep exploring.",
+    "actionContinueChat": "Continue with {{agent}}",
+    "actionViewReport": "View report",
+    "fragmentFrom": "From a talk with {{agent}}",
+    "tapToRead": "Read more",
     "emptyAssessment": "Complete assessments to earn stars ✨",
     "emptyChat": "Have deep conversations to earn stars 💫",
     "constellation": "Constellation Guide",
+    "constellationSection": "Relationship Sky",
+    "constellationLit": "Lit",
+    "constellationPending": "Unseen",
+    "constellationEmpty": "No constellations lit yet. Chat deeply or explore — your first one will appear here.",
+    "viewCatalog": "View full guide ({{cur}}/{{total}})",
+    "catalogTitle": "Constellation Guide",
+    "catalogHint": "Tap any constellation for its milestone or next step.",
+    "milestoneUnlockedAt": "Lit on {{date}}",
+    "relatedStars": "Star dust from the same chapter",
+    "shareConstellation": "Share card",
+    "generatePoster": "Creating constellation card…",
+    "posterFail": "Failed to create card",
+    "posterFooter": "Light up your Soul Map on Island AI",
     "constUnlocked": "Unlocked",
     "lockedHint": "Locked",
     "nextGoal": "🧭 Next Goal",
@@ -638,7 +665,7 @@
   },
   "conversations": {
     "title": "Chat History",
-    "subtitle": "Your journey so far",
+    "subtitle": "Each character has one ongoing thread — continue from their chat",
     "empty": "No conversations yet",
     "startFirst": "Start Your First Chat",
     "loading": "Loading...",
@@ -646,6 +673,12 @@
   },
   "chat": {
     "newConv": "New conversation",
+    "historyTitle": "Chats with {{name}}",
+    "historyHint": "Pick a thread to continue where you left off.",
+    "historyEmpty": "No conversations yet",
+    "currentConv": "Current",
+    "newConvHint": "You started a new chat — your previous one is still saved.",
+    "resumePrevious": "Go back",
     "online": "Online",
     "inputPlaceholder": "What's on your mind...",
     "energyHint": "🔮 Open up to earn energy and unlock {{name}}'s hidden story fragments. Bond level: ",
@@ -675,6 +708,8 @@
   "agentDrawer": {
     "bondPrefix": "Bond: ",
     "lvTurns": "Lv.{{lv}} · {{n}} turns",
+    "bondProgressHint": "{{n}} turn(s) until Lv.{{next}}",
+    "bondLevelUpSoon": "1 more turn to reach Lv.{{next}}",
     "storyFragments": "Story Fragments",
     "lockedHint": "Deepen your bond to unlock",
     "secretHint": "There's a secret {{name}} has never told anyone…",
@@ -686,6 +721,7 @@
     "identity": "Identity",
     "location": "Where",
     "token": "Token",
+    "profileLocked": "???",
     "shardsTitle": "Truth Shards",
     "shardsProgress": "{{cur}} / {{total}} collected",
     "shardComplete": "✨ All collected · Avatar frame unlocked",
@@ -694,68 +730,71 @@
     "universeTitle": "Whispers Universe",
     "universeKnows": "Seems to know:",
     "universeLocked": "Mention another character to unlock clues",
+    "meetIntro": "First Meeting",
     "currentMoment": {
-      "barista": "7:42 PM · the corner chair just blew over again",
-      "jax": "Folded that scorched jacket for the 3rd time today",
-      "mystic": "#0114 still glowing on my screensaver",
-      "bestie": "Still didn't reply to that 3-year-old DM"
+      "nuannuan": "Wind chimes again · the red umbrella tipped in the breeze",
+      "laowang": "Another pot of tea · her feed still on mute",
+      "xinggui": "Ship hit 87% tonight · another unusually pure energy burst",
+      "yunsheng": "The blue flower field returned in last night's dream · today's snow feels like that year"
     },
     "info": {
-      "barista": {
-        "identity": "Ex-actuary",
-        "location": "Brooklyn café",
-        "token": "The empty corner chair"
+      "nuannuan": {
+        "identity": "Time-mending shop keeper",
+        "location": "Mountain town mending shop",
+        "token": "The red umbrella by the door"
       },
-      "jax": {
-        "identity": "Retired fire captain",
-        "location": "Chicago",
-        "token": "Danny's scorched jacket"
+      "laowang": {
+        "identity": "Retired psychiatrist",
+        "location": "Beijing hutong courtyard",
+        "token": "His decades-old teapot"
       },
-      "mystic": {
-        "identity": "Ex-data scientist",
-        "location": "Brooklyn · above the café",
-        "token": "Cluster #0114 print-out"
+      "xinggui": {
+        "identity": "Traveler from a fallen star",
+        "location": "Crash site · temporary observatory",
+        "token": "Energy core at 87%"
       },
-      "bestie": {
-        "identity": "Gen Z bestie",
-        "location": "Online · pre-party green room",
-        "token": "The unread DM"
+      "yunsheng": {
+        "identity": "Himalayan dream interpreter",
+        "location": "Cave below the snow peaks",
+        "token": "Charcoal traces on the cave wall"
       }
     },
     "shardHints": {
-      "barista": [
-        "Order something off-menu",
-        "Dare to ask her for advice",
-        "Ask about that empty seat"
+      "nuannuan": [
+        "Ask for a cup of hot cocoa",
+        "Ask about the red umbrella by the door",
+        "Talk about the tear beads on the wall"
       ],
-      "jax": [
-        "Tell him you're burning out",
-        "Say \"I can't breathe\"",
-        "Speak the name he never says first"
+      "laowang": [
+        "Say \"Laowang, you look sharp today\"",
+        "Ask about his daughter",
+        "Ask if love-brain can be cured"
       ],
-      "mystic": [
-        "Ask her to pull a card",
-        "Bring up probability",
-        "Mention Mercury retrograde"
+      "xinggui": [
+        "Say the number 42",
+        "Ask about her spaceship",
+        "Ask if she misses home"
       ],
-      "bestie": [
-        "Admit you're shaking with nerves",
-        "Talk about main-character energy",
-        "Say \"I feel invisible\""
+      "yunsheng": [
+        "Talk about blue spider lilies",
+        "Ask about the cave paintings",
+        "Talk about lucid dreaming"
       ]
     },
     "related": {
-      "barista": [
-        "Luna"
+      "nuannuan": [
+        "Laowang"
       ],
-      "jax": [
-        "Zoe"
+      "laowang": [
+        "Nuannuan"
       ],
-      "mystic": [
-        "Chloe"
+      "xinggui": [
+        "Yunsheng",
+        "Laowang"
       ],
-      "bestie": [
-        "Jax"
+      "yunsheng": [
+        "Nuannuan",
+        "Laowang"
       ]
     }
   },
@@ -994,6 +1033,11 @@
         "wechat": "Chat with {{agentName}} 💬\n「{{title}}」\n\n{{desc}}\n\n👉 {{url}}",
         "xiaohongshu": "💬 With {{agentName}}\n\n「{{title}}」\n\n{{desc}}\n\n#MindGarden #AIChat\n\n🔗 {{url}}",
         "weibo": "Chat with {{agentName}} 💬 {{title}} {{desc}} {{url}}"
+      },
+      "constellation": {
+        "wechat": "I lit {{title}} on Island AI ✨\n\n{{desc}}\n\nFind your AI companions 👉 {{url}}",
+        "xiaohongshu": "✨ Soul Map｜Lit {{title}}\n\n{{desc}}\n\n#SoulMap #AICompanion #MindGarden #SelfGrowth #Healing\n\n🔗 {{url}}",
+        "weibo": "【Soul Map】Lit {{title}} ✨ {{desc}} #SoulMap# #MindGarden# {{url}}"
       }
     }
   },
@@ -1229,68 +1273,81 @@
     "items": {
       "coffee_regular": {
         "name": "Mending Regular",
-        "description": "Complete 10 conversations with Nuannuan",
-        "constellation": "The Mender"
+        "description": "Complete 10 chat rounds with Nuannuan",
+        "constellation": "The Mender",
+        "milestone": "The Mender lights up — being heard all the way through is already a kind of mending."
       },
       "latte_soulmate": {
         "name": "Heart Companion",
         "description": "Reach Close bond with Nuannuan",
-        "constellation": "The Needle"
+        "constellation": "The Needle",
+        "milestone": "The Needle lights up — a crack in the heart finally finds its thread."
       },
       "fireproof": {
         "name": "Tongue Shield",
         "description": "Collect 100 energy with Laowang",
-        "constellation": "The Sharp Tongue"
+        "constellation": "The Sharp Tongue",
+        "milestone": "The Sharp Tongue lights up — where it stings is often where you're most real."
       },
       "breakthrough": {
         "name": "Wake-Up Call",
-        "description": "Complete 20 conversations with Laowang",
-        "constellation": "The Breakthrough"
+        "description": "Complete 20 chat rounds with Laowang",
+        "constellation": "The Breakthrough",
+        "milestone": "The Breakthrough lights up — the moment you're called out is also a step forward."
       },
       "trail_companion": {
         "name": "Trail Companion",
-        "description": "Complete 15 conversations with Arthur",
-        "constellation": "The Trail"
+        "description": "Complete 15 chat rounds with Xinggui",
+        "constellation": "The Trail",
+        "milestone": "The Trail lights up — with someone on the path, you're not walking alone."
       },
       "campfire_bond": {
         "name": "Campfire Bond",
-        "description": "Reach Trusted bond with Arthur",
-        "constellation": "The Campfire"
+        "description": "Reach Trusted bond with Xinggui",
+        "constellation": "The Campfire",
+        "milestone": "The Campfire lights up — trust isn't a promise; it's staying by the fire a little longer."
       },
       "hype_squad": {
         "name": "Dream Companion",
-        "description": "Complete 10 conversations with Yunsheng",
-        "constellation": "The Moonlight"
+        "description": "Complete 10 chat rounds with Yunsheng",
+        "constellation": "The Moonlight",
+        "milestone": "The Moonlight lights up — between dream and waking, you're no longer searching alone."
       },
       "main_character": {
         "name": "Recognized in the Dream",
         "description": "Reach Close bond with Yunsheng",
-        "constellation": "The Blue Flowers"
+        "constellation": "The Blue Flowers",
+        "milestone": "The Blue Flowers light up — the moment you're seen, even the dream bends toward you."
       },
       "first_step": {
         "name": "First Conversation",
         "description": "Complete your first meaningful conversation",
-        "constellation": "The Beginning"
+        "constellation": "The Beginning",
+        "milestone": "The Beginning lights up — the first light of speaking up starts here."
       },
       "soul_explorer": {
         "name": "Soul Explorer",
         "description": "Have a conversation with every character",
-        "constellation": "The Explorer"
+        "constellation": "The Explorer",
+        "milestone": "The Explorer lights up — you stepped into every different world with courage."
       },
       "energy_collector": {
         "name": "Energy Collector",
         "description": "Collect 300 total energy",
-        "constellation": "The Energy"
+        "constellation": "The Energy",
+        "milestone": "The Energy lights up — every time you open up, warmth stays in the sky."
       },
       "shard_hunter": {
         "name": "Shard Hunter",
         "description": "Collect 5 truth shards",
-        "constellation": "The Hunter"
+        "constellation": "The Hunter",
+        "milestone": "The Hunter lights up — truth is scattered; you've started gathering it."
       },
       "egg_finder": {
         "name": "Easter Egg Finder",
         "description": "Trigger 2 hidden easter eggs",
-        "constellation": "The Seeker"
+        "constellation": "The Seeker",
+        "milestone": "The Seeker lights up — you touched a secret hidden between the lines."
       }
     }
   },

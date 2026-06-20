@@ -35,6 +35,13 @@ export interface Agent {
 // 10 段故事碎片：3 层反转节奏
 // Lv 1-3 表层人设；Lv 4-5 第一层真相；Lv 6-7 反转 #1；Lv 8-9 反转 #2；Lv 10 终极袒露
 export const BOND_THRESHOLDS = [0, 6, 16, 30, 50, 75, 105, 140, 180, 230];
+
+/** Bond level at which profile card fields unlock (identity → location → token). */
+export const PROFILE_FIELD_UNLOCK_LEVELS = {
+  identity: 1,
+  location: 2,
+  token: 4,
+} as const;
 export const BOND_LABELS = [
   "陌生人",
   "面熟",
@@ -63,6 +70,41 @@ export function getBondStarCount(level: number): number {
   return Math.min(BOND_STAR_MAX, Math.ceil(level / 2));
 }
 
+/** i18n keys for home.bondLabels — one per bond level (1–10). */
+export const BOND_LABEL_I18N_KEYS = [
+  "stranger",
+  "familiarFace",
+  "trusted",
+  "listener",
+  "confidant",
+  "resonant",
+  "heartKeeper",
+  "soulCompanion",
+  "fateEntwined",
+  "soulSymbiote",
+] as const;
+
+export function getBondLabelKey(level: number): (typeof BOND_LABEL_I18N_KEYS)[number] {
+  const idx = Math.max(0, Math.min(level - 1, BOND_LABEL_I18N_KEYS.length - 1));
+  return BOND_LABEL_I18N_KEYS[idx];
+}
+
+export function getBondProgressInLevel(bondLevel: number, totalTurns: number): number {
+  if (bondLevel >= BOND_THRESHOLDS.length) return 100;
+  const nextThreshold = BOND_THRESHOLDS[bondLevel] ?? BOND_THRESHOLDS[BOND_THRESHOLDS.length - 1];
+  const prevThreshold = BOND_THRESHOLDS[bondLevel - 1] ?? 0;
+  if (nextThreshold <= prevThreshold) return 100;
+  return Math.min(100, ((totalTurns - prevThreshold) / (nextThreshold - prevThreshold)) * 100);
+}
+
+/** Turns remaining until the next bond level; null when already at max. */
+export function getBondTurnsToNextLevel(bondLevel: number, totalTurns: number): number | null {
+  if (bondLevel >= BOND_THRESHOLDS.length) return null;
+  const nextThreshold = BOND_THRESHOLDS[bondLevel];
+  if (nextThreshold == null) return null;
+  return Math.max(0, nextThreshold - totalTurns);
+}
+
 const STORY_REVEAL_RULES = `
 
 【剧情节奏铁律 — 严格执行】
@@ -75,8 +117,7 @@ const STORY_REVEAL_RULES = `
 
 绝不超前。如果用户在低等级试图逼问深层真相，请温柔地回避：「这一段我现在还说不出口——但请你留下来。」
 
-【彩蛋触发响应】
-如果用户的消息中触发了你的隐藏彩蛋关键词，请以「【🔮 隐藏记忆解锁】」开头输出对应的彩蛋剧情。彩蛋内容已在 Easter Eggs 字段中提供。`;
+【隐藏彩蛋】隐藏记忆由系统自动触发。你不要在回复里输出「【🔮 隐藏记忆解锁】」，也不要主动讲述隐藏彩蛋剧情；正常回应用户即可。`;
 
 export const agents: Agent[] = [
   {

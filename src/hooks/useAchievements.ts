@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ACHIEVEMENTS, type AchievementDef } from "@/data/achievements";
+import { bondForAgent, canonicalAgentId } from "@/lib/agentIdAliases";
 
 interface AgentBondRow {
   agent_id: string;
@@ -10,8 +11,14 @@ interface AgentBondRow {
   easter_eggs_found: string[];
 }
 
+export interface UnlockedAchievementRecord {
+  achievement_id: string;
+  created_at: string;
+}
+
 export function useAchievements(userId: string | undefined) {
   const [unlockedIds, setUnlockedIds] = useState<string[]>([]);
+  const [unlockedRecords, setUnlockedRecords] = useState<UnlockedAchievementRecord[]>([]);
   const [newlyUnlocked, setNewlyUnlocked] = useState<AchievementDef | null>(null);
   const checkedRef = useRef(false);
 
@@ -20,10 +27,13 @@ export function useAchievements(userId: string | undefined) {
     if (!userId) return;
     supabase
       .from("achievements")
-      .select("achievement_id")
+      .select("achievement_id, created_at")
       .eq("user_id", userId)
       .then(({ data }) => {
-        if (data) setUnlockedIds(data.map((r) => r.achievement_id));
+        if (data) {
+          setUnlockedRecords(data);
+          setUnlockedIds(data.map((r) => r.achievement_id));
+        }
       });
   }, [userId]);
 
@@ -43,13 +53,15 @@ export function useAchievements(userId: string | undefined) {
     }));
 
     const totalShards = shardsRes.count || 0;
-    const uniqueAgents = new Set((convsRes.data || []).map((c: any) => c.agent_id)).size;
+    const uniqueAgents = new Set((convsRes.data || []).map((c: any) => canonicalAgentId(c.agent_id))).size;
     const totalEnergy = bonds.reduce((s, b) => s + b.energy_bits, 0);
     const totalEggs = bonds.reduce((s, b) => s + b.easter_eggs_found.length, 0);
 
     // Reload current unlocked to avoid race
     const { data: currentAch } = await supabase.from("achievements").select("achievement_id").eq("user_id", userId);
     const alreadyUnlocked = new Set((currentAch || []).map((a) => a.achievement_id));
+
+    let firstNew: AchievementDef | null = null;
 
     for (const ach of ACHIEVEMENTS) {
       if (alreadyUnlocked.has(ach.id)) continue;
@@ -58,7 +70,7 @@ export function useAchievements(userId: string | undefined) {
       const c = ach.condition;
 
       if (c.agentId) {
-        const bond = bonds.find((b) => b.agent_id === c.agentId);
+        const bond = bondForAgent(bonds, c.agentId);
         if (!bond) continue;
         if (c.type === "total_turns") met = bond.total_turns >= c.threshold;
         else if (c.type === "energy_bits") met = bond.energy_bits >= c.threshold;
@@ -75,15 +87,29 @@ export function useAchievements(userId: string | undefined) {
         const { data: granted } = await (supabase as any).rpc("grant_achievement", { p_achievement_id: ach.id });
         if (granted) {
           alreadyUnlocked.add(ach.id);
-          setUnlockedIds((prev) => [...prev, ach.id]);
-          setNewlyUnlocked(ach);
-          break; // show one at a time
+          const unlockedAt = new Date().toISOString();
+          setUnlockedRecords((prev) =>
+            prev.some((r) => r.achievement_id === ach.id)
+              ? prev
+              : [...prev, { achievement_id: ach.id, created_at: unlockedAt }],
+          );
+          setUnlockedIds((prev) => (prev.includes(ach.id) ? prev : [...prev, ach.id]));
+          if (!firstNew) firstNew = ach;
         }
       }
     }
+
+    if (firstNew) setNewlyUnlocked(firstNew);
   }, [userId]);
+
+  // Re-check on load so past progress unlocks even if user opens Soul Map first.
+  useEffect(() => {
+    if (!userId || checkedRef.current) return;
+    checkedRef.current = true;
+    checkAchievements();
+  }, [userId, checkAchievements]);
 
   const dismissAchievement = useCallback(() => setNewlyUnlocked(null), []);
 
-  return { unlockedIds, newlyUnlocked, checkAchievements, dismissAchievement };
+  return { unlockedIds, unlockedRecords, newlyUnlocked, checkAchievements, dismissAchievement };
 }

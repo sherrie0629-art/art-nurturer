@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
-import { dedupeEasterEggContent, matchEasterEggTrigger } from "../_shared/easterEggContent.ts";
+import { dedupeEasterEggContent, matchEasterEggTrigger, sanitizeEasterEggReply } from "../_shared/easterEggContent.ts";
 import { checkBannedUserId } from "../_shared/checkUserBanned.ts";
 
 const AI_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
@@ -558,20 +558,19 @@ serve(async (req) => {
     // Easter eggs: prefer client-provided persona.easterEggs (full response text),
     // fall back to server-side `easterEggs` (instruction outlines).
     if (persona && Array.isArray(persona.easterEggs) && persona.easterEggs.length > 0) {
-      fullSystemPrompt += `\n\n【Hidden Easter Eggs】Each entry below has a list of trigger keywords AND a ready-made response written in the character's voice. If the user's most recent message contains ANY of the keywords (case-insensitive substring match — paraphrases and obvious synonyms count too), you MUST output ONLY the provided Response text as your entire reply — no preamble, no recap, no second copy of the same story before or after the marker. Do not paraphrase the story outside the Response block.${isZh ? "" : " Preserve the marker 【🔮 Hidden Memory Unlocked】."}`;
-      persona.easterEggs.forEach((egg: any) => {
-        const aliases = Array.isArray(egg.aliases) ? egg.aliases : [];
-        const keywords = [egg.trigger, ...aliases].filter(Boolean).map((k: string) => `"${k}"`).join(" / ");
-        fullSystemPrompt += `\n\nKeywords [${keywords}]\nResponse:\n${egg.response}`;
-      });
+      const allKeywords = persona.easterEggs.flatMap((egg: any) =>
+        [egg.trigger, ...(Array.isArray(egg.aliases) ? egg.aliases : [])].filter(Boolean)
+      );
+      fullSystemPrompt += isZh
+        ? `\n\n【隐藏彩蛋 · 系统接管】以下关键词若完整出现在用户最新消息中，系统会自动回复对应隐藏记忆，你无需处理：${allKeywords.map((k: string) => `"${k}"`).join(" / ")}。\n\n严格规则：若用户消息未包含上述任一完整关键词，禁止输出「【🔮 隐藏记忆解锁】」；禁止编造用户说过彩蛋关键词（例如用户没说「真帅」就绝不能写「你刚才说我真帅」）；禁止主动讲述这些隐藏剧情。`
+        : `\n\n【Hidden Easter Eggs · system handled】If the user's latest message contains one of these exact keywords, the system replies automatically — do NOT handle it yourself: ${allKeywords.map((k: string) => `"${k}"`).join(" / ")}.\n\nStrict rule: if none of these keywords appear verbatim in the user's message, do NOT output the hidden-memory marker; do NOT claim the user said a keyword they did not say; do NOT tell these hidden stories unprompted.`;
     } else {
       const agentEggs = easterEggs[agentId] || [];
       if (agentEggs.length > 0) {
-        fullSystemPrompt += `\n\n【Hidden Easter Eggs】The instructions below are plot outlines, NOT verbatim scripts. Any quoted English sentence inside an instruction is only describing the emotional beat — you must rewrite it in the user's current language (${isZh ? "简体中文" : "English"}) using your own voice. Never copy English phrases verbatim when the user language is Chinese.\n\nIMPORTANT TRIGGER RULE: Each easter egg lists multiple keywords (Chinese AND English variants). If the user's most recent message contains ANY of these keywords (case-insensitive, substring match), you MUST output the literal marker "【🔮 Hidden Memory Unlocked】" on its own line and then follow the corresponding instruction. Match generously — paraphrases and obvious synonyms count too.`;
-        agentEggs.forEach((egg) => {
-          const keywords = [egg.trigger, ...egg.aliases].map((k) => `"${k}"`).join(" / ");
-          fullSystemPrompt += `\n- Keywords [${keywords}]: ${egg.instruction}`;
-        });
+        const allKeywords = agentEggs.flatMap((egg) => [egg.trigger, ...egg.aliases]);
+        fullSystemPrompt += isZh
+          ? `\n\n【隐藏彩蛋 · 系统接管】关键词：${allKeywords.map((k) => `"${k}"`).join(" / ")}。未完整出现则禁止输出隐藏记忆标记，禁止编造用户说过关键词。`
+          : `\n\n【Hidden Easter Eggs · system handled】Keywords: ${allKeywords.map((k) => `"${k}"`).join(" / ")}. Without an exact keyword match, do NOT output the hidden-memory marker or invent user quotes.`;
       }
     }
 
@@ -690,7 +689,13 @@ ${memoryContext.join("\n")}`;
       content: aiContent,
       isZh,
     });
-    const finalContent = dedupeEasterEggContent(enforced.content);
+    const sanitized = sanitizeEasterEggReply(
+      lastUserText,
+      enforced.content,
+      personaEggs,
+      unlockedList,
+    );
+    const finalContent = sanitized.content;
     if (enforced.rewritten || finalContent !== aiContent) {
       return new Response(makeSseResponse(finalContent), {
         headers: { ...corsHeaders, "Content-Type": "text/event-stream" },

@@ -119,24 +119,45 @@ Call the batch_questions tool. version=${QUESTIONS_PROMPT_VERSION}`;
     if (quotaError) return quotaError;
 
     const { history } = body;
-    const systemPrompt = `You are a professional wellness coach. Based on the user's answers, assess their current burnout and wellness state.
-Use therapy-speak naturally: "boundaries", "emotional labor", "self-care", "holding space", "validation".
-Be warm, supportive, and professional. If you notice signs of serious mental health concerns, gently suggest professional help.
-Respond in the language indicated by LANG below. Call emotion_result tool.${langInstr}`;
+    const writingRulesZh = `
+写作规则（严格遵守）：
+- profileHook：一句有画面感的开场，像懂心理学的损友发微信，≤45字。禁止「亲爱的」「请记住」「你应该」等说教口吻。
+- profileBullets：恰好 4 条。每条以 1 个 emoji 开头 + 18-32 字。覆盖：①当下状态快照 ②边界/人际里的小模式 ③能量从哪漏、从哪补 ④一句温柔但不煽情的洞察。语气具体、略带幽默，像朋友复盘——不是咨询报告。
+- description：≤90 字兜底摘要（hook 的压缩版），禁止写成长段落。
+- suggestions：恰好 3 条，每条以 emoji 开头 + 12-22 字，必须是今天就能做的小动作，不要空泛鸡汤。
+- emotionLevel 用中文档位名，如：状态在线 / 基本平衡 / 有点耗竭 / 能量告急 / 倦怠预警区（择一，自然中文）`;
+
+    const writingRulesEn = `
+Writing rules (strict):
+- profileHook: One vivid opening line, like a witty therapist-friend texting you. ≤18 words. No "dear", "remember", "you should" lecturing.
+- profileBullets: EXACTLY 4 lines. Each starts with one emoji + 12-22 words. Cover: ①current vibe snapshot ②boundary/people pattern ③where energy leaks or refills ④one gentle insight — not a sermon.
+- description: ≤90 char fallback summary only, NOT a long essay.
+- suggestions: EXACTLY 3 micro-actions with emoji prefix, 8-16 words each, doable today — no generic self-help fluff.`;
+
+    const systemPrompt = `You are a witty wellness friend (not a clinical report writer). Based on the user's answers, assess burnout and wellness.
+Tone: warm, specific, a little playful — never preachy or template-like. If serious mental health red flags appear, gently suggest professional help in ONE bullet only.
+Respond in the language indicated by LANG below. Call emotion_result tool.${langInstr}
+${locale === "zh" ? writingRulesZh : writingRulesEn}`;
 
     // Use a stronger model for structured tool calling — flash-lite is unreliable here
     const resultModel = "google/gemini-2.5-flash";
     const callResult = (m: string) => fetchAI(m, {
       messages: [{ role: "system", content: systemPrompt }, { role: "user", content: `Q&A:\n${history.map((h: any, i: number) => `Q${i + 1}: ${h.question}\nA${i + 1}: ${h.answer}`).join("\n\n")}\n\nAssess wellness state.` }],
       tools: [{ type: "function" as const, function: { name: "emotion_result", description: "Return wellness assessment result", parameters: { type: "object", properties: {
-        emotionLevel: { type: "string", description: "Wellness level: Thriving/Balanced/Coasting/Running Low/Burnout Zone" },
+        emotionLevel: { type: "string", description: "Wellness tier label in user's language" },
         emoji: { type: "string" },
-        title: { type: "string", description: "Title like 'Your Inner Fire is Strong' or 'Time to Recharge'" },
-        description: { type: "string", description: "~200 word personalized wellness analysis, warm and encouraging" },
+        title: { type: "string", description: "Catchy title like 'Battery at 23%' or 'Running on Fumes'" },
+        profileHook: { type: "string", description: "One vivid hook line, ≤45 zh chars / ≤18 en words, playful not preachy" },
+        profileBullets: {
+          type: "array",
+          items: { type: "string" },
+          description: "Exactly 4 lines: emoji + short insight. Specific scenes from their answers.",
+        },
+        description: { type: "string", description: "Brief fallback summary ≤90 chars, NOT a long paragraph" },
         traits: { type: "object", description: "Each is an INTEGER 0-100. 强弱差异要明显：典型最高维 70-92，最低维 30-55。严禁全部维度都低于 20。", properties: { burnout: { type: "number", description: "Burnout level, integer 0-100 (lower is better)" }, energy: { type: "number", description: "Integer 0-100, typically 30-92" }, boundaries: { type: "number", description: "Integer 0-100, typically 30-92" }, sleep: { type: "number", description: "Integer 0-100, typically 30-92" } }, required: ["burnout", "energy", "boundaries", "sleep"] },
-        suggestions: { type: "array", items: { type: "string" }, description: "3 actionable self-care suggestions" },
-        socialCaption: { type: "string", description: "Warm shareable caption under 30 words" },
-      }, required: ["emotionLevel", "emoji", "title", "description", "traits", "suggestions", "socialCaption"] } } }],
+        suggestions: { type: "array", items: { type: "string" }, description: "Exactly 3 emoji-prefixed micro-actions, 12-22 zh chars each" },
+        socialCaption: { type: "string", description: "Shareable one-liner under 30 words, with personality" },
+      }, required: ["emotionLevel", "emoji", "title", "profileHook", "profileBullets", "description", "traits", "suggestions", "socialCaption"] } } }],
       tool_choice: { type: "function" as const, function: { name: "emotion_result" } },
       temperature: 0.7, max_tokens: 1024,
     });

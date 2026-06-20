@@ -28,7 +28,7 @@ export function normalizeAssessmentProfile(source: ProfileSource): AssessmentPro
   if (sentences.length >= 2) {
     return {
       hook: sentences[0],
-      bullets: sentences.slice(1, 5),
+      bullets: sentences.slice(1, 5).map((s) => s.replace(/^[，、]\s*/, "")),
     };
   }
 

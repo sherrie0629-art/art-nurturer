@@ -18,6 +18,7 @@ import PosterPreviewDialog from "@/components/PosterPreviewDialog";
 import DeepReportUnlock from "@/components/DeepReportUnlock";
 import { getNextVariant } from "@/lib/assessmentVariant";
 import { pickZodiacQuestionSet } from "@/data/zodiacQuestionPool";
+import ZodiacFortuneCards, { buildZodiacFortuneCards } from "@/components/ZodiacFortuneCards";
 
 interface QA { question: string; answer: string; dimension: string; }
 
@@ -302,7 +303,7 @@ const ZodiacFlow = () => {
           <div className="text-center mt-4 mb-6">
             <div className="mx-auto mb-4 h-20 w-20 rounded-full bg-gradient-mystic flex items-center justify-center"><span className="text-3xl">{signIcon}</span></div>
             <h1 className="font-display text-xl font-bold text-foreground">{localizeName(result.zodiacSign)} · {result.title}</h1>
-            <p className="mt-1 text-xs text-secondary">{localizeElement(result.element)}{t("assessmentFlow.zodiac.elementSuffix")}</p>
+            <p className="mt-1 text-xs text-gold-light/90">{localizeElement(result.element)}{t("assessmentFlow.zodiac.elementSuffix")}</p>
             <p className="mt-1 text-xs text-muted-foreground">"{result.socialCaption}"</p>
           </div>
           <ResultAIImage imageUrl={resultImageUrl} loading={imageLoading} />
@@ -311,20 +312,11 @@ const ZodiacFlow = () => {
             <p className="text-sm text-muted-foreground leading-relaxed">{result.description}</p>
           </div>
           <div className="rounded-2xl bg-card p-5 shadow-card mb-4">
-            <h3 className="font-display text-sm font-semibold text-foreground mb-4">{t("assessmentDetail.dimensions")}</h3>
-            {[
-              { l: t("assessmentDetail.dim.overall"), v: result.traits.overall },
-              { l: t("assessmentDetail.dim.love"), v: result.traits.love },
-              { l: t("assessmentDetail.dim.career"), v: result.traits.career },
-              { l: t("assessmentDetail.dim.fortune"), v: result.traits.fortune },
-            ].map(b => (
-              <div key={b.l} className="mb-3">
-                <div className="flex justify-between text-xs text-muted-foreground mb-1"><span>{b.l}</span><span>{b.v}%</span></div>
-                <div className="h-2 rounded-full bg-muted overflow-hidden">
-                  <motion.div initial={{ width: 0 }} animate={{ width: `${b.v}%` }} transition={{ duration: 0.8 }} className="h-full rounded-full bg-gradient-golden" />
-                </div>
-              </div>
-            ))}
+            <h3 className="font-display text-sm font-semibold text-foreground mb-1">{t("assessmentDetail.dimensions")}</h3>
+            <p className="text-[10px] text-muted-foreground mb-4">{t("assessmentFlow.zodiac.cardsHint")}</p>
+            <ZodiacFortuneCards
+              dimensions={buildZodiacFortuneCards(result.traits, (k) => t(`assessmentDetail.dim.${k}`))}
+            />
           </div>
           <div className="rounded-2xl bg-card p-5 shadow-card mb-4">
             <h3 className="font-display text-sm font-semibold text-foreground mb-3">{t("assessmentFlow.zodiac.luckyGuide")}</h3>
@@ -342,7 +334,7 @@ const ZodiacFlow = () => {
               <div className="space-y-4">
                 {/* Mantra */}
                 <div className="relative rounded-xl bg-gradient-mystic/10 border border-primary/15 px-4 py-4 text-center">
-                  <p className="text-[10px] uppercase tracking-widest text-secondary mb-1">{t("assessmentFlow.zodiac.mantraTitle")}</p>
+                  <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">{t("assessmentFlow.zodiac.mantraTitle")}</p>
                   <p className="font-display text-base text-gradient-golden leading-snug font-semibold">
                     "{result.advice.mantra}"
                   </p>
@@ -384,7 +376,7 @@ const ZodiacFlow = () => {
                 {/* Lucky moment + Ritual */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                   <div className="rounded-xl bg-secondary/10 border border-secondary/20 px-3 py-3">
-                    <p className="text-[10px] uppercase tracking-wider text-secondary mb-1">⏰ {t("assessmentFlow.zodiac.luckyMoment")}</p>
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">⏰ {t("assessmentFlow.zodiac.luckyMoment")}</p>
                     <p className="text-xs text-foreground/90 leading-relaxed">{result.advice.luckyMoment}</p>
                   </div>
                   <div className="rounded-xl bg-primary/5 border border-primary/15 px-3 py-3">

@@ -1,4 +1,6 @@
-import { BOND_LABELS, BOND_STAR_MAX, BOND_THRESHOLDS, getBondStarCount } from "@/data/agents";
+import { useTranslation } from "react-i18next";
+import { BOND_STAR_MAX, BOND_THRESHOLDS, getBondProgressInLevel, getBondStarCount } from "@/data/agents";
+import { getBondLabel } from "@/lib/bondLabels";
 
 interface BondIndicatorProps {
   level: number;
@@ -7,14 +9,11 @@ interface BondIndicatorProps {
 }
 
 const BondIndicator = ({ level, totalTurns }: BondIndicatorProps) => {
-  const label = BOND_LABELS[level - 1] || "陌生人";
+  const { t } = useTranslation();
+  const label = getBondLabel(t, level);
   const starCount = getBondStarCount(level);
-  const nextThreshold = BOND_THRESHOLDS[level] || null;
-  const currentThreshold = BOND_THRESHOLDS[level - 1] || 0;
-  
-  const progress = nextThreshold
-    ? ((totalTurns - currentThreshold) / (nextThreshold - currentThreshold)) * 100
-    : 100;
+  const progress = getBondProgressInLevel(level, totalTurns);
+  const hasNextLevel = level < BOND_THRESHOLDS.length;
 
   return (
     <div className="flex items-center gap-1.5">
@@ -25,8 +24,8 @@ const BondIndicator = ({ level, totalTurns }: BondIndicatorProps) => {
           </span>
         ))}
       </div>
-      <span className="text-[10px] text-foreground/80">{label}</span>
-      {nextThreshold && (
+      <span className="text-[10px] text-gold-light font-medium">{label}</span>
+      {hasNextLevel && (
         <div className="h-1 w-8 rounded-full bg-muted overflow-hidden">
           <div
             className="h-full rounded-full bg-primary transition-all"

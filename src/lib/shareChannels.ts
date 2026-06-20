@@ -11,7 +11,8 @@ export type ShareScene =
   | "tarot"
   | "deepReport"
   | "chat"
-  | "assessment";
+  | "assessment"
+  | "constellation";
 
 export interface ShareCopyParams {
   title: string;
@@ -38,12 +39,13 @@ const SCENE_HASHTAG: Record<ShareScene, string> = {
   deepReport: "深度心理报告",
   chat: "AI陪伴",
   assessment: "心理测评",
+  constellation: "灵魂星图",
 };
 
 export function resolveShareScene(scene?: ShareScene, fallback?: string): ShareScene {
   const valid: ShareScene[] = [
     "mbti", "enneagram", "zodiac", "emotion",
-    "compatibility", "tarot", "deepReport", "chat", "assessment",
+    "compatibility", "tarot", "deepReport", "chat", "assessment", "constellation",
   ];
   if (scene && valid.includes(scene)) return scene;
   if (fallback && valid.includes(fallback as ShareScene)) return fallback as ShareScene;

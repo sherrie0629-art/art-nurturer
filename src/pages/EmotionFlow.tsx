@@ -1,6 +1,6 @@
 import { isDailyLimitError } from "@/lib/assessmentErrors";
 import { persistAssessmentResult } from "@/lib/guestAssessment";
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
@@ -13,9 +13,12 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { useSharePoster } from "@/hooks/useSharePoster";
 import { useLocale } from "@/hooks/useLocale";
 import AssessmentQuestionLayout from "@/components/AssessmentQuestionLayout";
+import AssessmentProfileCard from "@/components/AssessmentProfileCard";
+import { profileToPlainText } from "@/lib/assessmentProfile";
 import ResultAIImage from "@/components/ResultAIImage";
 import PosterPreviewDialog from "@/components/PosterPreviewDialog";
 import DeepReportUnlock from "@/components/DeepReportUnlock";
+import { pickEmotionQuestionSet } from "@/data/emotionQuestionPool";
 
 interface QA { question: string; answer: string; dimension: string; }
 
@@ -24,6 +27,8 @@ interface WellnessResult {
   emoji: string;
   title: string;
   description: string;
+  profileHook?: string;
+  profileBullets?: string[];
   traits: { burnout: number; energy: number; boundaries: number; sleep: number };
   suggestions: string[];
   socialCaption: string;
@@ -53,6 +58,18 @@ const EmotionFlow = () => {
   const resultIdRef = useRef<string | null>(null);
   const [savedReportId, setSavedReportId] = useState<string | null>(null);
   const batchQuestionsRef = useRef<any[]>([]);
+  const prefetchedRef = useRef<Promise<any[] | null> | null>(null);
+
+  // Prefetch AI questions while user reads the intro — often ready before they tap Start.
+  useEffect(() => {
+    if (started || prefetchedRef.current) return;
+    prefetchedRef.current = supabase.functions
+      .invoke("assessment-emotion", { body: { action: "batch-questions", locale } })
+      .then(({ data, error }) =>
+        !error && data?.type === "batch" && Array.isArray(data.data) && data.data.length >= 10 ? data.data : null,
+      )
+      .catch(() => null);
+  }, [started, locale]);
 
   const fetchResultImage = useCallback(async (r: WellnessResult) => {
     setImageLoading(true);
@@ -97,17 +114,28 @@ const EmotionFlow = () => {
     setStarted(true);
     setLoading(true);
     setLoadingMsg(t("assessmentFlow.common.starting"));
-    try {
-      const { data, error } = await supabase.functions.invoke("assessment-emotion", { body: { action: "batch-questions", locale } });
-      if (error) throw error;
-      if (data.type === "batch" && data.data?.length > 0) {
-        batchQuestionsRef.current = data.data.slice(1);
-        setCurrentQuestion(data.data[0]);
-      }
-    } catch (e: any) {
-      if (isDailyLimitError(e)) toast.error(t("assessmentFlow.common.limitReached", { n: 20 }));
-      else toast.error(e.message || t("assessmentFlow.common.loadFail"));
-    } finally { setLoading(false); }
+
+    const fetchPromise = (prefetchedRef.current ??
+      supabase.functions
+        .invoke("assessment-emotion", { body: { action: "batch-questions", locale } })
+        .then(({ data, error }) => {
+          if (error) throw error;
+          return data?.type === "batch" && Array.isArray(data.data) && data.data.length >= 10 ? data.data : null;
+        }))
+      .catch((e: any) => {
+        if (isDailyLimitError(e)) toast.error(t("assessmentFlow.common.limitReached", { n: 20 }));
+        return null;
+      });
+
+    const batch = await Promise.race([
+      fetchPromise,
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 500)),
+    ]);
+
+    const finalBatch = batch && batch.length >= 10 ? batch : pickEmotionQuestionSet(locale);
+    batchQuestionsRef.current = finalBatch.slice(1);
+    setCurrentQuestion(finalBatch[0]);
+    setLoading(false);
   };
 
   const handleAnswer = (option: { label: string; text: string }) => {
@@ -124,10 +152,11 @@ const EmotionFlow = () => {
 
   const handleSharePoster = () => {
     if (!result) return;
+    const analysisText = profileToPlainText(result) || result.description;
     sharePoster({
       title: `${result.emoji} ${result.emotionLevel}`,
       subtitle: result.title,
-      description: result.description,
+      description: analysisText,
       icon: result.emoji,
       caption: result.socialCaption,
       accentColor: "#e07a7a",
@@ -181,13 +210,13 @@ const EmotionFlow = () => {
               <span className="text-4xl">{result.emoji}</span>
             </div>
             <h1 className="font-display text-xl font-bold text-foreground">{result.title}</h1>
-            <p className="mt-1 text-xs text-secondary">{result.emotionLevel}</p>
-            <p className="mt-1 text-xs text-muted-foreground">"{result.socialCaption}"</p>
+            <p className="mt-1 text-xs text-gold-light/90">{result.emotionLevel}</p>
+            <p className="mt-1 text-xs text-muted-foreground italic">"{result.socialCaption}"</p>
           </div>
           <ResultAIImage imageUrl={resultImageUrl} loading={imageLoading} />
           <div className="rounded-2xl bg-card p-5 shadow-card mb-4">
             <h3 className="font-display text-sm font-semibold text-foreground mb-3">{t("assessmentFlow.emotion.analysis")}</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">{result.description}</p>
+            <AssessmentProfileCard data={result} variant="warm" />
           </div>
           <div className="rounded-2xl bg-card p-5 shadow-card mb-4">
             <h3 className="font-display text-sm font-semibold text-foreground mb-4">{t("assessmentFlow.emotion.dimensions")}</h3>
@@ -211,9 +240,11 @@ const EmotionFlow = () => {
             <h3 className="font-display text-sm font-semibold text-foreground mb-3">{t("assessmentFlow.emotion.actionPlan")}</h3>
             <div className="space-y-2">
               {result.suggestions.map((s, i) => (
-                <div key={i} className="flex items-start gap-2">
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-secondary/20 text-[10px] font-bold text-secondary">{i + 1}</span>
-                  <p className="text-sm text-muted-foreground">{s}</p>
+                <div key={i} className="flex items-start gap-2.5 rounded-xl border border-gold/10 bg-muted/30 px-3.5 py-2.5">
+                  <span className="shrink-0 text-base leading-none">{s.trim().match(/^[\p{Extended_Pictographic}\p{Emoji_Presentation}]/u)?.[0] ?? "💡"}</span>
+                  <p className="text-sm text-foreground/90 leading-relaxed">
+                    {s.trim().replace(/^[\p{Extended_Pictographic}\p{Emoji_Presentation}]\s*/u, "") || s}
+                  </p>
                 </div>
               ))}
             </div>
@@ -228,7 +259,7 @@ const EmotionFlow = () => {
               <Download className="h-4 w-4" /> {t("assessmentFlow.common.saveAndShare")}
             </button>
             <button onClick={() => navigate(`/chat?agent=laowang`, {
-              state: { emotionResult: { emotionLevel: result.emotionLevel, title: result.title, description: result.description, traits: result.traits, suggestions: result.suggestions } },
+              state: { emotionResult: { emotionLevel: result.emotionLevel, title: result.title, description: profileToPlainText(result) || result.description, traits: result.traits, suggestions: result.suggestions } },
             })} className="flex-1 rounded-xl bg-gradient-golden py-3 text-sm font-semibold text-primary-foreground">
               {t("assessmentFlow.emotion.talkToLaowang")}
             </button>

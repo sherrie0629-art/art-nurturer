@@ -11,6 +11,7 @@ import ShareSheet from "@/components/ShareSheet";
 import { toast } from "sonner";
 import DeepReportUnlock from "@/components/DeepReportUnlock";
 import AssessmentProfileCard from "@/components/AssessmentProfileCard";
+import ZodiacFortuneCards, { buildZodiacFortuneCards } from "@/components/ZodiacFortuneCards";
 import type { ShareScene } from "@/lib/shareChannels";
 import { useTranslation } from "react-i18next";
 import i18n from "@/i18n";
@@ -135,10 +136,18 @@ const AssessmentDetail = () => {
     }
     const dimGradients: Record<string, string> = {
       enneagram: "bg-gradient-mystic",
-      zodiac: "bg-gradient-to-r from-lavender to-rose-warm",
       emotion: "bg-gradient-to-r from-rose-warm to-gold",
     };
-    if ((type === "enneagram" || type === "zodiac" || type === "emotion") && d.traits) {
+    if (type === "zodiac" && d.traits) {
+      return (
+        <ZodiacFortuneCards
+          dimensions={buildZodiacFortuneCards(d.traits as Record<string, number>, (k) =>
+            t(`assessmentDetail.dim.${k}`, { defaultValue: k }),
+          )}
+        />
+      );
+    }
+    if ((type === "enneagram" || type === "emotion") && d.traits) {
       const traits = normalizeTraitScores(d.traits as Record<string, number>);
       return Object.entries(traits).map(([k, v]) => (
         <div key={k} className="space-y-1">
@@ -209,7 +218,7 @@ const AssessmentDetail = () => {
 
           {type === "enneagram" && d.wing && (
             <div className="mb-4 rounded-xl bg-muted/40 p-3">
-              <p className="text-[11px] font-semibold text-secondary">{t("assessmentFlow.enneagram.wing", { defaultValue: "Wing" })}: {d.wing}</p>
+              <p className="text-[11px] font-semibold text-gold-light/90">{t("assessmentFlow.enneagram.wing", { defaultValue: "Wing" })}: {d.wing}</p>
               {d.wingExplanation && (
                 <p className="mt-1 text-xs text-foreground leading-relaxed">{d.wingExplanation}</p>
               )}
@@ -217,10 +226,10 @@ const AssessmentDetail = () => {
           )}
 
           {d.socialCaption && (
-            <p className="mb-4 text-xs text-secondary italic">"{d.socialCaption}"</p>
+            <p className="mb-4 text-xs text-gold-light/85 italic leading-relaxed">"{d.socialCaption}"</p>
           )}
 
-          <AssessmentProfileCard data={d} />
+          <AssessmentProfileCard data={d} variant={type === "emotion" ? "warm" : "default"} />
         </motion.div>
 
         {/* Dimensions */}
@@ -274,7 +283,11 @@ const AssessmentDetail = () => {
             )}
             {d.advice && typeof d.advice === "object" && (
               <div className="space-y-3 text-sm text-foreground leading-relaxed">
-                {d.advice.mantra && <p className="italic text-secondary">"{d.advice.mantra}"</p>}
+                {d.advice.mantra && (
+                  <p className="rounded-xl border border-gold/15 bg-muted/30 px-4 py-3 text-center font-display text-base italic leading-snug text-gold-light">
+                    "{d.advice.mantra}"
+                  </p>
+                )}
                 {Array.isArray(d.advice.doThis) && (
                   <ul className="space-y-1">
                     {d.advice.doThis.map((s: string, i: number) => <li key={`do-${i}`}>{s}</li>)}
@@ -293,7 +306,7 @@ const AssessmentDetail = () => {
               <ul className="space-y-2 mt-1">
                 {(d.suggestions as string[]).map((s, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm text-foreground">
-                    <span className="text-secondary mt-0.5">•</span>
+                    <span className="text-gold-light mt-0.5">•</span>
                     <span className="leading-relaxed">{s}</span>
                   </li>
                 ))}
