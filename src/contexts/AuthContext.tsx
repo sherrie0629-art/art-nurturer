@@ -115,13 +115,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const enforceAccountStatus = useCallback(async (userId: string) => {
     const { data } = await supabase
       .from("profiles")
-      .select("is_banned, ban_reason")
+      .select("is_banned, banned_reason")
       .eq("user_id", userId)
       .maybeSingle();
 
     if (data?.is_banned) {
       setIsBanned(true);
-      toast.error(data.ban_reason || ACCOUNT_SUSPENDED_MESSAGE);
+      toast.error(data.banned_reason || ACCOUNT_SUSPENDED_MESSAGE);
       try {
         await supabase.auth.signOut();
       } catch { /* ignore */ }
