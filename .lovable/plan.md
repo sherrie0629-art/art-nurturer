@@ -1,55 +1,38 @@
-## 目标
-在 `/admin` 用户管理列表中，为每个用户增加"禁用 / 解禁"按钮。被禁用的用户无法登录，也无法继续调用聊天、测评、深度报告等消耗成本的接口。
+## 设计目标
 
-## 实现方案
+把 `src/components/FortuneRippleScene.tsx` 中央的"静水涟漪"整体替换为**一柄半开的折扇**，扇面绘有梅花花瓣。待机时扇面轻轻呼吸；触发抽签时花瓣脱离扇面、缓缓飘落，落幕之际中央浮现签文标签。
 
-### 1. 数据层（迁移）
-在 `public.profiles` 表新增字段：
-- `is_banned boolean not null default false`
-- `banned_at timestamptz`
-- `banned_reason text`（可选，先做空字段，后续可填）
+## 视觉构成（纯 SVG + CSS，无图片依赖）
 
-通过 `has_role(auth.uid(), 'admin')` 让管理员可以更新所有 profile 的封禁字段；普通用户保持现状（只能读写自己）。
+1. **折扇主体**（SVG，约 220×140）
+   - 11 根扇骨：深木色 `#3a2418` 渐变到顶端淡金 `#d4af37`，从中心轴呈 160° 展开
+   - 扇面：宣纸质感渐变 `#f5ecd9 → #e8d9b8`，叠一层 5% 不透明墨色噪点
+   - 扇面边缘描金 1px 线，底部扇轴一颗 `#d4af37` 金钉 + 一缕朱红流苏
+   - 扇面上手绘 3 朵梅花（5 瓣，淡粉 `#e8a4a4` 描深红边）静止贴在扇面上
 
-### 2. 后端拦截（成本守门）
-在所有消耗 LOVABLE_API_KEY / ElevenLabs 的 Edge Function 入口加一道统一检查：拿到 JWT 中的 user_id → 查 `profiles.is_banned` → 若为 true，立刻返回 `403 { error: "account_banned" }`，不走 AI 调用。
+2. **待机动效**
+   - 整柄扇子 `transform-origin: bottom center`，以 6s 周期 ±1.5° 微摆
+   - 金钉处一圈极弱光晕呼吸（opacity 0.4 → 0.7）
 
-需要打补丁的函数（按"会花钱"清单）：
-- `chat`
-- `chat-tarot-draw`、`tarot-draw`、`daily-fortune-stick`
-- `assessment`、`assessment-emotion`、`assessment-enneagram`、`assessment-zodiac`、`assessment-compatibility`
-- `generate-deep-report`、`generate-soul-fragment`、`generate-soul-mirror`、`generate-poster-image`
-- `extract-memory-incremental`、`recall-memory`、`summarize-conversation`
-- `tts-speak`
+3. **抽签触发动效**（外部 prop `isDrawing` 控制）
+   - 扇面上的梅花花瓣逐片脱离（共 12–15 瓣），各自带不同 delay (0–1.2s)、duration (2.5–3.5s)、horizontal drift (±60px)、rotation (180–540°)
+   - 同时扇子微微合拢 5°、整体淡出至 0.35 opacity
+   - 1.2s 后中央浮现签文卡（已存在的"心定则签现"位置）：缩放 0.9→1 + 透明度 0→1
 
-做法：新建 `supabase/functions/_shared/ban-check.ts`，导出 `assertNotBanned(req)`，每个函数在 CORS 之后、业务逻辑之前调用一次。失败返回带 CORS 头的 403。
+4. **下方文字**
+   - 保留"静心求签 / Draw your fortune"两行 label，仅替换为思源宋体 + 细金色分隔线
 
-### 3. 强制登出已封禁用户
-- 新增 Edge Function `admin-ban-user`（service_role）：校验调用者是 admin，然后
-  1. `UPDATE profiles SET is_banned = $1, banned_at = ...`
-  2. 当封禁时，调用 `admin.auth.admin.signOut(user_id, 'global')` 让现存 session 全部失效。
-- 前端 `AuthContext` 监听到 session 失效时已经会跳登录页，无需额外改动。
+## 涉及文件
 
-### 4. 前端（Admin 页面）
-在 `src/pages/Admin.tsx` 的 users tab 中：
-- `loadUsers` 一并拉取 `profiles.is_banned`
-- 每个用户卡片右上角显示状态徽章：正常 / 已禁用（红色）
-- 在"管理订阅"按钮旁加一个按钮：
-  - 未禁用 → `禁用此用户`（红色 ghost 样式，点击二次确认）
-  - 已禁用 → `解除禁用`
-- 点击后调用 `supabase.functions.invoke("admin-ban-user", { body: { user_id, banned: true/false } })`，成功后 toast 并 `loadUsers()` 刷新。
-- 被禁用的用户卡片整体降低透明度，便于一眼识别。
+- 改写 `src/components/FortuneRippleScene.tsx`：
+  - 删除现有同心圆 / 花瓣 / "静水"标签节点
+  - 新增 `<FoldingFan />` 子组件（内联 SVG）+ `<FallingPetals count={14} active={isDrawing} />`
+  - 接受现有 props（`isDrawing` 或同等触发态），保持外部 API 不变
+- 在同文件底部新增 `<style>` 段或追加 `src/index.css` 中的 keyframes：`fan-breathe`、`petal-fall-{i}`、`label-reveal`
+- 不改业务逻辑、不改父组件调用方式
 
-### 5. 文案
-中文为主，新增 i18n key（`admin.banUser` / `admin.unbanUser` / `admin.banned` / `admin.confirmBan` / `admin.bannedToast`），同步英文兜底。
+## 验证
 
-## 技术细节
-- 迁移使用 `ALTER TABLE public.profiles ADD COLUMN ...`，无需 GRANT（profiles 已有授权）。
-- 封禁检查函数读取 profiles 时使用 service role client，避免被 RLS 影响。
-- 不删除用户数据，仅打标 + 全局登出，随时可恢复。
-- 管理员账户自身不允许被禁（接口内校验 `target !== caller && !has_role(target,'admin')`，避免误操作锁死后台）。
-
-## 验收
-1. 在 Admin → 用户 中对一个测试账号点"禁用此用户"，徽章变为"已禁用"。
-2. 该账号若在线，下次任意请求被踢回登录页；登录后调用 chat 接口直接 403，不消耗 AI 额度。
-3. 解除禁用后恢复正常。
+- 待机：扇子静态优雅、轻微摆动
+- 点击抽签：花瓣逐片飘落 → 签文浮现
+- 暗色卡片背景、尺寸与原组件一致，移动端不溢出
