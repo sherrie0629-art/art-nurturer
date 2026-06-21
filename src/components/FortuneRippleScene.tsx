@@ -161,7 +161,7 @@ export default function FortuneRippleScene({ shaking = false }: Props) {
 
       {/* 折扇主体（待机微摆 / 抽签淡出微合） */}
       <motion.div
-        className="absolute left-1/2 bottom-[26px] -translate-x-1/2 -ml-8"
+        className="absolute left-1/2 bottom-[26px] -translate-x-1/2 -ml-16"
         style={{ transformOrigin: "50% 100%" }}
         animate={
           shaking
@@ -264,7 +264,7 @@ export default function FortuneRippleScene({ shaking = false }: Props) {
       )}
 
       <p
-        className="absolute bottom-0 left-1/2 -translate-x-1/2 whitespace-nowrap text-[11px] tracking-[0.35em] text-muted-foreground/65 pl-[0.35em] font-light"
+        className="absolute bottom-0 left-1/2 -translate-x-1/2 -ml-6 whitespace-nowrap text-[11px] tracking-[0.35em] text-muted-foreground/65 pl-[0.35em] font-light"
         style={{ fontFamily: '"Noto Serif SC", serif' }}
       >
         {shaking ? "心定则签现" : "执扇问心"}
