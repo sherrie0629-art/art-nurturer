@@ -10,7 +10,7 @@ import { localizeAgent } from "@/lib/localizeAgent";
 import SEO from "@/components/SEO";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { isOnboardingDone } from "@/lib/onboarding";
+import { isOnboardingDone, markOnboardingDone } from "@/lib/onboarding";
 
 const assessments = [
   { id: "mbti", path: "/assessment/mbti" },
@@ -29,10 +29,15 @@ const Index = () => {
   const [bondLevels, setBondLevels] = useState<Record<string, number>>({});
 
   useEffect(() => {
+    // 已登录的老用户直接跳过欢迎页
+    if (user) {
+      if (!isOnboardingDone()) markOnboardingDone();
+      return;
+    }
     if (!isOnboardingDone()) {
       navigate("/welcome", { replace: true });
     }
-  }, [navigate]);
+  }, [navigate, user]);
 
   useEffect(() => {
     if (!user) return;
