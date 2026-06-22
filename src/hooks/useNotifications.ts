@@ -37,7 +37,7 @@ export function useNotifications(userId: string | undefined) {
     }
     setLoading(true);
     await maybeDispatchFollowups();
-    const { data } = await supabase
+    const { data } = await (supabase as any)
       .from("user_notifications")
       .select("*")
       .eq("user_id", userId)
@@ -57,7 +57,7 @@ export function useNotifications(userId: string | undefined) {
     async (id: string) => {
       if (!userId) return;
       const readAt = new Date().toISOString();
-      await supabase.from("user_notifications").update({ read_at: readAt }).eq("id", id).eq("user_id", userId);
+      await (supabase as any).from("user_notifications").update({ read_at: readAt }).eq("id", id).eq("user_id", userId);
       setItems((prev) => prev.map((n) => (n.id === id ? { ...n, read_at: readAt } : n)));
     },
     [userId],
@@ -66,7 +66,7 @@ export function useNotifications(userId: string | undefined) {
   const markAllRead = useCallback(async () => {
     if (!userId || unreadCount === 0) return;
     const readAt = new Date().toISOString();
-    await supabase
+    await (supabase as any)
       .from("user_notifications")
       .update({ read_at: readAt })
       .eq("user_id", userId)
