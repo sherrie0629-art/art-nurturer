@@ -1294,7 +1294,7 @@ const Chat = () => {
                       onClick={() => handleQuoteButtonClick(msg.id, msg.content)}
                       title={t("chat.quoteCardTooltip")}
                       aria-label={t("chat.quoteCardTooltip")}
-                      className="absolute -bottom-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-card opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 md:opacity-0"
+                      className="absolute -bottom-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-card opacity-70 transition-opacity hover:opacity-100 focus-visible:opacity-100 md:opacity-0 md:group-hover:opacity-100"
                     >
                       <Quote className="h-3.5 w-3.5" />
                     </button>
