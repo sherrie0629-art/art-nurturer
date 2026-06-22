@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Send, Zap, Home, BookOpen, Sparkles, User, Coffee, Flame, Moon, MessageCircleHeart } from "lucide-react";
+import { ArrowLeft, Send, Zap, Home, BookOpen, Sparkles, User, Coffee, Flame, Moon, MessageCircleHeart, Quote } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useLocale } from "@/hooks/useLocale";
 import { useQuoteCard } from "@/hooks/useQuoteCard";
@@ -179,6 +179,8 @@ const Chat = () => {
   const [shareOpen, setShareOpen] = useState(false);
   const [shareImageUrl, setShareImageUrl] = useState<string | null>(null);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressStartPos = useRef<{ x: number; y: number } | null>(null);
+  const [longPressMsgId, setLongPressMsgId] = useState<string | null>(null);
   const { generateQuoteCard } = useQuoteCard();
   const scrollRef = useRef<HTMLDivElement>(null);
   const isStreamingRef = useRef(false);
@@ -1077,9 +1079,11 @@ const Chat = () => {
 
   const levelUpLore = pendingLevelUp ? agent.lore.find((l) => l.level === pendingLevelUp)?.text || "" : "";
 
-  const handleLongPressStart = useCallback((content: string) => {
-    longPressTimer.current = setTimeout(async () => {
-      toast.info(t("chat.quoteCardLoading"));
+  const triggerQuoteCard = useCallback(
+    async (content: string, fromSelection: boolean) => {
+      toast.info(
+        fromSelection ? t("chat.quoteCardFromSelection") : t("chat.quoteCardLoading"),
+      );
       const accentMap: Record<string, string> = {
         barista: "#e8a87c",
         jax: "#f59e0b",
@@ -1088,7 +1092,7 @@ const Chat = () => {
       };
       try {
         const dataUrl = await generateQuoteCard({
-          quote: content.slice(0, 200),
+          quote: content.slice(0, fromSelection ? 300 : 200),
           agentName: agent.name,
           agentTitle: agent.title,
           agentImage: agent.image,
@@ -1099,15 +1103,73 @@ const Chat = () => {
       } catch {
         toast.error(t("chat.cardFail"));
       }
-    }, 600);
-  }, [agent, agentId, generateQuoteCard]);
+    },
+    [agent, agentId, generateQuoteCard, t],
+  );
+
+  const resolveQuoteFromMessage = useCallback(
+    (msgEl: HTMLElement | null, fallback: string): { text: string; fromSelection: boolean } => {
+      if (typeof window === "undefined") return { text: fallback, fromSelection: false };
+      const sel = window.getSelection();
+      if (sel && !sel.isCollapsed && sel.rangeCount > 0 && msgEl) {
+        const range = sel.getRangeAt(0);
+        if (msgEl.contains(range.commonAncestorContainer)) {
+          const text = sel.toString().trim();
+          if (text.length >= 6) return { text, fromSelection: true };
+          if (text.length > 0) toast.info(t("chat.selectionTooShort"));
+        }
+      }
+      return { text: fallback, fromSelection: false };
+    },
+    [t],
+  );
+
+  const handleLongPressStart = useCallback(
+    (msgId: string, content: string, e: React.TouchEvent<HTMLElement>) => {
+      const touch = e.touches[0];
+      longPressStartPos.current = { x: touch.clientX, y: touch.clientY };
+      const target = e.currentTarget;
+      setLongPressMsgId(msgId);
+      longPressTimer.current = setTimeout(() => {
+        setLongPressMsgId(null);
+        const { text, fromSelection } = resolveQuoteFromMessage(target, content);
+        if (navigator.vibrate) navigator.vibrate(15);
+        triggerQuoteCard(text, fromSelection);
+      }, 500);
+    },
+    [resolveQuoteFromMessage, triggerQuoteCard],
+  );
+
+  const handleLongPressMove = useCallback((e: React.TouchEvent<HTMLElement>) => {
+    if (!longPressStartPos.current || !longPressTimer.current) return;
+    const touch = e.touches[0];
+    const dx = touch.clientX - longPressStartPos.current.x;
+    const dy = touch.clientY - longPressStartPos.current.y;
+    if (Math.hypot(dx, dy) > 10) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+      longPressStartPos.current = null;
+      setLongPressMsgId(null);
+    }
+  }, []);
 
   const handleLongPressEnd = useCallback(() => {
     if (longPressTimer.current) {
       clearTimeout(longPressTimer.current);
       longPressTimer.current = null;
     }
+    longPressStartPos.current = null;
+    setLongPressMsgId(null);
   }, []);
+
+  const handleQuoteButtonClick = useCallback(
+    (msgId: string, content: string) => {
+      const el = document.querySelector<HTMLElement>(`[data-msg-id="${msgId}"]`);
+      const { text, fromSelection } = resolveQuoteFromMessage(el, content);
+      triggerQuoteCard(text, fromSelection);
+    },
+    [resolveQuoteFromMessage, triggerQuoteCard],
+  );
 
   return (
     <div className="md:ml-[220px] flex">
@@ -1199,22 +1261,23 @@ const Chat = () => {
               {msg.kind === "tarot-card" ? (
                 <TarotCardInline card={msg.tarotCard ?? null} />
               ) : (
-              <div className="flex flex-col max-w-[75%] md:max-w-[60%]">
+              <div className="group flex flex-col max-w-[75%] md:max-w-[60%]">
                 <div
-                  className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+                  data-msg-id={msg.id}
+                  className={`relative rounded-2xl px-4 py-2.5 text-sm leading-relaxed transition-transform ${
+                    longPressMsgId === msg.id ? "scale-[0.98] ring-2 ring-primary/40" : ""
+                  } ${
                     msg.role === "user"
                       ? "bg-primary text-primary-foreground rounded-br-md"
                       : "bg-card text-card-foreground shadow-card rounded-bl-md"
                   } ${containsEasterEggMarker(msg.content) ? "ring-2 ring-secondary/50 shadow-glow" : ""}`}
                   {...(msg.role === "assistant" && msg.id !== "welcome" && msg.id !== "streaming"
                     ? {
-                        onTouchStart: () => handleLongPressStart(msg.content),
+                        onTouchStart: (e: React.TouchEvent<HTMLDivElement>) =>
+                          handleLongPressStart(msg.id, msg.content, e),
+                        onTouchMove: handleLongPressMove,
                         onTouchEnd: handleLongPressEnd,
                         onTouchCancel: handleLongPressEnd,
-                        onContextMenu: (e: React.MouseEvent) => {
-                          e.preventDefault();
-                          handleLongPressStart(msg.content);
-                        },
                       }
                     : {})}
                 >
@@ -1224,6 +1287,17 @@ const Chat = () => {
                     </div>
                   ) : (
                     msg.content
+                  )}
+                  {msg.role === "assistant" && msg.id !== "welcome" && msg.id !== "streaming" && (
+                    <button
+                      type="button"
+                      onClick={() => handleQuoteButtonClick(msg.id, msg.content)}
+                      title={t("chat.quoteCardTooltip")}
+                      aria-label={t("chat.quoteCardTooltip")}
+                      className="absolute -bottom-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-card opacity-70 transition-opacity hover:opacity-100 focus-visible:opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                    >
+                      <Quote className="h-3.5 w-3.5" />
+                    </button>
                   )}
                 </div>
                 {msg.role === "assistant" && msg.branchOptions && msg.branchOptions.length > 0 && !isStreaming && (
