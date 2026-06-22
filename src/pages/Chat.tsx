@@ -1261,22 +1261,23 @@ const Chat = () => {
               {msg.kind === "tarot-card" ? (
                 <TarotCardInline card={msg.tarotCard ?? null} />
               ) : (
-              <div className="flex flex-col max-w-[75%] md:max-w-[60%]">
+              <div className="group flex flex-col max-w-[75%] md:max-w-[60%]">
                 <div
-                  className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+                  data-msg-id={msg.id}
+                  className={`relative rounded-2xl px-4 py-2.5 text-sm leading-relaxed transition-transform ${
+                    longPressMsgId === msg.id ? "scale-[0.98] ring-2 ring-primary/40" : ""
+                  } ${
                     msg.role === "user"
                       ? "bg-primary text-primary-foreground rounded-br-md"
                       : "bg-card text-card-foreground shadow-card rounded-bl-md"
                   } ${containsEasterEggMarker(msg.content) ? "ring-2 ring-secondary/50 shadow-glow" : ""}`}
                   {...(msg.role === "assistant" && msg.id !== "welcome" && msg.id !== "streaming"
                     ? {
-                        onTouchStart: () => handleLongPressStart(msg.content),
+                        onTouchStart: (e: React.TouchEvent<HTMLDivElement>) =>
+                          handleLongPressStart(msg.id, msg.content, e),
+                        onTouchMove: handleLongPressMove,
                         onTouchEnd: handleLongPressEnd,
                         onTouchCancel: handleLongPressEnd,
-                        onContextMenu: (e: React.MouseEvent) => {
-                          e.preventDefault();
-                          handleLongPressStart(msg.content);
-                        },
                       }
                     : {})}
                 >
@@ -1286,6 +1287,17 @@ const Chat = () => {
                     </div>
                   ) : (
                     msg.content
+                  )}
+                  {msg.role === "assistant" && msg.id !== "welcome" && msg.id !== "streaming" && (
+                    <button
+                      type="button"
+                      onClick={() => handleQuoteButtonClick(msg.id, msg.content)}
+                      title={t("chat.quoteCardTooltip")}
+                      aria-label={t("chat.quoteCardTooltip")}
+                      className="absolute -bottom-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-card opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 md:opacity-0"
+                    >
+                      <Quote className="h-3.5 w-3.5" />
+                    </button>
                   )}
                 </div>
                 {msg.role === "assistant" && msg.branchOptions && msg.branchOptions.length > 0 && !isStreaming && (
