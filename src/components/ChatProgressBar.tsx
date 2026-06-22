@@ -50,14 +50,14 @@ const ChatProgressBar = ({ totalTurns, bondLevel, isLoggedIn }: Props) => {
     <button
       type="button"
       onClick={handleClick}
-      className="w-full border-b border-border/60 bg-background/40 px-4 py-2 text-left transition-colors hover:bg-muted/30"
+      className="w-full border-b border-primary/15 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent px-4 py-2 text-left transition-colors hover:from-primary/15 hover:via-primary/10"
     >
       <div className="flex items-center justify-between gap-2">
-        <p className="truncate text-[11px] text-muted-foreground">{message}</p>
-        <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/70" />
+        <p className="truncate text-[11px] text-foreground/85">{message}</p>
+        <ChevronRight className="h-3.5 w-3.5 shrink-0 text-primary/70" />
       </div>
       {hint.kind !== "guest" && (
-        <div className="mt-1.5 h-0.5 overflow-hidden rounded-full bg-muted">
+        <div className="mt-1.5 h-0.5 overflow-hidden rounded-full bg-primary/15">
           <div
             className="h-full rounded-full bg-gradient-golden transition-all duration-500"
             style={{ width: `${progressPct}%` }}
