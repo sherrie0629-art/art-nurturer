@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Brain, Heart, Lock, Map, MessageCircleHeart, Sparkles } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import SEO from "@/components/SEO";
-import { markOnboardingDone } from "@/lib/onboarding";
+import { markOnboardingDone, isOnboardingDone } from "@/lib/onboarding";
+import { useAuth } from "@/contexts/AuthContext";
 
 type OnboardingPath = "chat" | "assessment";
 
@@ -19,6 +20,15 @@ const Welcome = () => {
   const { t } = useTranslation();
   const [step, setStep] = useState(1);
   const [path, setPath] = useState<OnboardingPath>("chat");
+  const { user } = useAuth();
+
+  // 老用户或已完成引导的访客直接跳到首页，避免重复看到欢迎页
+  useEffect(() => {
+    if (user || isOnboardingDone()) {
+      if (user) markOnboardingDone();
+      navigate("/", { replace: true });
+    }
+  }, [user, navigate]);
 
   const finish = (targetPath: OnboardingPath) => {
     markOnboardingDone();
