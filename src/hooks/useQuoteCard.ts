@@ -118,20 +118,43 @@ export function useQuoteCard() {
 }
 
 function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
-  const words = text.split(" ");
   const lines: string[] = [];
-  let line = "";
-
-  for (const word of words) {
-    const test = line ? `${line} ${word}` : word;
-    if (ctx.measureText(test).width > maxWidth && line) {
-      lines.push(line);
-      line = word;
-    } else {
-      line = test;
+  const paragraphs = text.split(/\r?\n/);
+  // CJK-aware wrap: split into tokens where each CJK char is its own token,
+  // and runs of non-CJK (latin words/numbers/punct) are kept together.
+  const tokenize = (s: string): string[] => {
+    const tokens: string[] = [];
+    let buf = "";
+    const isCJK = (ch: string) => /[\u3000-\u9fff\uff00-\uffef]/.test(ch);
+    for (const ch of s) {
+      if (isCJK(ch)) {
+        if (buf) { tokens.push(buf); buf = ""; }
+        tokens.push(ch);
+      } else if (ch === " ") {
+        if (buf) { tokens.push(buf); buf = ""; }
+        tokens.push(" ");
+      } else {
+        buf += ch;
+      }
     }
+    if (buf) tokens.push(buf);
+    return tokens;
+  };
+
+  for (const para of paragraphs) {
+    const tokens = tokenize(para);
+    let line = "";
+    for (const tok of tokens) {
+      const test = line + tok;
+      if (ctx.measureText(test).width > maxWidth && line) {
+        lines.push(line.replace(/\s+$/, ""));
+        line = tok === " " ? "" : tok;
+      } else {
+        line = test;
+      }
+    }
+    if (line) lines.push(line.replace(/\s+$/, ""));
   }
-  if (line) lines.push(line);
   return lines;
 }
 
