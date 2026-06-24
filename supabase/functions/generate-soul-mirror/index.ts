@@ -322,9 +322,14 @@ serve(async (req) => {
       }
     }
 
-    const profileFacts = (factsRes.data as any[] || []).map(
-      (f) => `[${f.category}] ${f.key}: ${f.value}`,
-    );
+    // Filter out facts that are most prone to roleplay leakage from AI personas.
+    // identity / relationship facts have historically absorbed agent backstories
+    // (e.g. "origin_story: 来自被伽马射线暴摧毁的星系"), so we only trust the
+    // safer categories (preference / value / goal) for cross-character mirrors.
+    const SAFE_FACT_CATEGORIES = new Set(["preference", "value", "goal"]);
+    const profileFacts = (factsRes.data as any[] || [])
+      .filter((f) => SAFE_FACT_CATEGORIES.has(String(f.category)))
+      .map((f) => `[${f.category}] ${f.key}: ${f.value}`);
 
     const locale: "zh" | "en" = profile.locale === "en" ? "en" : "zh";
     const nickname = profile.display_name || (locale === "zh" ? "你" : "you");
