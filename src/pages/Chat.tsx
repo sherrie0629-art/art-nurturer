@@ -1013,18 +1013,34 @@ const Chat = () => {
           await checkAchievements();
 
           if (user) {
-            supabase.functions
-              .invoke("extract-memory-incremental", {
-                body: {
-                  agentId,
-                  locale,
-                  recentMessages: [
-                    { role: "user", content: userMsg.content },
-                    { role: "assistant", content: displayContent },
-                  ],
-                },
-              })
-              .catch((err) => console.error("[Chat] extract-memory-incremental failed:", err));
+            (async () => {
+              try {
+                // Ensure JWT is fresh — stale tokens after signing-key rotation
+                // lack the `sub` claim and cause the edge function to 401.
+                const { data: sessionData } = await supabase.auth.getSession();
+                if (!sessionData.session) return;
+                const { error } = await supabase.functions.invoke("extract-memory-incremental", {
+                  body: {
+                    agentId,
+                    locale,
+                    recentMessages: [
+                      { role: "user", content: userMsg.content },
+                      { role: "assistant", content: displayContent },
+                    ],
+                  },
+                });
+                if (error) {
+                  // Silent: background memory extraction is best-effort.
+                  console.warn("[Chat] extract-memory-incremental skipped:", error.message);
+                  // If unauthorized, try refreshing the session so the next turn succeeds.
+                  if ((error as any)?.context?.status === 401) {
+                    await supabase.auth.refreshSession().catch(() => {});
+                  }
+                }
+              } catch (err) {
+                console.warn("[Chat] extract-memory-incremental error:", err);
+              }
+            })();
           }
         },
         onError: (error) => {
