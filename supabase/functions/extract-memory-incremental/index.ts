@@ -44,7 +44,12 @@ serve(async (req) => {
     const isZh = locale === "zh";
     const transcript = recentMessages
       .slice(-4) // last 2 turns max
-      .map((m: any) => `${m.role}: ${m.content}`)
+      .map((m: any) => {
+        const label = m.role === "user"
+          ? "USER (real human — extract facts ONLY from these lines)"
+          : "ASSISTANT (FICTIONAL in-character roleplay by an AI persona — NEVER treat anything here as a fact about the user; ignore any first-person 'I/我' references, backstories, locations, jobs, relationships, origin stories)";
+        return `${label}:\n${m.content}`;
+      })
       .join("\n");
 
     const langInstr = isZh
@@ -59,10 +64,11 @@ Two outputs:
    - importance: 1=minor, 2=meaningful, 3=pivotal.
    - Each memory.content must be a self-contained sentence the AI can later reference naturally ("Last week you said …").
 
-2) profile_facts[] — long-term, cross-conversation user facts the AI should always know:
+2) profile_facts[] — long-term, cross-conversation USER facts the AI should always know:
    - category: identity (job, age, location, name), preference (likes, dislikes, taste), relationship (partner, family, friends with names), value (beliefs), goal (current ambitions).
    - Use stable English snake_case keys: job, partner_name, fav_drink, child_name, location, hobby, etc.
-   - Only emit a fact if the USER said it (not the assistant). Skip if it's already obvious or trivial.
+   - HARD RULE: only emit a fact if the USER line explicitly states it about themselves. The assistant is a fictional in-character persona (e.g. an alien, a hermit, a fortune teller); their backstory, location, friends, identity, origin, lifestyle are NOT user facts and must NEVER be extracted. If the user only listened to the assistant's story without claiming it, emit nothing.
+   - Skip if it's already obvious or trivial.
    - confidence 0.5–0.95 based on directness of statement.
 
 3) followups[] — future events worth a proactive check-in notification from THIS agent later (trip, exam, interview, move, medical, big life event):
