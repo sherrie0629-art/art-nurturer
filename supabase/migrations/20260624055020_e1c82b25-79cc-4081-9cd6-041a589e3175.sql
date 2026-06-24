@@ -1,0 +1,1 @@
+DELETE FROM public.user_profile_facts WHERE category IN ('identity','relationship');
