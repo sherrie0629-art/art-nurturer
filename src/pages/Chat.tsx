@@ -1071,24 +1071,41 @@ const Chat = () => {
       const u = userRef.current;
       if (cid && msgs.length > 4 && u) {
         const filtered = msgs.filter((m) => m.id !== "welcome");
-        supabase.functions.invoke("summarize-conversation", {
-          body: { messages: filtered, agentId, userId: u.id, locale },
-        }).then(({ data }) => {
-          if (data && u) {
-            supabase.from("conversation_summaries").insert({
-              user_id: u.id,
-              agent_id: agentId,
-              conversation_id: cid,
-              summary: data.summary,
-              key_topics: data.key_topics,
+        (async () => {
+          try {
+            const { data: sess } = await supabase.auth.getSession();
+            if (!sess?.session) return;
+            let { data, error } = await supabase.functions.invoke("summarize-conversation", {
+              body: { messages: filtered, agentId, userId: u.id, locale },
             });
-            if (totalTurnsRef.current >= CHAT_FRAGMENT_TURN_INTERVAL) {
-              generateSoulFragment(u.id, "chat", agentId, `Chat summary with ${agent.name}: ${data.summary}`, {
-                totalTurns: totalTurnsRef.current,
-              });
+            if (error && (error as any)?.context?.status === 401) {
+              await supabase.auth.refreshSession();
+              ({ data, error } = await supabase.functions.invoke("summarize-conversation", {
+                body: { messages: filtered, agentId, userId: u.id, locale },
+              }));
             }
+            if (error) {
+              console.warn("[summarize-conversation] skipped:", error);
+              return;
+            }
+            if (data && u) {
+              await supabase.from("conversation_summaries").insert({
+                user_id: u.id,
+                agent_id: agentId,
+                conversation_id: cid,
+                summary: data.summary,
+                key_topics: data.key_topics,
+              });
+              if (totalTurnsRef.current >= CHAT_FRAGMENT_TURN_INTERVAL) {
+                generateSoulFragment(u.id, "chat", agentId, `Chat summary with ${agent.name}: ${data.summary}`, {
+                  totalTurns: totalTurnsRef.current,
+                });
+              }
+            }
+          } catch (e) {
+            console.warn("[summarize-conversation] failed:", e);
           }
-        });
+        })();
       }
     };
   }, [agentId, agent.name]);
