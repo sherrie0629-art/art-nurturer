@@ -155,7 +155,7 @@ const DailyFortuneStick = () => {
               className="px-6 mt-4"
             >
               <div className="mx-auto max-w-md flex flex-col items-center text-center">
-                <div className="relative w-full rounded-3xl border border-[#7A9BA8]/15 bg-[linear-gradient(180deg,rgba(122,155,168,0.06)_0%,transparent_100%)] px-4 pb-2 pt-4">
+                <div className="relative w-full rounded-3xl border border-[#7A9BA8]/15 bg-[linear-gradient(180deg,rgba(122,155,168,0.06)_0%,transparent_100%)] px-4 pb-8 pt-4 overflow-hidden">
                   <FortuneRippleScene />
                 </div>
 
