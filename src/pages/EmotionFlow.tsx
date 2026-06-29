@@ -64,13 +64,15 @@ const EmotionFlow = () => {
   // Prefetch AI questions while user reads the intro — often ready before they tap Start.
   useEffect(() => {
     if (started || prefetchedRef.current) return;
+    // Edge function requires auth; anonymous users use the local question pool.
+    if (!user) return;
     prefetchedRef.current = supabase.functions
       .invoke("assessment-emotion", { body: { action: "batch-questions", locale } })
       .then(({ data, error }) =>
         !error && data?.type === "batch" && Array.isArray(data.data) && data.data.length >= 10 ? data.data : null,
       )
       .catch(() => null);
-  }, [started, locale]);
+  }, [started, locale, user]);
 
   const fetchResultImage = useCallback(async (r: WellnessResult) => {
     setImageLoading(true);
@@ -92,6 +94,11 @@ const EmotionFlow = () => {
     setLoading(true);
     setLoadingMsg(t("assessmentFlow.common.analyzing"));
     try {
+      if (!user) {
+        toast.error(t("assessmentFlow.common.loginRequired", { defaultValue: "请先登录后再生成测评结果 ✨" }));
+        setLoading(false);
+        return;
+      }
       const { data, error } = await supabase.functions.invoke("assessment-emotion", { body: { history: finalHistory, locale } });
       if (error) throw error;
       if (data.type === "result") {
@@ -117,12 +124,14 @@ const EmotionFlow = () => {
     setLoadingMsg(t("assessmentFlow.common.starting"));
 
     const fetchPromise = (prefetchedRef.current ??
-      supabase.functions
-        .invoke("assessment-emotion", { body: { action: "batch-questions", locale } })
-        .then(({ data, error }) => {
-          if (error) throw error;
-          return data?.type === "batch" && Array.isArray(data.data) && data.data.length >= 10 ? data.data : null;
-        }))
+      (user
+        ? supabase.functions
+            .invoke("assessment-emotion", { body: { action: "batch-questions", locale } })
+            .then(({ data, error }) => {
+              if (error) throw error;
+              return data?.type === "batch" && Array.isArray(data.data) && data.data.length >= 10 ? data.data : null;
+            })
+        : Promise.resolve(null)))
       .catch((e: any) => {
         if (isDailyLimitError(e)) toast.error(t("assessmentFlow.common.limitReached", { n: 20 }));
         return null;
